@@ -225,7 +225,7 @@ export default class QuestionPage {
 
         // wait for visible menu 
         const menu = this.page.locator('.n-base-select-menu').filter({ hasText: value }).last();
-        await menu.waitFor({ state: 'visible', timeout: 5000 });
+        await menu.waitFor({ state: 'visible', timeout: 1000 });
 
         // click option container
         const option = menu.locator('.n-base-select-option').filter({ hasText: value }).first();
@@ -254,11 +254,11 @@ export default class QuestionPage {
 
         // wait for menu portal
         const menu = this.page.locator('.n-base-select-menu').last();
-        await menu.waitFor({ state: 'visible', timeout: 5000 });
+        await menu.waitFor({ state: 'visible', timeout: 1000 });
 
         // select option container
         const option = menu.locator('.n-base-select-option', { hasText: value }).first();
-        await option.waitFor({ state: 'visible', timeout: 5000 });
+        await option.waitFor({ state: 'visible', timeout: 1000 });
         await option.click({ force: true });
 
     }

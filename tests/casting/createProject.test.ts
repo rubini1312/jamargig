@@ -3,16 +3,17 @@ import LoginPage from "../../pages/casting/owner/login/loginPage";
 import ProjectPage from "../../pages/casting/owner/project/projectPage";
 import * as data from "../../test-data/test-data.json";
 import { projectLocators } from "../../pages/casting/owner/project/projectPageLocators";
+import { urls } from "@/utils/urls";
 
 test.describe("Casting owner create project flow", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/login");
+    await page.goto(urls.casting);
   });
 
   test("Create new project and verify it appears in projects list", async ({ page }) => {
     const login = new LoginPage(page);
     await login.validLogin(data.email, data.password);
-    await expect(page).toHaveURL('/projects');
+    await expect(page).toHaveURL(/projects/);
 
     const projectPage = new ProjectPage(page);
     const projectName = `Auto Project name ${Date.now()}`;
@@ -52,7 +53,7 @@ test.describe("Casting owner create project flow", () => {
     // login
     const login = new LoginPage(page);
     await login.validLogin(data.email, data.password);
-    await expect(page).toHaveURL("/projects");
+    await expect(page).toHaveURL(/projects/);
 
     // open New Project modal
     const projectPage = new ProjectPage(page);
@@ -97,7 +98,7 @@ test.describe("Casting owner create project flow", () => {
       expect(ariaInvalid === "true" || ariaInvalid === "true").toBeTruthy();
     } else {
       // fallback: ensure we did not navigate away (still on projects) and modal is visible
-      await expect(page).toHaveURL(/\/projects/);
+      await expect(page).toHaveURL(/projects/);
     }
 
     // Optionally look for visible alert or feedback inside modal

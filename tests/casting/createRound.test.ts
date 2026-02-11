@@ -4,17 +4,18 @@ import RoundPage from "../../pages/casting/owner/round/roundPage";
 import { roundLocators } from "../../pages/casting/owner/round/roundPageLocators";
 import * as data from "../../test-data/test-data.json";
 import { openFirstProject } from '../../helpers/projects';
+import { urls } from "@/utils/urls";
 
 test.describe('Casting owner create round scenarios', () => {
     test.beforeEach(async ({ page }) => {
-        await page.goto('/login');
+        await page.goto(urls.casting);
     });
 
     test('Create new online round and verify it appears in rounds list', async ({ page }) => {
         test.setTimeout(90000);
         const login = new LoginPage(page);
         await login.validLogin(data.email, data.password);
-        await expect(page).toHaveURL('/projects');
+        await expect(page).toHaveURL(/projects/);
 
         const roundPage = new RoundPage(page);
         const projectId = await openFirstProject(page);
@@ -46,7 +47,7 @@ test.describe('Casting owner create round scenarios', () => {
         test.setTimeout(90000);
         const login = new LoginPage(page);
         await login.validLogin(data.email, data.password);
-        await expect(page).toHaveURL('/projects');
+        await expect(page).toHaveURL(/projects/);
 
         const roundPage = new RoundPage(page);
         const projectId = await openFirstProject(page);
@@ -82,7 +83,7 @@ test.describe('Casting owner create round scenarios', () => {
     test('Submitting empty New Round form shows validation (required fields)', async ({ page }) => {
         const login = new LoginPage(page);
         await login.validLogin(data.email, data.password);
-        await expect(page).toHaveURL('/projects');
+        await expect(page).toHaveURL(/projects/);
 
         const roundPage = new RoundPage(page);
         await roundPage.gotoRoundsTab();

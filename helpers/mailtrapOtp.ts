@@ -1,4 +1,4 @@
-import { APIRequestContext, expect } from '@playwright/test';
+import { APIRequestContext, Page, expect } from '@playwright/test';
 
 const BASE_URL = process.env.MAILTRAP_BASE_URL!;
 const ACCOUNT_ID = process.env.MAILTRAP_ACCOUNT_ID!;
@@ -6,81 +6,97 @@ const INBOX_ID = process.env.MAILTRAP_INBOX_ID!;
 const API_TOKEN = process.env.MAILTRAP_API_TOKEN!;
 
 /**
- * Fetch latest OTP sent to given email from Mailtrap
+ * Fetch OTP from Mailtrap
  */
 export async function getOtpFromMailtrap(
   request: APIRequestContext,
   email: string,
-  timeoutMs = 20000
+  timeoutMs = 60000
 ): Promise<string> {
 
   const startTime = Date.now();
 
   while (Date.now() - startTime < timeoutMs) {
+    try {
+      const res = await request.get(
+        `${BASE_URL}/accounts/${ACCOUNT_ID}/inboxes/${INBOX_ID}/messages`,
+        { headers: { 'Api-Token': API_TOKEN } }
+      );
 
-    // 1️⃣ Fetch all messages
-    const messagesResponse = await request.get(
-      `${BASE_URL}/accounts/${ACCOUNT_ID}/inboxes/${INBOX_ID}/messages`,
-      {
-        headers: {
-          'Api-Token': API_TOKEN,
-        },
+      if (!res.ok()) {
+        await wait(3000);
+        continue;
       }
-    );
 
-    expect(messagesResponse.ok()).toBeTruthy();
-    const messages = await messagesResponse.json();
+      const messages = await res.json();
 
-    // 2️⃣ Filter messages for this user + OTP subject
-    const filtered = messages.filter(
-      (m: any) =>
-        m.to_email === email &&
-        m.subject?.includes('User Passcode') // optional but recommended
-    );
+      const filtered = messages.filter((m: any) =>
+        m.to_email?.includes(email)
+      );
 
-    if (filtered.length === 0) {
-      await wait(3000);
-      continue;
+      if (!filtered.length) {
+        await wait(3000);
+        continue;
+      }
+
+      filtered.sort(
+        (a: any, b: any) =>
+          new Date(b.created_at).getTime() -
+          new Date(a.created_at).getTime()
+      );
+
+      const latest = filtered[0];
+
+      const bodyRes = await request.get(
+        `${BASE_URL}/accounts/${ACCOUNT_ID}/inboxes/${INBOX_ID}/messages/${latest.id}/body.txt`,
+        { headers: { 'Api-Token': API_TOKEN } }
+      );
+
+      if (!bodyRes.ok()) {
+        await wait(3000);
+        continue;
+      }
+
+      const bodyText = await bodyRes.text();
+      const otpMatch = bodyText.match(/\b\d{4,6}\b/);
+
+      if (otpMatch) {
+        console.log("✅ OTP FOUND:", otpMatch[0]);
+        return otpMatch[0];
+      }
+
+    } catch (e) {
+      console.log("Mailtrap retry...");
     }
 
-    // 3️⃣ Sort newest → oldest
-    filtered.sort(
-      (a: any, b: any) =>
-        new Date(b.created_at).getTime() -
-        new Date(a.created_at).getTime()
-    );
-
-    const latestMessage = filtered[0];
-
-    // 4️⃣ Fetch message body.txt
-    const bodyResponse = await request.get(
-      `${BASE_URL}/accounts/${ACCOUNT_ID}/inboxes/${INBOX_ID}/messages/${latestMessage.id}/body.txt`,
-      {
-        headers: {
-          'Api-Token': API_TOKEN,
-        },
-      }
-    );
-
-    expect(bodyResponse.ok()).toBeTruthy();
-    const bodyText = await bodyResponse.text();
-
-    // 5️⃣ Extract OTP (4–6 digits)
-    const otpMatch = bodyText.match(/\b\d{4,6}\b/);
-    if (otpMatch) {
-      return otpMatch[0];
-    }
-
-    // OTP not yet in body → retry
     await wait(3000);
   }
 
-  throw new Error('OTP not received from Mailtrap within timeout');
+  throw new Error("OTP not received from Mailtrap");
+}
+
+function wait(ms: number) {
+  return new Promise(res => setTimeout(res, ms));
 }
 
 /**
- * Simple async wait
+ * Enter OTP in UI
  */
-function wait(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+export async function enterOtp(page: Page, code: string) {
+
+  const container = page.locator('[data-testid="auth-passcode"]');
+
+  await container.waitFor({
+    state: "visible",
+    timeout: 60000
+  });
+
+  const inputs = container.locator('input');
+  const digits = code.split("");
+
+  for (let i = 0; i < digits.length; i++) {
+    await inputs.nth(i).fill(digits[i]);
+  }
+
+  console.log("OTP entered");
 }

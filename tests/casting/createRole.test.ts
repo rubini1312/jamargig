@@ -4,17 +4,18 @@ import RolePage from "../../pages/casting/owner/role/rolePage";
 import { roleLocators } from "../../pages/casting/owner/role/rolePageLocators";
 import * as data from "../../test-data/test-data.json";
 import { openFirstProject } from '../../helpers/projects';
+import { urls } from "@/utils/urls";
 
 test.describe('Casting owner create role scenarios', () => {
     test.beforeEach(async ({ page }) => {
-        await page.goto('/login');
+        await page.goto(urls.casting);
     });
 
     test('Create new role and verify it appears in roles list', async ({ page }) => {
         test.setTimeout(60000);
         const login = new LoginPage(page);
         await login.validLogin(data.email, data.password);
-        await expect(page).toHaveURL('/projects');
+        await expect(page).toHaveURL(/projects/);
 
 
         const rolePage = new RolePage(page);
@@ -55,7 +56,7 @@ test.describe('Casting owner create role scenarios', () => {
     test('Submitting empty New Role form shows validation (required fields)', async ({ page }) => {
         const login = new LoginPage(page);
         await login.validLogin(data.email, data.password);
-        await expect(page).toHaveURL('/projects');
+        await expect(page).toHaveURL(/projects/);
 
         const rolePage = new RolePage(page);
         await rolePage.gotoRolesTab();

@@ -1,27 +1,24 @@
-import { Page, expect } from '@playwright/test';
+import { Page, expect } from "@playwright/test";
 
 export async function openFirstProject(page: Page): Promise<string> {
-  const cover = page
-    .locator('[data-testid^="project-list-card-"][data-testid$="-cover-image"]')
-    .first();
 
-  await expect(cover).toBeVisible();
+  // wait for ANY project card (not image)
+  const card = page.locator('[data-testid^="project-list-card-"]').first();
 
-  const testId = await cover.getAttribute('data-testid');
-  if (!testId) {
-    throw new Error('data-testid not found on project cover image');
-  }
+  await expect(card).toBeVisible({ timeout: 60000 });
 
-  const match = testId.match(/project-list-card-(\d+)-cover-image/);
-  if (!match) {
-    throw new Error(`Unexpected data-testid format: ${testId}`);
-  }
+  const testId = await card.getAttribute("data-testid");
+  if (!testId) throw new Error("Project card testid missing");
 
-  // Click and wait for navigation to complete so callers operate on a stable page
+  const match = testId.match(/project-list-card-(\d+)/);
+  if (!match) throw new Error(`Unexpected testid format: ${testId}`);
+
+  const projectId = match[1];
+
   await Promise.all([
-    page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 5000 }).catch(() => {}),
-    cover.click()
+    page.waitForURL(new RegExp(`/projects/${projectId}`), { timeout: 60000 }),
+    card.click()
   ]);
 
-  return match[1];
+  return projectId;
 }

@@ -1,14 +1,18 @@
 import { Page } from "@playwright/test";
 import { loginLocators } from "./loginPageLocators";
+import { urls } from "@/utils/urls";
 
 export default class loginPage {
   constructor(public page: Page) { }
 
   async validLogin(email: string, password: string) {
+    await this.page.goto(urls.casting);
     await this.enterEmail(email);
     await this.clickOnLoginBtn();
     await this.enterPassword(password);
     await this.clickOnLoginBtn();
+    await this.page.waitForURL('**/projects', { timeout: 30000 });
+
   }
 
   async enterEmail(email: string) {

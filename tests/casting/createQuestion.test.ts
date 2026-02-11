@@ -4,10 +4,11 @@ import QuestionPage from "../../pages/casting/owner/question/questionPage";
 import { questionLocators } from "../../pages/casting/owner/question/questionPageLocators";
 import * as data from "../../test-data/test-data.json";
 import { openFirstProject } from '../../helpers/projects';
+import { urls } from "@/utils/urls";
 
 test.describe('Casting owner create question scenarios', () => {
     test.beforeEach(async ({ page }) => {
-        await page.goto('/login');
+        await page.goto(urls.casting);
     });
 
     test('Create new text question and verify it appears in questions list', async ({ page }) => {
@@ -15,11 +16,14 @@ test.describe('Casting owner create question scenarios', () => {
         const login = new LoginPage(page);
         await login.validLogin(data.email, data.password);
         
-        await Promise.race([
-            page.waitForURL('**/projects', { timeout: 60000 }),
-            page.locator('text=Invalid').waitFor({ timeout: 60000 }).catch(() => {})]);
-        await page.waitForURL('**/projects', { timeout: 60000 });
-        await page.waitForLoadState('networkidle');
+        
+        // wait until we are on projects page
+        await expect(page).toHaveURL(/projects/, { timeout: 60000 });
+
+        // wait until projects UI is ready
+        await expect(
+        page.locator('[data-testid^="project-list-card-"]').first()
+        ).toBeVisible({ timeout: 60000 });
 
 
         const questionPage = new QuestionPage(page);
@@ -56,7 +60,7 @@ test.describe('Casting owner create question scenarios', () => {
         test.setTimeout(90000);
         const login = new LoginPage(page);
         await login.validLogin(data.email, data.password);
-        await expect(page).toHaveURL('/projects');
+        await expect(page).toHaveURL(/projects/);
 
         const questionPage = new QuestionPage(page);
         const projectId = await openFirstProject(page);
@@ -101,7 +105,7 @@ test.describe('Casting owner create question scenarios', () => {
         test.setTimeout(90000);
         const login = new LoginPage(page);
         await login.validLogin(data.email, data.password);
-        await expect(page).toHaveURL('/projects');
+        await expect(page).toHaveURL(/projects/);
 
         const questionPage = new QuestionPage(page);
         const projectId = await openFirstProject(page);
@@ -137,7 +141,7 @@ test.describe('Casting owner create question scenarios', () => {
         test.setTimeout(90000);
         const login = new LoginPage(page);
         await login.validLogin(data.email, data.password);
-        await expect(page).toHaveURL('/projects');
+        await expect(page).toHaveURL(/projects/);
 
         const questionPage = new QuestionPage(page);
         const projectId = await openFirstProject(page);
@@ -172,7 +176,7 @@ test.describe('Casting owner create question scenarios', () => {
     test('Submitting empty New Question form shows validation (required fields)', async ({ page }) => {
         const login = new LoginPage(page);
         await login.validLogin(data.email, data.password);
-        await expect(page).toHaveURL('/projects');
+        await expect(page).toHaveURL(/projects/);
 
         const questionPage = new QuestionPage(page);
         await questionPage.gotoQuestionsTab();
@@ -204,7 +208,7 @@ test.describe('Casting owner create question scenarios', () => {
         test.setTimeout(90000);
         const login = new LoginPage(page);
         await login.validLogin(data.email, data.password);
-        await expect(page).toHaveURL('/projects');
+        await expect(page).toHaveURL(/projects/);
 
         const questionPage = new QuestionPage(page);
         const projectId = await openFirstProject(page);

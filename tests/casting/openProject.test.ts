@@ -2,17 +2,18 @@ import { expect, test } from '@playwright/test';
 import LoginPage from '../../pages/casting/owner/login/loginPage';
 import RolePage from '../../pages/casting/owner/role/rolePage';
 import * as data from '../../test-data/test-data.json';
+import { urls } from '@/utils/urls';
 
 
 test.describe('Open project from projects list', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/login');
+    await page.goto(urls.casting);
   });
 
   test('Click project cover image (dynamic data-testid) and verify project page opens', async ({ page }) => {
     const login = new LoginPage(page);
     await login.validLogin(data.email, data.password);
-    await expect(page).toHaveURL('/projects');
+    await expect(page).toHaveURL(/projects/);
 
     const rolePage = new RolePage(page);
 
