@@ -1,7 +1,8 @@
 import { Page } from '@playwright/test';
 import { talentRegisterLocators } from './registerPageLocators';
+import path from 'path';
 
-export class TalentLoginPage {
+export class TalentRegisterPage {
   constructor(private page: Page) {}
 
   async enterFullName(name: string) {
@@ -14,17 +15,45 @@ export class TalentLoginPage {
 
   async selectGender(index : number) {
     await this.page.locator(talentRegisterLocators.genderSelector).click();
-    const options = this.page.locator(talentRegisterLocators.genderOptions);
-    await options.first().waitFor({ state: 'visible' });
-    await options.nth(index).click();
+    const options = this.page.locator(talentRegisterLocators.dropDownOptions);
+    await this.page.keyboard.press('ArrowDown'); // moves to first option
+    await this.page.keyboard.press('Enter');
   }
 
-  async enterLocation() {
-    await this.page.locator(talentRegisterLocators.locationInput).click();
+  async selectLocation(location: string) {
+    const dropdown = this.page.locator(talentRegisterLocators.locationInput);
+    await dropdown.click();
+    await dropdown.fill(location);
+    await this.page.waitForTimeout(2000);
+    await this.page.keyboard.press('ArrowDown');
+    await this.page.keyboard.press('Enter');
   }
 
-  async openDOB() {
-    await this.page.locator(talentRegisterLocators.dobPicker).click();
+  async openDOBAndSelectDate(dob : string) {
+    await this.page.locator(talentRegisterLocators.dobPicker).fill(dob);
+  }
+
+  async clickTermsAndConditionCheckBox(){
+    await this.page.locator(talentRegisterLocators.termsAndConditionCheckBox).click();
+  }
+
+  async clickContinueButton() {
+    const continueBtn = this.page.locator(talentRegisterLocators.continueButton);
+    await continueBtn.scrollIntoViewIfNeeded();
+    await continueBtn.click();
+    await this.page.waitForTimeout(5000);
+  }
+
+  async uploadProfilePicture() {
+    const filePath = path.join(process.cwd(), "test-files/images/test-role.jpg");
+    await this.page.waitForLoadState('domcontentloaded');
+    const fileInput = this.page.locator(talentRegisterLocators.uploadInput);
+    await fileInput.waitFor({ state: "attached" });
+    await fileInput.setInputFiles(filePath);
+  }
+
+  async saveCroppedProfilePicture() {
+    await this.page.locator(talentRegisterLocators.cropImageSaveButton).click();
   }
 
 }

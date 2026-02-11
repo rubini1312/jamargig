@@ -15,4 +15,5 @@ test.describe("Talent login", () => {
     await enterOtp(page, otp);
 
     });
+
 });

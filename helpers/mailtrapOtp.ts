@@ -11,7 +11,7 @@ const API_TOKEN = process.env.MAILTRAP_API_TOKEN!;
 export async function getOtpFromMailtrap(
   request: APIRequestContext,
   email: string,
-  timeoutMs = 60000
+  timeoutMs = 18000
 ): Promise<string> {
 
   const startTime = Date.now();

@@ -2,12 +2,21 @@
 // Locators for talent register page 
 export const talentRegisterLocators = {
 
+  //talent user details
   fullNameInput: "//div[@label='Your full name']//input",
   stageNameInput: "//div[@label='Stage Name']//input",
-  locationInput: "[data-testid='auth-location']",
+  locationInput: "//input[@class='n-base-selection-input']",
   genderSelector: "[data-testid='auth-gender']",
-  genderOptions: "[role='option']", 
-  dobPicker: "[data-testid='auth-birth-picker']"
+  dobPicker: "//input[@placeholder='Select Date']",
+  termsAndConditionCheckBox : "//div[@class='n-checkbox-box__border']",
+  continueButton: "role=button[name='Continue']",
+
+  //upload profile
+  uploadInput: "input[type='file']",
+  cropImageSaveButton : "//span[normalize-space()='Save']",
+
+  selfRatedSkillsInput: "[data-testid='auth-self_rated_skills-field'] input",
+  dropDownOptions: "[role='option']", 
 
 };
 
