@@ -16,7 +16,7 @@ export class TalentRegisterPage {
   async selectGender(index : number) {
     await this.page.locator(talentRegisterLocators.genderSelector).click();
     const options = this.page.locator(talentRegisterLocators.dropDownOptions);
-    await this.page.keyboard.press('ArrowDown'); // moves to first option
+    await this.page.keyboard.press('ArrowDown'); 
     await this.page.keyboard.press('Enter');
   }
 
@@ -53,7 +53,35 @@ export class TalentRegisterPage {
   }
 
   async saveCroppedProfilePicture() {
+    await this.page.waitForTimeout(3000);
     await this.page.locator(talentRegisterLocators.cropImageSaveButton).click();
   }
+
+  async selectSelfRatedSkill(index : number, skill : string) {
+    await this.page.locator(talentRegisterLocators.selfRatedSkillsDropdown).click();
+    await this.page.waitForTimeout(3000);
+    await this.page.locator(talentRegisterLocators.selfRatedSkillsInput).fill(skill);
+    const options = this.page.locator(talentRegisterLocators.dropDownOptions);
+    await this.page.keyboard.press('ArrowDown'); 
+    await this.page.keyboard.press('Enter');
+  }
+
+  async selectUnions(index : number) {
+    await this.page.locator(talentRegisterLocators.unionsDropdown).click();
+    const options = this.page.locator(talentRegisterLocators.dropDownOptions);
+    await this.page.keyboard.press('ArrowDown'); 
+    await this.page.keyboard.press('Enter');
+  }
+
+  async enterDescription(description : string) {
+    await this.page.locator(talentRegisterLocators.descriptionInput).fill(description);
+  }
+
+  async selectProductType(index : number) {
+      await this.page.locator(talentRegisterLocators.productionTypeSelector).click();
+      const options = this.page.locator(talentRegisterLocators.dropDownOptions);
+      await this.page.keyboard.press('ArrowDown'); 
+      await this.page.keyboard.press('Enter');
+    }
 
 }

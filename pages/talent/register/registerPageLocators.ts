@@ -15,8 +15,14 @@ export const talentRegisterLocators = {
   uploadInput: "input[type='file']",
   cropImageSaveButton : "//span[normalize-space()='Save']",
 
-  selfRatedSkillsInput: "[data-testid='auth-self_rated_skills-field'] input",
-  dropDownOptions: "[role='option']", 
+  selfRatedSkillsDropdown: "[data-testid='auth-self_rated_skills-field']",
+  selfRatedSkillsInput: "[data-testid='auth-self_rated_skills-input']",
+
+  unionsDropdown: "[data-testid='auth-unions']",
+  descriptionInput: "[data-testid='auth-description-content']",
+  productionTypeSelector: "[data-testid='auth-production_types-field']",
+
+  dropDownOptions: "[role='option']"
 
 };
 

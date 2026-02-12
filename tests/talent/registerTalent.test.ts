@@ -11,7 +11,7 @@ test.describe('Talent registration scenarioes', () => {
 });
 
 
-  test('register new talent with required talent details', async ({ request, page, talentEmail }) => {
+  test('register new talent with all talent details', async ({ request, page, talentEmail }) => {
     test.setTimeout(100000);
 
     const login = new LoginPage(page);
@@ -33,7 +33,13 @@ test.describe('Talent registration scenarioes', () => {
     await talentRegisterPage.uploadProfilePicture();
     await talentRegisterPage.saveCroppedProfilePicture();
     await talentRegisterPage.clickContinueButton();
+
+    await talentRegisterPage.selectSelfRatedSkill(1, 'Acting');
+    await talentRegisterPage.selectUnions(1)
+    await talentRegisterPage.enterDescription('Automating Talent Profile Description')
     await talentRegisterPage.clickContinueButton();
+
+    await talentRegisterPage.selectProductType(1);
     await talentRegisterPage.clickContinueButton();
 
     await page.waitForURL(urls.talent, { timeout: 180000 });
