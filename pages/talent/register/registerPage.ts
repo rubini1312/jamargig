@@ -24,7 +24,7 @@ export class TalentRegisterPage {
     const dropdown = this.page.locator(talentRegisterLocators.locationInput);
     await dropdown.click();
     await dropdown.fill(location);
-    await this.page.waitForTimeout(2000);
+    await this.page.waitForTimeout(3000);
     await this.page.keyboard.press('ArrowDown');
     await this.page.keyboard.press('Enter');
   }
