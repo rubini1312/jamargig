@@ -1,6 +1,7 @@
 import { Page } from '@playwright/test';
 import { talentRegisterLocators } from './registerPageLocators';
 import path from 'path';
+import { talentloginPageLocators } from '../login/loginPageLocators';
 
 export class TalentRegisterPage {
   constructor(private page: Page) {}
@@ -20,13 +21,20 @@ export class TalentRegisterPage {
     await this.page.keyboard.press('Enter');
   }
 
-  async selectLocation(location: string) {
-    const dropdown = this.page.locator(talentRegisterLocators.locationInput);
-    await dropdown.click();
-    await dropdown.fill(location);
-    await this.page.waitForTimeout(3000);
-    await this.page.keyboard.press('ArrowDown');
-    await this.page.keyboard.press('Enter');
+  async setLocation(value: string) {
+      const input = this.page.locator(talentRegisterLocators.locationInput);
+      await input.scrollIntoViewIfNeeded();
+      await input.fill(value);
+  
+      const option = this.page.getByRole('option', { name: value }).first();
+      try {
+          await option.waitFor({state: 'visible',timeout: 5000});
+          await option.click();
+          return;
+
+      } catch {
+          await input.press('Enter');
+      }
   }
 
   async openDOBAndSelectDate(dob : string) {

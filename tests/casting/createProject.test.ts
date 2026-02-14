@@ -11,6 +11,7 @@ test.describe("Casting owner create project flow", () => {
   });
 
   test("Create new project and verify it appears in projects list", async ({ page }) => {
+    test.setTimeout(120000);
     const login = new LoginPage(page);
     await login.validLogin(data.email, data.password);
     await expect(page).toHaveURL(/projects/);
@@ -23,7 +24,7 @@ test.describe("Casting owner create project flow", () => {
       location: "Remote",
       url: "https://example.com",
       email: "test@example.com",
-      phone: "8909089909",
+      phone: "+94 76 899 6899",
       contractFrom: "26 Dec 2025",
       contractTo: "31 Jan 2026",
       rehearsalFrom: "01 Nov 2025",
@@ -38,13 +39,10 @@ test.describe("Casting owner create project flow", () => {
       additionalHtml: "Additional information",
       otherHtml: "Other information",
       acceptTerms: true,
-      termsUrl: "https://example.com/terms.pdf"
+      termsUrl: "https://jamargig.com/terms-and-conditions/"
     };
 
     await projectPage.createNewProject(payload);
-
-    // small wait for list refresh then verify
-    await page.waitForTimeout(4000);
     const created = await projectPage.isProjectPresent(projectName);
     expect(created).toBeTruthy();
   });

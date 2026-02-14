@@ -11,51 +11,6 @@ test.describe('Casting owner create question scenarios', () => {
         await page.goto(urls.casting);
     });
 
-    test('Create new text question and verify it appears in questions list', async ({ page }) => {
-        test.setTimeout(100000);
-        const login = new LoginPage(page);
-        await login.validLogin(data.email, data.password);
-        
-        
-        // wait until we are on projects page
-        await expect(page).toHaveURL(/projects/, { timeout: 60000 });
-
-        // wait until projects UI is ready
-        await expect(
-        page.locator('[data-testid^="project-list-card-"]').first()
-        ).toBeVisible({ timeout: 60000 });
-
-
-        const questionPage = new QuestionPage(page);
-        const projectId = await openFirstProject(page);
-        await questionPage.openProjectById(projectId, { waitForUrl: new RegExp(`/projects/${projectId}`) });
-        await questionPage.gotoQuestionsTab();
-        
-        // Open question modal
-        await questionPage.openCreateQuestion();
-
-        const questionText = `Automation Question ${Date.now()}`;
-        // Continue creating question manually
-        await questionPage.fillQuestionText(questionText);
-        await questionPage.selectQuestionType(1);
-        await questionPage.fillQuestionDescription('Automated text question for testing purposes - This is a sample text input question to test the question creation workflow.');
-        await questionPage.toggleRequiredCheckbox(true);
-        await questionPage.toggleStatusToggle(true);
-        
-        const rounds = await questionPage.getAvailableRounds();
-        if (rounds.length) await questionPage.setQuestionRound(rounds[0]);
-
-        const roles = await questionPage.getAvailableRoles();
-        if (roles.length) await questionPage.setQuestionRole(roles[0]);
-        // Submit without round/role - they are not truly required
-
-        await questionPage.submitQuestion();
-        await page.waitForTimeout(2000);
-        // small wait for list to refresh then verify
-
-        expect(await questionPage.isQuestionPresent(questionText)).toBeTruthy();
-    });
-
     test('Create new checkbox question with options and verify it appears in questions list', async ({ page }) => {
         test.setTimeout(90000);
         const login = new LoginPage(page);

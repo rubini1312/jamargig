@@ -49,38 +49,29 @@ export default class RoundPage {
         await this.selectDropdownOption(roundLocators.roundTimezone, value);
     }
 
-    async setLocation(value: string) {
-        const input = this.page.locator(roundLocators.roundLocationInput);
-        await input.scrollIntoViewIfNeeded();
-        await input.fill(value);
-        await this.page.waitForTimeout(500); // Wait for autocomplete suggestions to appear
-        
-        // Look for matching autocomplete option and click it
-        const optionSelectors = [
-            `role=option >> text="${value}"`,
-            `.n-base-select-option:has-text("${value}")`,
-            `.n-select-option:has-text("${value}")`,
-            `.n-dropdown-menu:has-text("${value}")`,
-            `text="${value}"`
-        ];
-        
-        let found = false;
-        for (const selector of optionSelectors) {
-            const option = this.page.locator(selector).first();
-            if ((await option.count()) > 0 && (await option.isVisible())) {
-                await option.click();
-                await this.page.waitForTimeout(300);
-                found = true;
-                break;
-            }
-        }
-        
-        // If no dropdown option found, press Enter to confirm the typed value
-        if (!found) {
-            await input.press("Enter");
-            await this.page.waitForTimeout(300);
-        }
+   async setLocation(value: string) {
+    const input = this.page.locator(roundLocators.roundLocationInput);
+
+    await input.scrollIntoViewIfNeeded();
+    await input.fill(value);
+
+    const option = this.page.getByRole('option', { name: value }).first();
+
+    try {
+        await option.waitFor({
+        state: 'visible',
+        timeout: 5000
+        });
+
+        await option.click();
+        return;
+
+    } catch {
+        // fallback if dropdown didn't show
+        await input.press('Enter');
     }
+  }
+
     async setRadius(value: string) {
         await this.page.locator(roundLocators.roundRadiusInput).fill(value);
     }

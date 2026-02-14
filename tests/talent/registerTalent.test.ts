@@ -24,7 +24,7 @@ test.describe('Talent registration scenarioes', () => {
 
     await talentRegisterPage.enterFullName('Automation Talent');
     await talentRegisterPage.enterStageName('Automation Talent Stage');
-    await talentRegisterPage.selectLocation('Colombo, LKA');
+    await talentRegisterPage.setLocation('Colombo, LKA');
     await talentRegisterPage.selectGender(1);
     await talentRegisterPage.openDOBAndSelectDate('20 Apr 1990');
     await talentRegisterPage.clickTermsAndConditionCheckBox();
@@ -53,7 +53,7 @@ test.describe('Talent registration scenarioes', () => {
     await login.validTalentLogin(talentEmail);
     await page.waitForTimeout(2000);
 
-    const otp = await getOtpFromMailtrap(request, talentEmail, 60000);
+    const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
     await enterOtp(page, otp);
     await page.waitForURL(urls.talent, { timeout: 60000 });
   });

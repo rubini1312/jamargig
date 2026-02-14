@@ -59,7 +59,7 @@ test.describe('Casting owner create round scenarios', () => {
             name: roundName,
             typeIndex: 2,
             timezone: 'Asia/Colombo',
-            location: 'Australia',
+            location: 'Colombo, LKA',
             radius: '50',
             units: 'Miles',
             defaultNumberOfTalents: '20',

@@ -160,12 +160,42 @@ export default class ProjectPage {
   }
 
   // Submit / create project button
-  async submitNewProject() {
-    await this.page.locator(projectLocators.projectNewSubmitButton).click();
-    // wait for modal to close
-    await this.page.locator(projectLocators.titleInput).waitFor({ state: "detached", timeout: 7000 }).catch(() => { });
-    await this.page.waitForLoadState("networkidle");
+async submitNewProject(projectTitle?: string) {
+  const submitBtn = this.page.locator(projectLocators.projectNewSubmitButton);
+  await submitBtn.click();
+
+  await submitBtn.waitFor({ state: 'visible' });
+
+  await this.page.waitForFunction(
+    btn => btn.classList.contains('n-button--loading'),
+    await submitBtn.elementHandle(),
+    { timeout: 5000 }
+  ).catch(() => {});
+
+  // // 🟡 wait until loading class is removed (save finished)
+  // await this.page.waitForFunction(
+  //   btn => !btn.classList.contains('n-button--loading'),
+  //   await submitBtn.elementHandle(),
+  //   { timeout: 60000 }
+  // );
+
+  await this.page.locator(projectLocators.titleInput)
+    .waitFor({ state: 'detached', timeout: 60000 })
+    .catch(() => {});
+
+  if (projectTitle) {
+    await this.page.getByText(projectTitle).waitFor({
+      state: 'visible',
+      timeout: 60000
+    });
   }
+}
+
+
+
+
+
+
 
   // Terms: click checkbox, fill URL, and check state
   async clickTermsCheckbox() {
@@ -253,7 +283,7 @@ export default class ProjectPage {
       await this.page.waitForTimeout(100);
     }
 
-    await this.submitNewProject();
+    await this.submitNewProject(payload.title);
   }
 
   // Verify project exists in projects list by name
