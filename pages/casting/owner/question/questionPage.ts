@@ -1,35 +1,45 @@
-import { Page } from "@playwright/test";
+import { expect, Page } from "@playwright/test";
 import { questionLocators } from "./questionPageLocators";
 
 export default class QuestionPage {
     constructor(public page: Page) { }
 
     async gotoQuestionsTab() {
-        if (this.page.isClosed && this.page.isClosed()) {
-            throw new Error('Cannot click Questions tab: the Page is already closed. Ensure navigation to the project finished (wait for navigation) before interacting.');
-        }
-
-        const tab = this.page.locator(questionLocators.questionTab);
-        try {
-            await tab.waitFor({ state: 'visible', timeout: 5000 });
-        } catch (e) {
-            // If still on projects list, open first project and retry
-            const firstProjectLink = this.page.locator('a[href^="/projects/"]').first();
-            if ((await firstProjectLink.count()) > 0) {
-                await Promise.all([
-                    this.page.waitForNavigation(),
-                    firstProjectLink.click()
-                ]).catch(() => { });
-                await this.page.waitForLoadState('networkidle');
-                await tab.waitFor({ state: 'visible' });
-            } else {
-                throw new Error('Questions tab not visible and no project link found — ensure the test opened a project before calling gotoQuestionsTab.');
-            }
-        }
-
-        await tab.click();
-        await this.page.waitForLoadState('networkidle');
+    if (this.page.isClosed()) {
+        throw new Error('Page already closed before opening Questions tab');
     }
+
+    const tab = this.page.locator(questionLocators.questionTab);
+
+    // If already inside project
+    if (await tab.isVisible().catch(() => false)) {
+        await tab.click();
+        await this.page.getByText('Create Question').waitFor({ timeout: 30000 });
+        return;
+    }
+
+    // Otherwise open first project
+    const firstProjectLink = this.page.locator('a[href^="/projects/"]').first();
+
+    if (await firstProjectLink.count() === 0) {
+        throw new Error('No project link found before opening Questions tab');
+    }
+
+    await firstProjectLink.click();
+
+    // 🚨 DO NOT use networkidle
+    // Wait for either URL change OR tab visible
+    await Promise.race([
+        this.page.waitForURL(/\/projects\/\d+/, { timeout: 15000 }).catch(() => {}),
+        tab.waitFor({ state: 'visible', timeout: 15000 })
+    ]);
+
+    await tab.waitFor({ state: 'visible', timeout: 30000 });
+    await tab.click();
+
+    await this.page.getByText('Create Question').waitFor({ timeout: 30000 });
+}
+
 
     async openCreateQuestion() {
         await this.page.locator(questionLocators.questionListCreateButton).click();
@@ -223,9 +233,11 @@ export default class QuestionPage {
         // click inside field to open dropdown
         await field.locator('.n-base-selection').click({ force: true });
 
+        const menu = this.page.locator('.n-base-select-menu:visible').last();
+        await expect(menu).toBeVisible({ timeout: 5000 });
         // wait for visible menu 
-        const menu = this.page.locator('.n-base-select-menu').filter({ hasText: value }).last();
-        await menu.waitFor({ state: 'visible', timeout: 1000 });
+        // const menu = this.page.locator('.n-base-select-menu').filter({ hasText: value }).last();
+        // await menu.waitFor({ state: 'visible', timeout: 1000 });
 
         // click option container
         const option = menu.locator('.n-base-select-option').filter({ hasText: value }).first();
@@ -265,11 +277,17 @@ export default class QuestionPage {
 
 
     async submitQuestion() {
-        await this.page.locator(questionLocators.questionSaveButton).click();
-        // wait for the create dialog to close (question text input detached) or network idle
-        await this.page.locator(questionLocators.questionTextInput).waitFor({ state: 'detached', timeout: 7000 }).catch(() => { });
-        await this.page.waitForLoadState('networkidle');
-    }
+    await this.page.locator(questionLocators.questionSaveButton).click();
+
+    // wait modal close
+    await this.page.locator(questionLocators.questionTextInput)
+        .waitFor({ state: 'detached', timeout: 10000 })
+        .catch(() => {});
+
+    // wait for question to appear instead
+    await this.page.waitForTimeout(500); // UI settle
+}
+
 
     async closeNewQuestionModal() {
         // Try common close selectors; be permissive to match different UIs
@@ -548,10 +566,15 @@ export default class QuestionPage {
             return newPage;
         }
 
-        await Promise.all([
-            this.page.waitForNavigation({ timeout: options?.timeout ?? 10000 }),
-            locator.click()
-        ]).catch(() => { });
+        await locator.click();
+
+        await Promise.race([
+            this.page.waitForURL(/\/projects\/\d+/, { timeout: 15000 }).catch(()=>{}),
+            this.page.locator(questionLocators.questionTab)
+                .waitFor({ state: 'visible', timeout: 15000 })
+                .catch(()=>{})
+        ]);
+
 
         if (options?.waitForUrl) await this.page.waitForURL(options.waitForUrl, { timeout: options.timeout ?? 10000 });
         return this.page;

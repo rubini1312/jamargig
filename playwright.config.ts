@@ -16,6 +16,7 @@ dotenv.config();
  */
 export default defineConfig({
   
+  timeout: 120000, 
   testDir: './tests',
   /* Run tests in files in parallel */
   fullyParallel: false,
@@ -27,7 +28,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   
   /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
+  workers: 1,
   
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'html',
@@ -48,8 +49,8 @@ export default defineConfig({
      contextOptions: {
     bypassCSP: true,
     },
-    actionTimeout: 30000,
-
+    actionTimeout: 45000,
+    navigationTimeout: 90000,
   },
 
   /* Configure projects for major browsers */

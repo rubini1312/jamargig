@@ -1,35 +1,30 @@
-import { Page } from "@playwright/test";
+import { expect, Page } from "@playwright/test";
 import { roundLocators } from "./roundPageLocators";
 
 export default class RoundPage {
     constructor(public page: Page) { }
 
     async gotoRoundsTab() {
-        if (this.page.isClosed && this.page.isClosed()) {
-            throw new Error('Cannot click Rounds tab: the Page is already closed. Ensure navigation to the project finished (wait for navigation) before interacting.');
-        }
+  const tab = this.page.locator(roundLocators.roundTab);
 
-        const tab = this.page.locator(roundLocators.roundTab);
-        try {
-            await tab.waitFor({ state: 'visible', timeout: 5000 });
-        } catch (e) {
-            // If still on projects list, open first project and retry
-            const firstProjectLink = this.page.locator('a[href^="/projects/"]').first();
-            if ((await firstProjectLink.count()) > 0) {
-                await Promise.all([
-                    this.page.waitForNavigation(),
-                    firstProjectLink.click()
-                ]).catch(() => { });
-                await this.page.waitForLoadState('networkidle');
-                await tab.waitFor({ state: 'visible' });
-            } else {
-                throw new Error('Rounds tab not visible and no project link found — ensure the test opened a project before calling gotoRoundsTab.');
-            }
-        }
+  // If tab already visible → just click
+  if (await tab.isVisible().catch(() => false)) {
+    await tab.click();
+    return;
+  }
 
-        await tab.click();
-        await this.page.waitForLoadState('networkidle');
-    }
+  // Otherwise open first project
+  const firstProjectLink = this.page.locator('a[href^="/projects/"]').first();
+  await expect(firstProjectLink).toBeVisible({ timeout: 15000 });
+
+  await firstProjectLink.click();
+
+  // Wait for project page to load (UI wait, NOT networkidle)
+  await expect(tab).toBeVisible({ timeout: 20000 });
+
+  await tab.click();
+}
+
 
     async openCreateRound() {
         await this.page.locator(roundLocators.roundListCreateButton).click();
@@ -166,12 +161,21 @@ export default class RoundPage {
         await this.page.locator(roundLocators.roundInstruction).fill(instruction);
     }
 
-    async submitNewRound() {
+    async submitNewRound(roundName?: string) {
         await this.page.locator(roundLocators.roundNewSubmitButton).click();
-        // wait for the create dialog to close (round name input detached) or network idle
-        await this.page.locator(roundLocators.roundNameInput).waitFor({ state: 'detached', timeout: 7000 }).catch(() => { });
-        await this.page.waitForLoadState('networkidle');
-    }
+
+        // wait modal close
+        await this.page.locator(roundLocators.roundNameInput)
+            .waitFor({ state: 'detached', timeout: 10000 });
+
+        // wait for round row to appear in list
+        if (roundName) {
+            await expect(
+            this.page.locator(`text=${roundName}`)
+            ).toBeVisible({ timeout: 15000 });
+  }
+}
+
 
     async closeNewRoundModal() {
         // Try common close selectors; be permissive to match different UIs
@@ -370,7 +374,7 @@ export default class RoundPage {
         if (payload.submissionDateFrom || payload.submissionDateTo) await this.setSubmissionDate(payload.submissionDateFrom ?? "", payload.submissionDateTo);
         if (payload.assessmentDateFrom || payload.assessmentDateTo) await this.setAssessmentDate(payload.assessmentDateFrom ?? "", payload.assessmentDateTo);
         if (payload.instructionHtml) await this.fillInstruction(payload.instructionHtml);
-        await this.submitNewRound();
+        await this.submitNewRound(payload.name);
     }
 
     async isRoundPresent(name: string) {

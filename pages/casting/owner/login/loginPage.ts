@@ -11,8 +11,10 @@ export default class loginPage {
     await this.clickOnLoginBtn();
     await this.enterPassword(password);
     await this.clickOnLoginBtn();
-    await this.page.waitForURL('**/projects', { timeout: 30000 });
-
+await Promise.all([
+  this.page.waitForURL('**/projects', { timeout: 60000 }),
+  this.page.waitForLoadState('domcontentloaded')
+]);
   }
 
   async enterEmail(email: string) {

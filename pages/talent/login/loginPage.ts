@@ -7,7 +7,7 @@ export default class loginPage {
   constructor(public page: Page) { }
 
   async validTalentLogin(email: string) {
-    await this.page.goto(urls.talent);
+    await this.page.goto(urls.talent, { waitUntil: 'domcontentloaded' });
     await this.enterEmail(email);
     await this.clickOnContinueBtn();
   }

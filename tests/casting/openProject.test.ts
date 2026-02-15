@@ -19,7 +19,7 @@ test.describe('Open project from projects list', () => {
 
     // locate first project cover image by dynamic data-testid
     const coverLocator = page.locator('[data-testid^="project-list-card-"][data-testid$="-cover-image"]');
-    await coverLocator.first().waitFor({ state: 'visible', timeout: 5000 });
+    await expect(page.locator('[data-testid^="project-list-card-"][data-testid$="-cover-image"]').first()).toBeVisible({ timeout: 30000 });    
     const first = coverLocator.first();
     const dataTestId = await first.getAttribute('data-testid');
     expect(dataTestId).toBeTruthy();

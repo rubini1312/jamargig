@@ -6,38 +6,47 @@ export default class RolePage {
     constructor(public page: Page) { }
 
     async gotoRolesTab() {
-        // Fail fast if page is closed (more helpful than Playwright's generic error)
-        if (this.page.isClosed && this.page.isClosed()) {
-            throw new Error('Cannot click Roles tab: the Page is already closed. Ensure navigation to the project finished (wait for navigation) before interacting.');
-        }
-
-        // Try to wait for the Roles tab to be visible. If it does not appear
-        // within a short timeout, we might still be on the projects list page
-        // (the test may not have opened a project). In that case open the
-        // first project link and then try again.
-        const tab = this.page.locator(roleLocators.rolesTab);
-        try {
-            await tab.waitFor({ state: 'visible', timeout: 5000 });
-        } catch (e) {
-            // Attempt to navigate into the first project on the listing page
-            const firstProjectLink = this.page.locator('a[href^="/projects/"]').first();
-            if ((await firstProjectLink.count()) > 0) {
-                await Promise.all([
-                    this.page.waitForNavigation({ timeout: 10000 }),
-                    firstProjectLink.click()
-                ]).catch(() => { /* continue to check for tab presence */ });
-                await this.page.waitForLoadState('networkidle');
-                // try again for the roles tab
-                await tab.waitFor({ state: 'visible', timeout: 10000 });
-            } else {
-                // Nothing to click to reach a project; rethrow a clearer error
-                throw new Error('Roles tab not visible and no project link found — ensure the test opened a project before calling gotoRolesTab.');
-            }
-        }
-
-        await tab.click();
-        await this.page.waitForLoadState("networkidle");
+    if (this.page.isClosed()) {
+        throw new Error(
+            'Cannot click Roles tab: page already closed. Ensure project navigation finished.'
+        );
     }
+
+    const tab = this.page.locator(roleLocators.rolesTab);
+
+    // If already visible → just click
+    if (await tab.isVisible().catch(() => false)) {
+        await tab.click();
+        await this.page.getByText('Add role').waitFor({ timeout: 30000 });
+        return;
+    }
+
+    // Otherwise we are probably on project list page
+    const firstProjectLink = this.page.locator('a[href^="/projects/"]').first();
+
+    if (await firstProjectLink.count() === 0) {
+        throw new Error(
+            'Roles tab not visible and no project link found. Test must open a project first.'
+        );
+    }
+
+    // Navigate to project
+    await Promise.all([
+        this.page.waitForURL(/\/projects\/\d+/, { timeout: 30000 }),
+        firstProjectLink.click()
+    ]);
+
+    // await this.page.waitForLoadState('networkidle');
+
+    // Wait for roles tab instead (this is the REAL signal)
+    await tab.waitFor({ state: 'visible', timeout: 30000 });
+
+    await tab.click();
+
+    // Wait for modal content
+    await this.page.getByText('Add role').waitFor({ timeout: 30000 });
+}
+
 
     async openCreateRole() {
         await this.page.locator(roleLocators.createRoleButton).click();

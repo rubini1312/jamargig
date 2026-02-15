@@ -7,7 +7,8 @@ import { TalentRegisterPage } from "@/pages/talent/register/registerPage";
 
 test.describe('Talent registration scenarioes', () => {
   test.beforeEach(async ({ page }) => {
-  await page.goto(urls.talent, { waitUntil: 'domcontentloaded'});
+  await page.goto(urls.talent, { waitUntil: 'commit' });
+  await page.waitForLoadState('domcontentloaded');
 });
 
 
