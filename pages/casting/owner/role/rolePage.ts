@@ -5,47 +5,45 @@ import { projectLocators } from "../project/projectPageLocators";
 export default class RolePage {
     constructor(public page: Page) { }
 
-    async gotoRolesTab() {
-    if (this.page.isClosed()) {
-        throw new Error(
-            'Cannot click Roles tab: page already closed. Ensure project navigation finished.'
-        );
-    }
+    async openFirstProjectIfNeeded() {
+  const url = this.page.url();
 
-    const tab = this.page.locator(roleLocators.rolesTab);
+  if (/\/projects\/\d+/.test(url)) return;
 
-    // If already visible → just click
-    if (await tab.isVisible().catch(() => false)) {
-        await tab.click();
-        await this.page.getByText('Add role').waitFor({ timeout: 30000 });
-        return;
-    }
+  console.log("Not inside project → opening first project");
 
-    // Otherwise we are probably on project list page
-    const firstProjectLink = this.page.locator('a[href^="/projects/"]').first();
+  const project = this.page
+    .locator('[data-testid$="cover-image"]')
+    .first();
 
-    if (await firstProjectLink.count() === 0) {
-        throw new Error(
-            'Roles tab not visible and no project link found. Test must open a project first.'
-        );
-    }
+  await project.waitFor({ state: "visible", timeout: 20000 });
 
-    // Navigate to project
-    await Promise.all([
-        this.page.waitForURL(/\/projects\/\d+/, { timeout: 30000 }),
-        firstProjectLink.click()
-    ]);
+  const before = this.page.url();
+  console.log("Before click:", before);
 
-    // await this.page.waitForLoadState('networkidle');
+  await project.click();
 
-    // Wait for roles tab instead (this is the REAL signal)
-    await tab.waitFor({ state: 'visible', timeout: 30000 });
+  await Promise.race([
+    this.page.waitForURL(/\/projects\/\d+/, { timeout: 20000 }),
+    this.page.getByText("Roles").waitFor({ state: "visible", timeout: 20000 })
+  ]);
 
-    await tab.click();
-
-    // Wait for modal content
-    await this.page.getByText('Add role').waitFor({ timeout: 30000 });
+  console.log("After click:", this.page.url());
 }
+
+async gotoRolesTab() {
+  await this.openFirstProjectIfNeeded();
+
+  const tab = this.page.getByTestId("projects.roles-tab");
+
+  await tab.waitFor({ state: "visible", timeout: 30000 });
+  await tab.click();
+
+  await this.page.getByText("Add role").waitFor({ timeout: 30000 });
+}
+
+
+
 
 
     async openCreateRole() {

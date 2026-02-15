@@ -55,7 +55,7 @@ export default class RoundPage {
     try {
         await option.waitFor({
         state: 'visible',
-        timeout: 5000
+        timeout: 20000
         });
 
         await option.click();

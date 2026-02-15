@@ -4,41 +4,42 @@ import { questionLocators } from "./questionPageLocators";
 export default class QuestionPage {
     constructor(public page: Page) { }
 
+    async openFirstProjectIfNeeded() {
+        const url = this.page.url();
+
+        // already inside project
+        if (/\/projects\/\d+/.test(url)) return;
+
+        console.log("Not inside project → opening first project");
+
+        const project = this.page
+            .locator('[data-testid$="cover-image"]')
+            .first();
+
+        await project.waitFor({ state: "visible", timeout: 20000 });
+
+        const before = this.page.url();
+        console.log("Before click:", before);
+
+        await project.click();
+
+        await Promise.race([
+            this.page.waitForURL(/\/projects\/\d+/, { timeout: 20000 }),
+            this.page.getByText("Roles").waitFor({ state: "visible", timeout: 20000 })
+        ]);
+
+        console.log("After click:", this.page.url());
+    }
+
     async gotoQuestionsTab() {
-    if (this.page.isClosed()) {
-        throw new Error('Page already closed before opening Questions tab');
-    }
+    await this.openFirstProjectIfNeeded();
 
-    const tab = this.page.locator(questionLocators.questionTab);
-
-    // If already inside project
-    if (await tab.isVisible().catch(() => false)) {
-        await tab.click();
-        await this.page.getByText('Create Question').waitFor({ timeout: 30000 });
-        return;
-    }
-
-    // Otherwise open first project
-    const firstProjectLink = this.page.locator('a[href^="/projects/"]').first();
-
-    if (await firstProjectLink.count() === 0) {
-        throw new Error('No project link found before opening Questions tab');
-    }
-
-    await firstProjectLink.click();
-
-    // 🚨 DO NOT use networkidle
-    // Wait for either URL change OR tab visible
-    await Promise.race([
-        this.page.waitForURL(/\/projects\/\d+/, { timeout: 15000 }).catch(() => {}),
-        tab.waitFor({ state: 'visible', timeout: 15000 })
-    ]);
-
-    await tab.waitFor({ state: 'visible', timeout: 30000 });
+    const tab = this.page.getByText("Questions");
+    await tab.waitFor({ state: "visible", timeout: 30000 });
     await tab.click();
 
-    await this.page.getByText('Create Question').waitFor({ timeout: 30000 });
-}
+    await this.page.getByText("Create Question").waitFor({ timeout: 30000 });
+    }
 
 
     async openCreateQuestion() {
@@ -230,20 +231,28 @@ export default class QuestionPage {
     async setQuestionRound(value: string) {
         const field = this.page.locator('[data-testid="question-rounds-field"]');
 
-        // click inside field to open dropdown
+        // open dropdown
         await field.locator('.n-base-selection').click({ force: true });
 
-        const menu = this.page.locator('.n-base-select-menu:visible').last();
-        await expect(menu).toBeVisible({ timeout: 5000 });
-        // wait for visible menu 
-        // const menu = this.page.locator('.n-base-select-menu').filter({ hasText: value }).last();
-        // await menu.waitFor({ state: 'visible', timeout: 1000 });
+        // wait for menu portal
+        const menu = this.page.locator('.n-base-select-menu').last();
+        await menu.waitFor({ state: 'visible', timeout: 10000 });
 
-        // click option container
+        // wait until options appear
+        await this.page.waitForTimeout(500);
+
         const option = menu.locator('.n-base-select-option').filter({ hasText: value }).first();
-        await option.waitFor({ state: 'visible' });
+
+        // fallback: try typing
+        if (await option.count() === 0) {
+            await this.page.keyboard.type(value);
+            await this.page.waitForTimeout(500);
+        }
+
+        await option.waitFor({ state: 'visible', timeout: 10000 });
         await option.click({ force: true });
     }
+
 
     
     async setQuestionRole(value: string) {
