@@ -5,7 +5,7 @@ import * as data from '../../test-data/test-data.json';
 import { urls } from '@/utils/urls';
 
 
-test.describe('Open project from projects list', () => {
+test.describe.serial('Open project from projects list', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(urls.casting);
   });

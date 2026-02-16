@@ -44,28 +44,38 @@ export default class RoundPage {
         await this.selectDropdownOption(roundLocators.roundTimezone, value);
     }
 
-   async setLocation(value: string) {
-    const input = this.page.locator(roundLocators.roundLocationInput);
+    async setLocation(value: string) {
+  const input = this.page.locator(roundLocators.roundLocationInput);
 
-    await input.scrollIntoViewIfNeeded();
-    await input.fill(value);
+  await input.click();
+  await input.fill(value);
 
-    const option = this.page.getByRole('option', { name: value }).first();
+  // wait for dropdown container
+  const menu = this.page.locator('.n-base-select-menu:visible').last();
+  await menu.waitFor({ state: 'visible', timeout: 20000 });
 
-    try {
-        await option.waitFor({
-        state: 'visible',
-        timeout: 20000
-        });
+  // wait until options are loaded OR "No Data" appears
+  await this.page.waitForFunction(() => {
+    const menu = document.querySelector('.n-base-select-menu');
+    if (!menu) return false;
 
-        await option.click();
-        return;
+    const hasOption = menu.querySelector('.n-base-select-option');
+    const noData = menu.textContent?.includes('No Data');
 
-    } catch {
-        // fallback if dropdown didn't show
-        await input.press('Enter');
-    }
+    return hasOption || noData;
+  }, { timeout: 20000 });
+
+  const option = menu.locator('.n-base-select-option').first();
+
+  if (await option.count() > 0) {
+    await option.click();
+  } else {
+    // fallback
+    await input.press('Enter');
   }
+}
+
+
 
     async setRadius(value: string) {
         await this.page.locator(roundLocators.roundRadiusInput).fill(value);

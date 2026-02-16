@@ -92,6 +92,39 @@ export default class QuestionPage {
         }
     }
 
+   async selectQuestionTypeByText(typeText: string) {
+    const dropdown = this.page.locator(questionLocators.questionTypeGroup);
+
+    // open dropdown
+    await dropdown.click();
+
+    // wait until dropdown menu is actually visible
+    const menu = this.page.locator('.n-base-select-menu:visible');
+    await expect(menu).toBeVisible({ timeout: 15000 });
+
+    // print all available options (for debugging)
+    const options = menu.locator('[role="option"]');
+    const count = await options.count();
+
+    console.log(`Found ${count} options in dropdown:`);
+
+    for (let i = 0; i < count; i++) {
+        const text = await options.nth(i).innerText();
+        console.log(`Option ${i}:`, text);
+    }
+
+    // find exact match
+    const target = options.filter({ hasText: typeText });
+
+    await expect(target.first()).toBeVisible({ timeout: 15000 });
+
+    console.log(`Clicking option: ${typeText}`);
+
+    await target.first().click();
+  }
+
+
+
     async fillCheckboxOption(optionIndex: number, value: string) {
         const locator = `[data-testid="question-options-option-${optionIndex}"]`;
         const input = this.page.locator(locator);
@@ -115,6 +148,7 @@ export default class QuestionPage {
         try {
             await input.fill(value);
             console.log(`✓ Filled option ${optionIndex}: "${value}"`);
+            await this.page.waitForTimeout(500)
         } catch (e) {
             console.log(`✗ Could not fill option ${optionIndex}:`, e);
         }
@@ -228,61 +262,42 @@ export default class QuestionPage {
     }
 
 
-    async setQuestionRound(value: string) {
+    async setQuestionRound() {
         const field = this.page.locator('[data-testid="question-rounds-field"]');
 
         // open dropdown
-        await field.locator('.n-base-selection').click({ force: true });
+        await field.locator('.n-base-selection').click();
 
-        // wait for menu portal
-        const menu = this.page.locator('.n-base-select-menu').last();
-        await menu.waitFor({ state: 'visible', timeout: 10000 });
+        // wait for menu
+        const menu = this.page.locator('.n-base-select-menu:visible').last();
+        await menu.waitFor({ state: 'visible' });
 
-        // wait until options appear
-        await this.page.waitForTimeout(500);
+        // wait for options to load
+        const options = menu.locator('.n-base-select-option');
+        await options.first().waitFor({ state: 'visible', timeout: 10000 });
 
-        const option = menu.locator('.n-base-select-option').filter({ hasText: value }).first();
-
-        // fallback: try typing
-        if (await option.count() === 0) {
-            await this.page.keyboard.type(value);
-            await this.page.waitForTimeout(500);
-        }
-
-        await option.waitFor({ state: 'visible', timeout: 10000 });
-        await option.click({ force: true });
+        // click FIRST option
+        await options.first().click();
     }
+ 
+    async setQuestionRole() {
+  const field = this.page.locator('[data-testid="question-roles-field"]');
 
+  // open dropdown
+  await field.locator('.n-base-selection-tags').click();
 
-    
-    async setQuestionRole(value: string) {
-        const field = this.page.locator('[data-testid="question-roles-field"]');
+  // wait for menu portal
+  const menu = this.page.locator('.n-base-select-menu:visible').last();
+  await menu.waitFor({ state: 'visible' });
 
-        // wait until roles field is enabled after round selection
-        await field.waitFor({ state: 'visible', timeout: 10000 });
+  // wait until options exist (important!)
+  const options = menu.locator('.n-base-select-option');
+  await expect(options.first()).toBeVisible({ timeout: 15000 });
 
-        const input = field.locator('.n-base-selection-tags');
+  // click first
+  await options.first().click();
+}
 
-        // wait until clickable
-        await input.waitFor({ state: 'visible', timeout: 10000 });
-
-        // click + focus
-        await input.click({ force: true });
-        await input.focus();
-
-        // open dropdown via keyboard
-        await this.page.keyboard.press('ArrowDown');
-
-        // wait for menu portal
-        const menu = this.page.locator('.n-base-select-menu').last();
-        await menu.waitFor({ state: 'visible', timeout: 1000 });
-
-        // select option container
-        const option = menu.locator('.n-base-select-option', { hasText: value }).first();
-        await option.waitFor({ state: 'visible', timeout: 1000 });
-        await option.click({ force: true });
-
-    }
 
 
     async submitQuestion() {
@@ -488,12 +503,12 @@ export default class QuestionPage {
         if (payload.active !== undefined) await this.toggleStatusToggle(payload.active);
         if (payload.roundNames && payload.roundNames.length > 0) {
             for (const roundName of payload.roundNames) {
-                await this.setQuestionRound(roundName);
+                await this.setQuestionRound();
             }
         }
         if (payload.roleNames && payload.roleNames.length > 0) {
             for (const roleName of payload.roleNames) {
-                await this.setQuestionRole(roleName);
+                await this.setQuestionRole();
             }
         }
 

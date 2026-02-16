@@ -6,7 +6,7 @@ import * as data from "../../test-data/test-data.json";
 import { openFirstProject } from '../../helpers/projects';
 import { urls } from "@/utils/urls";
 
-test.describe('Casting owner create question scenarios', () => {
+test.describe.serial('Casting owner create question scenarios', () => {
     test.beforeEach(async ({ page }) => {
         await page.goto(urls.casting);
     });
@@ -43,10 +43,10 @@ test.describe('Casting owner create question scenarios', () => {
         await page.waitForTimeout(2000);
 
         const rounds = await questionPage.getAvailableRounds();
-        if (rounds.length) await questionPage.setQuestionRound(rounds[0]);
+        if (rounds.length) await questionPage.setQuestionRound();
 
         const roles = await questionPage.getAvailableRoles();
-        if (roles.length) await questionPage.setQuestionRole(roles[0]);
+        if (roles.length) await questionPage.setQuestionRole();
         // Submit without round/role - they are not truly required
         await questionPage.submitQuestion();
 
@@ -78,10 +78,10 @@ test.describe('Casting owner create question scenarios', () => {
         });
 
         const rounds = await questionPage.getAvailableRounds();
-        if (rounds.length) await questionPage.setQuestionRound(rounds[0]);
+        if (rounds.length) await questionPage.setQuestionRound();
 
         const roles = await questionPage.getAvailableRoles();
-        if (roles.length) await questionPage.setQuestionRole(roles[0]);
+        if (roles.length) await questionPage.setQuestionRole();
         // Submit without round/role - they are not truly required
         await questionPage.submitQuestion();
 
@@ -114,10 +114,10 @@ test.describe('Casting owner create question scenarios', () => {
         });
 
         const rounds = await questionPage.getAvailableRounds();
-        if (rounds.length) await questionPage.setQuestionRound(rounds[0]);
+        if (rounds.length) await questionPage.setQuestionRound();
 
         const roles = await questionPage.getAvailableRoles();
-        if (roles.length) await questionPage.setQuestionRole(roles[0]);
+        if (roles.length) await questionPage.setQuestionRole();
         // Submit without round/role - they are not truly required
         await questionPage.submitQuestion();
 
@@ -176,16 +176,16 @@ test.describe('Casting owner create question scenarios', () => {
         const questionText = `Automation Question with Round and Role ${Date.now()}`;
         // Continue creating question manually
         await questionPage.fillQuestionText(questionText);
-        await questionPage.selectQuestionType(1);
+        await questionPage.selectQuestionTypeByText("Text");
         await questionPage.fillQuestionDescription('Automated question with round and role selection for testing purposes.');
         await questionPage.toggleRequiredCheckbox(true);
         await questionPage.toggleStatusToggle(true);
 
         const rounds = await questionPage.getAvailableRounds();
-        if (rounds.length) await questionPage.setQuestionRound(rounds[0]);
+        if (rounds.length) await questionPage.setQuestionRound();
 
         const roles = await questionPage.getAvailableRoles();
-        if (roles.length) await questionPage.setQuestionRole(roles[0]);
+        if (roles.length) await questionPage.setQuestionRole();
 
         // Submit the question
         await questionPage.submitQuestion();

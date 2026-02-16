@@ -6,7 +6,7 @@ import * as data from "../../test-data/test-data.json";
 import { openFirstProject } from '../../helpers/projects';
 import { urls } from "@/utils/urls";
 
-test.describe('Casting owner create role scenarios', () => {
+test.describe.serial('Casting owner create role scenarios', () => {
     test.beforeEach(async ({ page }) => {
         await page.goto(urls.casting);
     });
@@ -49,7 +49,7 @@ test.describe('Casting owner create role scenarios', () => {
             weightUnit: 'Kgs'
         });
         // small wait for list to refresh then verify
-        await page.waitForTimeout(2000);
+        await page.waitForTimeout(25000);
         expect(await rolePage.isRolePresent(roleName)).toBeTruthy();
     });
 

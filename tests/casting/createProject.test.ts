@@ -5,7 +5,7 @@ import * as data from "../../test-data/test-data.json";
 import { projectLocators } from "../../pages/casting/owner/project/projectPageLocators";
 import { urls } from "@/utils/urls";
 
-test.describe("Casting owner create project flow", () => {
+test.describe.serial("Casting owner create project flow", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(urls.casting);
   });

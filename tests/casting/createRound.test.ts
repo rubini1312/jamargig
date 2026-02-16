@@ -6,7 +6,7 @@ import * as data from "../../test-data/test-data.json";
 import { openFirstProject } from '../../helpers/projects';
 import { urls } from "@/utils/urls";
 
-test.describe('Casting owner create round scenarios', () => {
+test.describe.serial('Casting owner create round scenarios', () => {
     test.beforeEach(async ({ page }) => {
         await page.goto(urls.casting);
     });
