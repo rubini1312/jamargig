@@ -5,7 +5,7 @@ import { test, expect } from './_setup/talentTest';
 import { TalentRegisterPage } from "@/pages/talent/register/registerPage";
 
 
-test.describe('Talent registration scenarioes', () => {
+test.describe.serial('Talent registration scenarioes', () => {
   test.beforeEach(async ({ page }) => {
   await page.goto(urls.talent, { waitUntil: 'commit' });
   await page.waitForLoadState('domcontentloaded');
@@ -52,9 +52,9 @@ test.describe('Talent registration scenarioes', () => {
     
     const login = new LoginPage(page);
     await login.validTalentLogin(talentEmail);
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(5000);
 
-    const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
+    const otp = await getOtpFromMailtrap(request, talentEmail, 240000);
     await enterOtp(page, otp);
     await page.waitForURL(urls.talent, { timeout: 60000 });
   });
