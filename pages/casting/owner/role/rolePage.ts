@@ -1,4 +1,4 @@
-import { Page } from "@playwright/test";
+import { expect, Page } from "@playwright/test";
 import { roleLocators } from "./rolePageLocators";
 import { projectLocators } from "../project/projectPageLocators";
 
@@ -395,10 +395,21 @@ async gotoRolesTab() {
         await this.submitNewRole();
     }
 
-    async isRolePresent(name: string) {
-        const loc = this.page.locator(`text=${name}`);
-        return (await loc.count()) > 0;
-    }
+    async verifyRoleCreated(roleName: string) {
+    await expect
+        .poll(async () => {
+        return await this.page
+            .locator('td[data-col-key="role_name"]', { hasText: roleName })
+            .count();
+        }, { timeout: 30000 })
+        .toBeGreaterThan(0);
+
+        const allRoles = await this.page.locator('td[data-col-key="role_name"]').allTextContents();
+        console.log("ALL ROLES IN TABLE:");
+        console.log(allRoles);
+
+   }
+
 
     /**
      * Open a project by clicking its cover image using the dynamic data-testid

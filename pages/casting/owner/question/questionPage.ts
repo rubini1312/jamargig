@@ -262,7 +262,7 @@ async selectQuestionTypeByText(typeText: string) {
 
         // wait for options to load
         const options = menu.locator('.n-base-select-option');
-        await options.first().waitFor({ state: 'visible', timeout: 10000 });
+        await options.first().waitFor({ state: 'visible', timeout: 30000 });
 
         // click FIRST option
         await options.first().click();

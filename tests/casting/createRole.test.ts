@@ -49,8 +49,7 @@ test.describe.serial('Casting owner create role scenarios', () => {
             weightUnit: 'Kgs'
         });
         // small wait for list to refresh then verify
-        await page.waitForTimeout(25000);
-        expect(await rolePage.isRolePresent(roleName)).toBeTruthy();
+        await rolePage.verifyRoleCreated(roleName);
     });
 
     test('Submitting empty New Role form shows validation (required fields)', async ({ page, request }) => {
