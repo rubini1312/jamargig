@@ -81,9 +81,6 @@ test.describe.serial('Talent registration scenarioes', () => {
     const uiTitles = await page.locator(talentAuditionPageLocators.auditionCardTitles).allTextContents();
     expect(uiTitles).toEqual(expect.arrayContaining(result.names));
 
-});
-
-
-
+  });
 
 });

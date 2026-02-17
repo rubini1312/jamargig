@@ -13,7 +13,7 @@ export async function fetchAllProjectCount(
 
   while (allItems.length < total) {
     const res = await request.post(
-      `https://api.t.jamargig.com/api/casting/projects/search?page=${page}`,
+      urls.casting_base + `projects/search?page=${page}`,
       {
         headers: {
           Authorization: `Bearer ${token}`
@@ -77,7 +77,6 @@ export async function getPublishedProjects(
     page++;
   }
 
-  // 🔎 filter published
   const published = all.filter(p => p.is_published === true);
 
   const names = published.map(p => p.title);
