@@ -91,37 +91,25 @@ export default class QuestionPage {
             throw new Error(`Could not select question type ${typeIndex} — no matching locator found or clickable.`);
         }
     }
+async selectQuestionTypeByText(typeText: string) {
+  const dropdown = this.page.locator(questionLocators.questionTypeGroup);
 
-   async selectQuestionTypeByText(typeText: string) {
-    const dropdown = this.page.locator(questionLocators.questionTypeGroup);
+  await dropdown.click();
 
-    // open dropdown
-    await dropdown.click();
+  const menu = this.page.locator('.n-base-select-menu:visible').first();
+  await expect(menu).toBeVisible();
 
-    // wait until dropdown menu is actually visible
-    const menu = this.page.locator('.n-base-select-menu:visible');
-    await expect(menu).toBeVisible({ timeout: 15000 });
+  const option = menu.getByText(typeText, { exact: true });
+  await option.click();
 
-    // print all available options (for debugging)
-    const options = menu.locator('[role="option"]');
-    const count = await options.count();
+  // wait for close
+  await expect(menu).toBeHidden();
 
-    console.log(`Found ${count} options in dropdown:`);
+  // verify selected value
+  await expect(dropdown).toContainText(typeText);
+}
 
-    for (let i = 0; i < count; i++) {
-        const text = await options.nth(i).innerText();
-        console.log(`Option ${i}:`, text);
-    }
 
-    // find exact match
-    const target = options.filter({ hasText: typeText });
-
-    await expect(target.first()).toBeVisible({ timeout: 15000 });
-
-    console.log(`Clicking option: ${typeText}`);
-
-    await target.first().click();
-  }
 
 
 

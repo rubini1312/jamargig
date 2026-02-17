@@ -11,10 +11,10 @@ test.describe.serial('Casting owner create role scenarios', () => {
         await page.goto(urls.casting);
     });
 
-    test('Create new role and verify it appears in roles list', async ({ page }) => {
+    test('Create new role and verify it appears in roles list', async ({ page, request }) => {
         test.setTimeout(60000);
         const login = new LoginPage(page);
-        await login.validLogin(data.email, data.password);
+        await login.validLogin(data.email, data.password, request);
         await expect(page).toHaveURL(/projects/);
 
 
@@ -53,9 +53,9 @@ test.describe.serial('Casting owner create role scenarios', () => {
         expect(await rolePage.isRolePresent(roleName)).toBeTruthy();
     });
 
-    test('Submitting empty New Role form shows validation (required fields)', async ({ page }) => {
+    test('Submitting empty New Role form shows validation (required fields)', async ({ page, request }) => {
         const login = new LoginPage(page);
-        await login.validLogin(data.email, data.password);
+        await login.validLogin(data.email, data.password, request);
         await expect(page).toHaveURL(/projects/);
 
         const rolePage = new RolePage(page);

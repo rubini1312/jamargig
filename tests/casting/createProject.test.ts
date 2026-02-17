@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, request, test } from "@playwright/test";
 import LoginPage from "../../pages/casting/owner/login/loginPage";
 import ProjectPage from "../../pages/casting/owner/project/projectPage";
 import * as data from "../../test-data/test-data.json";
@@ -10,10 +10,10 @@ test.describe.serial("Casting owner create project flow", () => {
     await page.goto(urls.casting);
   });
 
-  test("Create new project and verify it appears in projects list", async ({ page }) => {
+  test("Create new project and verify it appears in projects list", async ({ page, request }) => {
     test.setTimeout(120000);
     const login = new LoginPage(page);
-    await login.validLogin(data.email, data.password);
+    await login.validLogin(data.email, data.password, request);
     await expect(page).toHaveURL(/projects/);
 
     const projectPage = new ProjectPage(page);
@@ -47,10 +47,10 @@ test.describe.serial("Casting owner create project flow", () => {
     expect(created).toBeTruthy();
   });
 
-  test("Submitting empty New Project form shows validation (required fields)", async ({ page }) => {
+  test("Submitting empty New Project form shows validation (required fields)", async ({ page, request }) => {
     // login
     const login = new LoginPage(page);
-    await login.validLogin(data.email, data.password);
+    await login.validLogin(data.email, data.password, request);
     await expect(page).toHaveURL(/projects/);
 
     // open New Project modal

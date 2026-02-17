@@ -10,9 +10,9 @@ test.describe.serial('Open project from projects list', () => {
     await page.goto(urls.casting);
   });
 
-  test('Click project cover image (dynamic data-testid) and verify project page opens', async ({ page }) => {
+  test('Click project cover image (dynamic data-testid) and verify project page opens', async ({ page, request}) => {
     const login = new LoginPage(page);
-    await login.validLogin(data.email, data.password);
+    await login.validLogin(data.email, data.password, request);
     await expect(page).toHaveURL(/projects/);
 
     const rolePage = new RolePage(page);

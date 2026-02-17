@@ -5,16 +5,17 @@ import { questionLocators } from "../../pages/casting/owner/question/questionPag
 import * as data from "../../test-data/test-data.json";
 import { openFirstProject } from '../../helpers/projects';
 import { urls } from "@/utils/urls";
+import { request } from "http";
 
 test.describe.serial('Casting owner create question scenarios', () => {
     test.beforeEach(async ({ page }) => {
         await page.goto(urls.casting);
     });
 
-    test('Create new checkbox question with options and verify it appears in questions list', async ({ page }) => {
+    test('Create new checkbox question with options and verify it appears in questions list', async ({ page, request}) => {
         test.setTimeout(90000);
         const login = new LoginPage(page);
-        await login.validLogin(data.email, data.password);
+        await login.validLogin(data.email, data.password, request);
         await expect(page).toHaveURL(/projects/);
 
         const questionPage = new QuestionPage(page);
@@ -56,10 +57,10 @@ test.describe.serial('Casting owner create question scenarios', () => {
         expect(await questionPage.isQuestionPresent(questionText)).toBeTruthy();
     });
 
-    test('Create new radio button question with options and verify it appears in questions list', async ({ page }) => {
+    test('Create new radio button question with options and verify it appears in questions list', async ({ page, request }) => {
         test.setTimeout(90000);
         const login = new LoginPage(page);
-        await login.validLogin(data.email, data.password);
+        await login.validLogin(data.email, data.password, request);
         await expect(page).toHaveURL(/projects/);
 
         const questionPage = new QuestionPage(page);
@@ -92,10 +93,10 @@ test.describe.serial('Casting owner create question scenarios', () => {
         expect(await questionPage.isQuestionPresent(questionText)).toBeTruthy();
     });
 
-    test('Create new dropdown question with options and verify it appears in questions list', async ({ page }) => {
+    test('Create new dropdown question with options and verify it appears in questions list', async ({ page, request }) => {
         test.setTimeout(90000);
         const login = new LoginPage(page);
-        await login.validLogin(data.email, data.password);
+        await login.validLogin(data.email, data.password, request);
         await expect(page).toHaveURL(/projects/);
 
         const questionPage = new QuestionPage(page);
@@ -128,9 +129,9 @@ test.describe.serial('Casting owner create question scenarios', () => {
         expect(await questionPage.isQuestionPresent(questionText)).toBeTruthy();
     });
 
-    test('Submitting empty New Question form shows validation (required fields)', async ({ page }) => {
+    test('Submitting empty New Question form shows validation (required fields)', async ({ page, request }) => {
         const login = new LoginPage(page);
-        await login.validLogin(data.email, data.password);
+        await login.validLogin(data.email, data.password, request);
         await expect(page).toHaveURL(/projects/);
 
         const questionPage = new QuestionPage(page);
@@ -159,10 +160,10 @@ test.describe.serial('Casting owner create question scenarios', () => {
         await questionPage.closeNewQuestionModal();
     });
 
-    test('Create new question with round and role selection', async ({ page }) => {
+    test('Create new question with round and role selection', async ({ page, request }) => {
         test.setTimeout(90000);
         const login = new LoginPage(page);
-        await login.validLogin(data.email, data.password);
+        await login.validLogin(data.email, data.password, request);
         await expect(page).toHaveURL(/projects/);
 
         const questionPage = new QuestionPage(page);

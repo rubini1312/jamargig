@@ -11,10 +11,10 @@ test.describe.serial('Casting owner create round scenarios', () => {
         await page.goto(urls.casting);
     });
 
-    test('Create new online round and verify it appears in rounds list', async ({ page }) => {
+    test('Create new online round and verify it appears in rounds list', async ({ page, request }) => {
         test.setTimeout(90000);
         const login = new LoginPage(page);
-        await login.validLogin(data.email, data.password);
+        await login.validLogin(data.email, data.password, request);
         await expect(page).toHaveURL(/projects/);
 
         const roundPage = new RoundPage(page);
@@ -43,10 +43,10 @@ test.describe.serial('Casting owner create round scenarios', () => {
         expect(await roundPage.isRoundPresent(roundName)).toBeTruthy();
     });
 
-    test('Create new In-person round and verify it appears in rounds list', async ({ page }) => {
+    test('Create new In-person round and verify it appears in rounds list', async ({ page, request }) => {
         test.setTimeout(90000);
         const login = new LoginPage(page);
-        await login.validLogin(data.email, data.password);
+        await login.validLogin(data.email, data.password, request);
         await expect(page).toHaveURL(/projects/);
 
         const roundPage = new RoundPage(page);
@@ -80,9 +80,9 @@ test.describe.serial('Casting owner create round scenarios', () => {
         expect(await roundPage.isRoundPresent(roundName)).toBeTruthy();
     });
 
-    test('Submitting empty New Round form shows validation (required fields)', async ({ page }) => {
+    test('Submitting empty New Round form shows validation (required fields)', async ({ page, request }) => {
         const login = new LoginPage(page);
-        await login.validLogin(data.email, data.password);
+        await login.validLogin(data.email, data.password, request);
         await expect(page).toHaveURL(/projects/);
 
         const roundPage = new RoundPage(page);
