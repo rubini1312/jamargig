@@ -6,9 +6,9 @@ import * as data from "../../test-data/test-data.json";
 
 test.describe("Casting owner login", () => {
 
-  test("User login with valid credentials", async ({ page }) => {
+  test("User login with valid credentials", async ({ page, request }) => {
     const login = new LoginPage(page);
-    await login.validLogin(data.email, data.password);
+    await login.validLogin(data.email, data.password, request);
     await expect(page).toHaveURL(/projects/);
   });
 

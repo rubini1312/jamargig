@@ -1,5 +1,6 @@
 import { urls } from "@/utils/urls";
 import { APIRequestContext, expect } from "@playwright/test";
+import * as data from '../../test-data/test-data.json';
 
 export async function getAccessToken(request: APIRequestContext): Promise<string> {
   const response = await request.post(
@@ -7,9 +8,9 @@ export async function getAccessToken(request: APIRequestContext): Promise<string
     {
       data: {
         type: 1,
-        email: "automation@example.com",
-        password: "@ut0maT3123",
-        tenant_id: "63e31adc898a4"
+        email: data.email,
+        password: data.password,
+        tenant_id: data.tenant_id
       }
     }
   );
