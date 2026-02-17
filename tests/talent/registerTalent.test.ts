@@ -3,7 +3,9 @@ import { urls } from "@/utils/urls";
 import { getOtpFromMailtrap, enterOtp } from "@/helpers/mailtrapOtp";
 import { test, expect } from './_setup/talentTest';
 import { TalentRegisterPage } from "@/pages/talent/register/registerPage";
-
+import { getAccessToken } from "@/helpers/api/authApi";
+import { fetchAllProjectCount, getPublishedProjects } from "@/helpers/api/projectApi";
+import { talentAuditionPageLocators } from "@/pages/talent/audition/auditionPageLocators";
 
 test.describe.serial('Talent registration scenarioes', () => {
   test.beforeEach(async ({ page }) => {
@@ -47,16 +49,41 @@ test.describe.serial('Talent registration scenarioes', () => {
   });
 
 
-  test('login as registred new talent', async ({ request, page, talentEmail }) => {
+  test('login as newly registred new talent', async ({ request, page, talentEmail }) => {
     test.setTimeout(100000);
     
     const login = new LoginPage(page);
     await login.validTalentLogin(talentEmail);
-    await page.waitForTimeout(5000);
+    await page.waitForTimeout(30000);
 
     const otp = await getOtpFromMailtrap(request, talentEmail, 240000);
     await enterOtp(page, otp);
     await page.waitForURL(urls.talent, { timeout: 60000 });
   });
+
+ 
+
+
+  test("verify listed projects to a newly registered talent", async ({ page, request, talentEmail }) => {
+
+    const token = await getAccessToken(request);
+    const result = await getPublishedProjects(request, token);
+
+    const login = new LoginPage(page);
+    await login.validTalentLogin(talentEmail);
+    await page.waitForTimeout(30000);
+
+    const otp = await getOtpFromMailtrap(request, talentEmail, 240000);
+    await enterOtp(page, otp);
+    await page.waitForURL(urls.talent, { timeout: 60000 });
+
+    await page.locator(talentAuditionPageLocators.auditionCards).first().waitFor();
+    const uiTitles = await page.locator(talentAuditionPageLocators.auditionCardTitles).allTextContents();
+    expect(uiTitles).toEqual(expect.arrayContaining(result.names));
+
+});
+
+
+
 
 });
