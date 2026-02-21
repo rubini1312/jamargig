@@ -63,5 +63,8 @@ export const projectLocators = {
 
     //terms
     termsCheckbox: '[data-testid="non-disclosure-requirements"]',
-    termsUrl: '[data-testid="terms-url"]'
+    termsUrl: '[data-testid="terms-url"]',
+
+    //project cover
+    projectCoverimage : '[data-testid^="project-list-card-"][data-testid$="-cover-image"]'
 };

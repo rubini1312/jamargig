@@ -1,6 +1,6 @@
 import loginPage from "@/pages/talent/login/loginPage";
 import { generateEmail } from "@/test-data/random-data";
-import { getOtpFromMailtrap, enterOtp } from "@/helpers/mailtrapOtp";
+import { getOtpFromMailtrap, enterOtpForTalent } from "@/helpers/mailtrapOtp";
 import { test, expect } from './_setup/talentTest';
 
 test.describe("Talent login", () => {
@@ -12,7 +12,7 @@ test.describe("Talent login", () => {
     await login.validTalentLogin(talentEmail);
     
     const otp = await getOtpFromMailtrap(request, talentEmail, 60000);
-    await enterOtp(page, otp);
+    await enterOtpForTalent(page, otp);
 
     });
 

@@ -1,9 +1,9 @@
 import { APIRequestContext, expect } from "@playwright/test";
-import { getAccessToken } from "./authApi";
+import { getAccessTokenSmart } from "./authApi";
 import { urls } from "@/utils/urls";
 
 export async function isTwoFactorEnabled(request: APIRequestContext): Promise<boolean> {
-  const token = await getAccessToken(request);
+  const token = await getAccessTokenSmart(request);
 
   const response = await request.get(
     urls.casting_base + "settings",

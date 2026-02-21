@@ -5,25 +5,25 @@ export default class RoundPage {
     constructor(public page: Page) { }
 
     async gotoRoundsTab() {
-  const tab = this.page.locator(roundLocators.roundTab);
+        const tab = this.page.locator(roundLocators.roundTab);
 
-  // If tab already visible → just click
-  if (await tab.isVisible().catch(() => false)) {
-    await tab.click();
-    return;
-  }
+        // If tab already visible → just click
+        if (await tab.isVisible().catch(() => false)) {
+            await tab.click();
+            return;
+        }
 
-  // Otherwise open first project
-  const firstProjectLink = this.page.locator('a[href^="/projects/"]').first();
-  await expect(firstProjectLink).toBeVisible({ timeout: 15000 });
+        // Otherwise open first project
+        const firstProjectLink = this.page.locator('a[href^="/projects/"]').first();
+        await expect(firstProjectLink).toBeVisible({ timeout: 15000 });
 
-  await firstProjectLink.click();
+        await firstProjectLink.click();
 
-  // Wait for project page to load (UI wait, NOT networkidle)
-  await expect(tab).toBeVisible({ timeout: 20000 });
+        // Wait for project page to load (UI wait, NOT networkidle)
+        await expect(tab).toBeVisible({ timeout: 20000 });
 
-  await tab.click();
-}
+        await tab.click();
+    }
 
 
     async openCreateRound() {
@@ -45,35 +45,35 @@ export default class RoundPage {
     }
 
     async setLocation(value: string) {
-  const input = this.page.locator(roundLocators.roundLocationInput);
+        const input = this.page.locator(roundLocators.roundLocationInput);
 
-  await input.click();
-  await input.fill(value);
+        await expect(async () => {
 
-  // wait for dropdown container
-  const menu = this.page.locator('.n-base-select-menu:visible').last();
-  await menu.waitFor({ state: 'visible', timeout: 20000 });
+            // 1️⃣ click + type
+            await input.click();
+            await input.fill(value);
 
-  // wait until options are loaded OR "No Data" appears
-  await this.page.waitForFunction(() => {
-    const menu = document.querySelector('.n-base-select-menu');
-    if (!menu) return false;
+            // wait for results
+            await this.page.waitForTimeout(2000);
 
-    const hasOption = menu.querySelector('.n-base-select-option');
-    const noData = menu.textContent?.includes('No Data');
+            // 2️⃣ click again to stabilize dropdown
+            await input.click();
 
-    return hasOption || noData;
-  }, { timeout: 20000 });
+            const menu = this.page.locator('.n-base-select-menu:visible').last();
+            await menu.waitFor({ state: 'visible', timeout: 15000 });
 
-  const option = menu.locator('.n-base-select-option').first();
+            // wait until options appear
+            await this.page.waitForFunction(() => {
+                const menu = document.querySelector('.n-base-select-menu');
+                if (!menu) return false;
+                return menu.querySelector('.n-base-select-option');
+            }, { timeout: 15000 });
 
-  if (await option.count() > 0) {
-    await option.click();
-  } else {
-    // fallback
-    await input.press('Enter');
-  }
-}
+            const option = menu.locator('.n-base-select-option').first();
+            await option.click();
+
+        }).toPass({ timeout: 40000 });
+    }
 
 
 
@@ -181,10 +181,10 @@ export default class RoundPage {
         // wait for round row to appear in list
         if (roundName) {
             await expect(
-            this.page.locator(`text=${roundName}`)
+                this.page.locator(`text=${roundName}`)
             ).toBeVisible({ timeout: 15000 });
-  }
-}
+        }
+    }
 
 
     async closeNewRoundModal() {

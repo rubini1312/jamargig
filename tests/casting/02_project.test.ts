@@ -1,22 +1,23 @@
 import { expect, test } from "@playwright/test";
 import LoginPage from "../../pages/casting/owner/login/loginPage";
 import ProjectPage from "../../pages/casting/owner/project/projectPage";
-import * as data from "../../test-data/test-data.json";
+import { validLogin } from "@/test-data/loginData";
 import { projectLocators } from "../../pages/casting/owner/project/projectPageLocators";
 import { urls } from "@/utils/urls";
 import { projectData } from "@/test-data/projectData";
+import RolePage from '../../pages/casting/owner/role/rolePage';
 
-test.describe.serial("Casting owner create project flow", () => {
+test.describe("Casting owner create project flow", () => {
 
   test.beforeEach(async ({ page, request }) => {
     await page.goto(urls.casting);
-
     const login = new LoginPage(page);
-    await login.validLogin(data.email, data.password, request);
-    await expect(page).toHaveURL(/projects/);
+    const status = await login.validLoginwithUI(validLogin.email, validLogin.password, request);
+    console.log("2FA Status:", status);
+    await page.goto(urls.casting + "/projects"); await expect(page).toHaveURL(/projects/);;
   });
 
-  
+
   // =========================================================
   test("Submitting empty New Project form shows validation (required fields)", async ({ page }) => {
 
@@ -83,7 +84,6 @@ test.describe.serial("Casting owner create project flow", () => {
     test.setTimeout(120000);
 
     const projectPage = new ProjectPage(page);
-
     await projectPage.createNewProject(projectData);
 
     // verify project appears anywhere in list
@@ -91,6 +91,37 @@ test.describe.serial("Casting owner create project flow", () => {
       page.locator(`text=${projectData.title}`)
     ).toBeVisible({ timeout: 30000 });
 
+  });
+
+  // =========================================================
+  test('Click project cover image (dynamic data-testid) and verify project page opens', async ({ page, request }) => {
+
+    const rolePage = new RolePage(page);
+
+    // locate first project cover image by dynamic data-testid
+    const coverLocator = page.locator(projectLocators.projectCoverimage);
+    await expect(page.locator(projectLocators.projectCoverimage).first()).toBeVisible({ timeout: 30000 });
+    const first = coverLocator.first();
+    const dataTestId = await first.getAttribute('data-testid');
+    expect(dataTestId).toBeTruthy();
+
+    const m = dataTestId!.match(/project-list-card-(\d+)-cover-image/);
+    expect(m).not.toBeNull();
+    const projectId = m![1];
+
+    // try opening in a new tab, fallback to same-tab navigation if needed
+    let targetPage = null as any;
+    try {
+      targetPage = await rolePage.openProjectInNewTab(projectId, new RegExp(`/projects/${projectId}`), 10000);
+    } catch (err) {
+      // fallback: some apps navigate in same tab
+      await rolePage.openProjectById(projectId, { waitForUrl: new RegExp(`/projects/${projectId}`), timeout: 10000 });
+      targetPage = page;
+    }
+
+    await targetPage.waitForLoadState('domcontentloaded');
+    const url = targetPage.url();
+    expect(url).toMatch(new RegExp(`/projects/${projectId}`));
   });
 
 });

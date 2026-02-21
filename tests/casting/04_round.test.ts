@@ -2,20 +2,22 @@ import { expect, test } from "@playwright/test";
 import LoginPage from "../../pages/casting/owner/login/loginPage";
 import RoundPage from "../../pages/casting/owner/round/roundPage";
 import { roundLocators } from "../../pages/casting/owner/round/roundPageLocators";
-import * as data from "../../test-data/test-data.json";
+import { validLogin } from "@/test-data/loginData";
 import { openFirstProject } from '../../helpers/projects';
 import { urls } from "@/utils/urls";
 
-test.describe.serial('Casting owner create round scenarios', () => {
-    test.beforeEach(async ({ page }) => {
+test.describe('Casting owner create round scenarios', () => {
+    test.beforeEach(async ({ page, request }) => {
         await page.goto(urls.casting);
+        const login = new LoginPage(page);
+        const status = await login.validLoginwithUI(validLogin.email, validLogin.password, request);
+        console.log("2FA Status:", status);
+        await page.goto(urls.casting + "/projects"); await expect(page).toHaveURL(/projects/);
     });
 
+    // =========================================================
     test('Create new online round and verify it appears in rounds list', async ({ page, request }) => {
         test.setTimeout(90000);
-        const login = new LoginPage(page);
-        await login.validLogin(data.email, data.password, request);
-        await expect(page).toHaveURL(/projects/);
 
         const roundPage = new RoundPage(page);
         const projectId = await openFirstProject(page);
@@ -43,11 +45,9 @@ test.describe.serial('Casting owner create round scenarios', () => {
         expect(await roundPage.isRoundPresent(roundName)).toBeTruthy();
     });
 
+    // =========================================================
     test('Create new In-person round and verify it appears in rounds list', async ({ page, request }) => {
         test.setTimeout(90000);
-        const login = new LoginPage(page);
-        await login.validLogin(data.email, data.password, request);
-        await expect(page).toHaveURL(/projects/);
 
         const roundPage = new RoundPage(page);
         const projectId = await openFirstProject(page);
@@ -74,16 +74,15 @@ test.describe.serial('Casting owner create round scenarios', () => {
             assessmentDateTo: '2026-01-30 13:40:30',
             instructionHtml: 'Automated round instruction for testing purposes -Audition round descriptions specify the requirements for each stage of the casting process, which can vary by discipline and project. They generally outline the material to prepare, the required format (e.g., self-tape, in-person), and the specific skills being evaluated'
         });
+        roundPage.setLocation("Colombo, LKA")
 
         // small wait for list to refresh then verify
         await page.waitForTimeout(2000);
         expect(await roundPage.isRoundPresent(roundName)).toBeTruthy();
     });
 
+    // =========================================================
     test('Submitting empty New Round form shows validation (required fields)', async ({ page, request }) => {
-        const login = new LoginPage(page);
-        await login.validLogin(data.email, data.password, request);
-        await expect(page).toHaveURL(/projects/);
 
         const roundPage = new RoundPage(page);
         await roundPage.gotoRoundsTab();

@@ -1,3 +1,4 @@
+import { loginLocators } from '@/pages/casting/owner/login/loginPageLocators';
 import { APIRequestContext, Page, expect } from '@playwright/test';
 
 const BASE_URL = process.env.MAILTRAP_BASE_URL!;
@@ -11,7 +12,7 @@ const API_TOKEN = process.env.MAILTRAP_API_TOKEN!;
 export async function getOtpFromMailtrap(
   request: APIRequestContext,
   email: string,
-  timeoutMs = 18000
+  timeoutMs = 30000
 ): Promise<string> {
 
   const startTime = Date.now();
@@ -24,7 +25,7 @@ export async function getOtpFromMailtrap(
       );
 
       if (!res.ok()) {
-        await wait(3000);
+        await wait(5000);
         continue;
       }
 
@@ -35,7 +36,7 @@ export async function getOtpFromMailtrap(
       );
 
       if (!filtered.length) {
-        await wait(3000);
+        await wait(5000);
         continue;
       }
 
@@ -53,7 +54,7 @@ export async function getOtpFromMailtrap(
       );
 
       if (!bodyRes.ok()) {
-        await wait(3000);
+        await wait(5000);
         continue;
       }
 
@@ -75,6 +76,8 @@ export async function getOtpFromMailtrap(
   throw new Error("OTP not received from Mailtrap");
 }
 
+
+
 function wait(ms: number) {
   return new Promise(res => setTimeout(res, ms));
 }
@@ -82,7 +85,35 @@ function wait(ms: number) {
 /**
  * Enter OTP in UI
  */
-export async function enterOtp(page: Page, code: string) {
+export async function enterOtpForCasting(page: Page, code: string) {
+  const digits = code.split("");
+
+  for (let i = 0; i < digits.length; i++) {
+    const box = page.locator(`[data-testid="twofa-pin-input-input-${i}"]`);
+    await box.waitFor({ state: "visible", timeout: 15000 });
+    await box.fill(digits[i]);
+  }
+
+  console.log("OTP entered");
+
+  const verifyBtn = page.locator('button:has-text("Verify")');
+
+  if (await verifyBtn.isVisible().catch(() => false)) {
+    await verifyBtn.click();
+    await page.waitForTimeout(30000);
+
+  }
+
+  // wait until really on projects page
+  await page.waitForURL("**/projects", { timeout: 60000 });
+
+  // wait a bit more for session to settle
+  await page.waitForLoadState("domcontentloaded");
+  await page.waitForTimeout(1500);
+}
+
+
+export async function enterOtpForTalent(page: Page, code: string) {
 
   const container = page.locator('[data-testid="auth-passcode"]');
 

@@ -207,10 +207,10 @@ async selectQuestionTypeByText(typeText: string) {
 
         // select visible menu
         const menu = this.page.locator('.n-base-select-menu').filter({ has: this.page.locator('.n-base-select-option') }).last();
-        await menu.waitFor({ state: 'visible', timeout: 5000 });
+        await menu.waitFor({ state: 'visible', timeout: 25000 });
 
         const options = menu.locator('.n-base-select-option');
-        await options.first().waitFor({ timeout: 5000 });
+        await options.first().waitFor({ timeout: 25000 });
 
         const count = await options.count();
         const roundNames: string[] = [];

@@ -1,11 +1,12 @@
 import LoginPage from "../../pages/talent/login/loginPage";
 import { urls } from "@/utils/urls";
-import { getOtpFromMailtrap, enterOtp } from "@/helpers/mailtrapOtp";
+import { getOtpFromMailtrap, enterOtpForTalent } from "@/helpers/mailtrapOtp";
 import { test, expect } from './_setup/talentTest';
 import { TalentRegisterPage } from "@/pages/talent/register/registerPage";
-import { getAccessToken } from "@/helpers/api/authApi";
-import { fetchAllProjectCount, getPublishedProjects } from "@/helpers/api/projectApi";
+import { getAccessTokenSmart } from "@/helpers/api/authApi";
+import { getPublishedProjects } from "@/helpers/api/projectApi";
 import { talentAuditionPageLocators } from "@/pages/talent/audition/auditionPageLocators";
+import { validLogin } from "@/test-data/loginData";
 
 test.describe.serial('Talent registration scenarioes', () => {
   test.beforeEach(async ({ page }) => {
@@ -21,7 +22,7 @@ test.describe.serial('Talent registration scenarioes', () => {
     await login.validTalentLogin(talentEmail);
 
     const otp = await getOtpFromMailtrap(request, talentEmail, 60000);
-    await enterOtp(page, otp);
+    await enterOtpForTalent(page, otp);
 
     const talentRegisterPage = new TalentRegisterPage(page);
 
@@ -57,7 +58,7 @@ test.describe.serial('Talent registration scenarioes', () => {
     await page.waitForTimeout(30000);
 
     const otp = await getOtpFromMailtrap(request, talentEmail, 240000);
-    await enterOtp(page, otp);
+    await enterOtpForTalent(page, otp);
     await page.waitForURL(urls.talent, { timeout: 60000 });
   });
 
@@ -66,7 +67,7 @@ test.describe.serial('Talent registration scenarioes', () => {
 
   test("verify listed projects to a newly registered talent", async ({ page, request, talentEmail }) => {
 
-    const token = await getAccessToken(request);
+    const token = await getAccessTokenSmart(request, validLogin.email);
     const result = await getPublishedProjects(request, token);
 
     const login = new LoginPage(page);
@@ -74,7 +75,7 @@ test.describe.serial('Talent registration scenarioes', () => {
     await page.waitForTimeout(30000);
 
     const otp = await getOtpFromMailtrap(request, talentEmail, 240000);
-    await enterOtp(page, otp);
+    await enterOtpForTalent(page, otp);
     await page.waitForURL(urls.talent, { timeout: 60000 });
 
     await page.locator(talentAuditionPageLocators.auditionCards).first().waitFor();

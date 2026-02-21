@@ -6,41 +6,41 @@ export default class RolePage {
     constructor(public page: Page) { }
 
     async openFirstProjectIfNeeded() {
-  const url = this.page.url();
+        const url = this.page.url();
 
-  if (/\/projects\/\d+/.test(url)) return;
+        if (/\/projects\/\d+/.test(url)) return;
 
-  console.log("Not inside project → opening first project");
+        console.log("Not inside project → opening first project");
 
-  const project = this.page
-    .locator('[data-testid$="cover-image"]')
-    .first();
+        const project = this.page
+            .locator('[data-testid$="cover-image"]')
+            .first();
 
-  await project.waitFor({ state: "visible", timeout: 20000 });
+        await project.waitFor({ state: "visible", timeout: 20000 });
 
-  const before = this.page.url();
-  console.log("Before click:", before);
+        const before = this.page.url();
+        console.log("Before click:", before);
 
-  await project.click();
+        await project.click();
 
-  await Promise.race([
-    this.page.waitForURL(/\/projects\/\d+/, { timeout: 20000 }),
-    this.page.getByText("Roles").waitFor({ state: "visible", timeout: 20000 })
-  ]);
+        await Promise.race([
+            this.page.waitForURL(/\/projects\/\d+/, { timeout: 20000 }),
+            this.page.getByText("Roles").waitFor({ state: "visible", timeout: 20000 })
+        ]);
 
-  console.log("After click:", this.page.url());
-}
+        console.log("After click:", this.page.url());
+    }
 
-async gotoRolesTab() {
-  await this.openFirstProjectIfNeeded();
+    async gotoRolesTab() {
+        await this.openFirstProjectIfNeeded();
 
-  const tab = this.page.getByTestId("projects.roles-tab");
+        const tab = this.page.getByTestId("projects.roles-tab");
 
-  await tab.waitFor({ state: "visible", timeout: 30000 });
-  await tab.click();
+        await tab.waitFor({ state: "visible", timeout: 30000 });
+        await tab.click();
 
-  await this.page.getByText("Add role").waitFor({ timeout: 30000 });
-}
+        await this.page.getByText("Add role").waitFor({ timeout: 30000 });
+    }
 
 
 
@@ -107,7 +107,7 @@ async gotoRolesTab() {
         await fromInput.scrollIntoViewIfNeeded();
         if (from) {
             await fromInput.fill(from);
-            await fromInput.press("Enter").catch(() => {});
+            await fromInput.press("Enter").catch(() => { });
         }
 
         if (to) {
@@ -118,7 +118,7 @@ async gotoRolesTab() {
             const innerInput = picker.locator('input[type="text"], input.n-input__input-el, input');
             if ((await innerInput.count()) > 0) {
                 await innerInput.fill(to);
-                await innerInput.press('Enter').catch(() => {});
+                await innerInput.press('Enter').catch(() => { });
                 return;
             }
 
@@ -183,7 +183,7 @@ async gotoRolesTab() {
             const input = innerInput.first();
             if (await input.isVisible()) {
                 await input.fill(value);
-                await input.press('Enter').catch(() => {});
+                await input.press('Enter').catch(() => { });
                 return;
             }
             // If the input exists but is hidden, continue to the open-menu flow below
@@ -192,7 +192,7 @@ async gotoRolesTab() {
         // Otherwise, try to open the menu and pick the option by visible text.
         // Some selects render options in a portal (outside the dropdown), so search the whole page.
         // Try several ways to open the menu: click wrapper, click inner toggle, focus+keyboard.
-        await dropdown.click({ force: true }).catch(() => {});
+        await dropdown.click({ force: true }).catch(() => { });
         try {
             const toggle = dropdown.locator('button, .n-base-selection, .n-base-selection-input, .n-base-selection-placeholder');
             if ((await toggle.count()) > 0) await toggle.first().click({ force: true });
@@ -259,7 +259,7 @@ async gotoRolesTab() {
                     const cand = anyInput.nth(i);
                     if (await cand.isVisible()) {
                         await cand.fill(value);
-                        await cand.press('Enter').catch(() => {});
+                        await cand.press('Enter').catch(() => { });
                         typed = true;
                         break;
                     }
@@ -267,7 +267,7 @@ async gotoRolesTab() {
             } else {
                 if (await postInputs.isVisible()) {
                     await postInputs.fill(value);
-                    await postInputs.press('Enter').catch(() => {});
+                    await postInputs.press('Enter').catch(() => { });
                     typed = true;
                 }
             }
@@ -293,10 +293,10 @@ async gotoRolesTab() {
                     if (await cand.isVisible()) {
                         try {
                             await cand.fill(value);
-                            await cand.press('Enter').catch(() => {});
+                            await cand.press('Enter').catch(() => { });
                         } catch {
                             await cand.type(value, { delay: 50 });
-                            await this.page.keyboard.press('Enter').catch(() => {});
+                            await this.page.keyboard.press('Enter').catch(() => { });
                         }
                         // check selection inside dropdown
                         await this.page.waitForTimeout(200);
@@ -305,7 +305,7 @@ async gotoRolesTab() {
                     }
                 }
                 // click the dropdown to prompt input to appear
-                await dropdown.click({ force: true }).catch(() => {});
+                await dropdown.click({ force: true }).catch(() => { });
                 await this.page.waitForTimeout(100);
             }
         } catch (e) {
@@ -342,7 +342,7 @@ async gotoRolesTab() {
     async submitNewRole() {
         await this.page.locator(roleLocators.roleNewSubmitButton).click();
         await this.page.locator(roleLocators.roleNameInput).waitFor({ state: "detached", timeout: 7000 }).catch(() => { });
-        await this.page.waitForLoadState("networkidle");
+        await this.page.waitForTimeout(5000);
     }
 
     async closeNewRoleModal() {
@@ -396,19 +396,19 @@ async gotoRolesTab() {
     }
 
     async verifyRoleCreated(roleName: string) {
-    await expect
-        .poll(async () => {
-        return await this.page
-            .locator('td[data-col-key="role_name"]', { hasText: roleName })
-            .count();
-        }, { timeout: 30000 })
-        .toBeGreaterThan(0);
+        await expect
+            .poll(async () => {
+                return await this.page
+                    .locator('td[data-col-key="role_name"]', { hasText: roleName })
+                    .count();
+            }, { timeout: 30000 })
+            .toBeGreaterThan(0);
 
         const allRoles = await this.page.locator('td[data-col-key="role_name"]').allTextContents();
         console.log("ALL ROLES IN TABLE:");
         console.log(allRoles);
 
-   }
+    }
 
 
     /**

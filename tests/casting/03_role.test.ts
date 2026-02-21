@@ -2,60 +2,37 @@ import { expect, test } from "@playwright/test";
 import LoginPage from "../../pages/casting/owner/login/loginPage";
 import RolePage from "../../pages/casting/owner/role/rolePage";
 import { roleLocators } from "../../pages/casting/owner/role/rolePageLocators";
-import * as data from "../../test-data/test-data.json";
+import { validLogin } from "@/test-data/loginData";
+import { roleData } from "@/test-data/roleData";
+
 import { openFirstProject } from '../../helpers/projects';
 import { urls } from "@/utils/urls";
 
-test.describe.serial('Casting owner create role scenarios', () => {
-    test.beforeEach(async ({ page }) => {
+test.describe('Casting owner create role scenarios', () => {
+    test.beforeEach(async ({ page, request }) => {
         await page.goto(urls.casting);
+        const login = new LoginPage(page);
+        const status = await login.validLoginwithUI(validLogin.email, validLogin.password, request);
+        console.log("2FA Status:", status);
+        await page.goto(urls.casting + "/projects"); await expect(page).toHaveURL(/projects/);
     });
 
+    // =========================================================
     test('Create new role and verify it appears in roles list', async ({ page, request }) => {
         test.setTimeout(60000);
-        const login = new LoginPage(page);
-        await login.validLogin(data.email, data.password, request);
-        await expect(page).toHaveURL(/projects/);
-
 
         const rolePage = new RolePage(page);
         const projectId = await openFirstProject(page);
         await rolePage.openProjectById(projectId, { waitForUrl: new RegExp(`/projects/${projectId}`) });
         await rolePage.gotoRolesTab();
-
-        const roleName = `Automation Role ${Date.now()}`;
-        await rolePage.createNewRole({
-            name: roleName,
-            imagePath: 'test-files/images/test-role.jpg',
-            descriptionHtml: 'Automated role description for testing purposes - You can add more details here.',
-            numberOfPeople: 5,
-            contractTypeIndex: 2,
-            contractFrom: "26 Dec 2025",
-            contractTo: "31 Jan 2026",
-            rehearsalFrom: "01 Nov 2025",
-            rehearsalTo: "10 Nov 2025",
-            gender: 'Female',
-            minAge: '25',
-            maxAge: '55',
-            ethnicity: 'Hispanic or Latino',
-            skills: 'Dancing',
-            languages: 'English',
-            nudity: 'No',
-            minHeight: '150',
-            maxHeight: '198',
-            heightUnit: 'CMs',
-            minWeight: '45',
-            maxWeight: '91',
-            weightUnit: 'Kgs'
-        });
+        await rolePage.createNewRole(roleData);
+        
         // small wait for list to refresh then verify
-        await rolePage.verifyRoleCreated(roleName);
+        await rolePage.verifyRoleCreated(roleData.name);
     });
 
+    // =========================================================
     test('Submitting empty New Role form shows validation (required fields)', async ({ page, request }) => {
-        const login = new LoginPage(page);
-        await login.validLogin(data.email, data.password, request);
-        await expect(page).toHaveURL(/projects/);
 
         const rolePage = new RolePage(page);
         await rolePage.gotoRolesTab();
