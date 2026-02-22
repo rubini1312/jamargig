@@ -8,5 +8,5 @@
       "@pages/*": ["pages/*"]
     }
   },
-  "include": ["tests", "pages", "utils", "helpers"]
+  "include": ["tests", "pages", "utils", "helpers", "test-data/dataModelConfig.ts"]
 }

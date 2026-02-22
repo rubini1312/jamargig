@@ -3,7 +3,7 @@
 export const talentRegisterLocators = {
 
   //talent user details
-  fullNameInput: "//div[@label='Your full name']//input",
+  fullNameInput: "[data-testid='auth-name']",
   stageNameInput: "//div[@label='Stage Name']//input",
   locationInput: "//input[@class='n-base-selection-input']",
   genderSelector: "[data-testid='auth-gender']",
