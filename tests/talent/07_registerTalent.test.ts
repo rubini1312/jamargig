@@ -9,36 +9,45 @@ import { talentAuditionPageLocators } from "@/pages/talent/audition/auditionPage
 import { validLogin } from "@/test-data/loginData";
 import { applyRegistrationConfig, getAllPages, getFieldsByPageId } from "@/helpers/api/talentOnboardingFieldsApi";
 import { defaultConfig, fullConfig } from "@/test-data/dataModelConfig";
+import { createCastingApiContext } from "@/helpers/api/castingApiContext";
+import { APIRequestContext } from "@playwright/test";
 
 test.describe.serial('Talent registration scenarioes', () => {
-
+let api: APIRequestContext;
+test.beforeAll(async ({ request }) => {
+  api = await createCastingApiContext(request);
+});
   test("validate talent registration fields per page agaist casting default data model config",
     async ({ page, request, talentEmail }) => {
+
       test.setTimeout(300000);
-      //config preperation
-      await applyRegistrationConfig(request, defaultConfig);
+
+      // 🔐 create authenticated API context ONCE
+
+      await applyRegistrationConfig(api, defaultConfig);
+      await page.waitForTimeout(15000);
 
       await expect.poll(async () => {
-        const f = await getFieldsByPageId(request, 1);
+        const f = await getFieldsByPageId(api, 1);
         return f.length;
       }).toBeGreaterThan(0);
 
-      await page.waitForTimeout(10000);
+      await page.waitForTimeout(15000);
 
-      //open talent UI
+      // open UI
       await page.goto(urls.talent, { waitUntil: "domcontentloaded" });
+      await page.waitForTimeout(5000);
 
       const login = new LoginPage(page);
       await login.validTalentLogin(talentEmail);
-      await page.waitForTimeout(15000);
 
       const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
-      await page.waitForTimeout(25000);
       await enterOtpForTalent(page, otp);
-      await page.waitForTimeout(10000);
+      await page.waitForTimeout(25000);
 
-      //get pages
-      const pages = await getAllPages(request);
+      // 🔴 IMPORTANT: use api context here
+      const pages = await getAllPages(api);
+
       const talentRegisterPage = new TalentRegisterPage(page);
 
       for (let i = 0; i < pages.length; i++) {
@@ -46,16 +55,15 @@ test.describe.serial('Talent registration scenarioes', () => {
         const p = pages[i];
         console.log("Checking page:", p.name);
 
-        //get active fields
-        const apiFields = await getFieldsByPageId(request, p.id);
-        const expectedLabels = apiFields.map(f => f.label.trim());
+        // 🔴 use api
+        const apiFields = await getFieldsByPageId(api, p.id);
 
+        const expectedLabels = apiFields.map(f => f.label.trim());
         console.log("API Labels:", expectedLabels);
 
-        //read ui 
+        // read UI
         let uiLabelsRaw = await page.locator("form label:visible").allTextContents();
 
-        // upload/photo page (no <label>)
         if (uiLabelsRaw.length === 0) {
           uiLabelsRaw = await page.locator(".font-bold:visible").allTextContents();
         }
@@ -66,12 +74,11 @@ test.describe.serial('Talent registration scenarioes', () => {
 
         console.log("UI Labels:", cleanedUiLabels);
 
-        // validate labels match API
         for (const expected of expectedLabels) {
           expect(cleanedUiLabels).toContain(expected);
         }
 
-        //validate required fields
+        // required stars
         for (const field of apiFields) {
           if (!field.required) continue;
 
@@ -79,7 +86,6 @@ test.describe.serial('Talent registration scenarioes', () => {
             .locator(".n-form-item-label__text")
             .filter({ hasText: new RegExp(`^${field.label}\\b`) });
 
-          // if label element doesn't exist → skip 
           if (await label.count() === 0) {
             console.log(`Skipping star check for ${field.label}`);
             continue;
@@ -88,7 +94,7 @@ test.describe.serial('Talent registration scenarioes', () => {
           await expect(label.first()).toContainText("*");
         }
 
-        //fill required fields
+        // fill required
         const requiredFields = apiFields.filter(f => f.required);
 
         for (const field of requiredFields) {
@@ -120,25 +126,24 @@ test.describe.serial('Talent registration scenarioes', () => {
           }
         }
 
-        //upload
-        const isUploadPage = apiFields.some(f => f.name === "avatar" || f.name === "profile_photo");
+        const isUploadPage = apiFields.some(f => f.name === "avatar");
 
         if (isUploadPage) {
           await talentRegisterPage.uploadProfilePicture();
           await talentRegisterPage.saveCroppedProfilePicture();
         }
 
-        //terms
         if (p.page_no === 1) {
           await talentRegisterPage.clickTermsAndConditionCheckBox();
         }
 
-        //continue
         await talentRegisterPage.clickContinueButton();
 
         if (i < pages.length - 1) {
           const nextPage = pages[i + 1];
-          const nextFields = await getFieldsByPageId(request, nextPage.id);
+
+          // 🔴 use api
+          const nextFields = await getFieldsByPageId(api, nextPage.id);
           const nextLabel = nextFields[0]?.label;
 
           if (nextLabel) {
@@ -150,15 +155,21 @@ test.describe.serial('Talent registration scenarioes', () => {
   );
 
   test("talent registration with defined config", async ({ page, request, talentEmail }) => {
-    test.setTimeout(300000);
+    test.setTimeout(350000);
+
+    // 🔐 create authenticated API context ONCE
+    await page.waitForTimeout(15000);
+    await page.waitForTimeout(30000);
 
     //config preperation
-    await applyRegistrationConfig(request, fullConfig);
+    await applyRegistrationConfig(api, fullConfig);
+    await page.waitForTimeout(30000);
 
     await expect.poll(async () => {
-      const f = await getFieldsByPageId(request, 1);
+      const f = await getFieldsByPageId(api, 1);
       return f.length;
     }).toBeGreaterThan(0);
+    await page.waitForTimeout(30000);
 
     //open talent UI
     await page.goto(urls.talent, { waitUntil: "domcontentloaded" });
@@ -167,14 +178,14 @@ test.describe.serial('Talent registration scenarioes', () => {
     await login.validTalentLogin(talentEmail);
     await page.waitForTimeout(5000);
 
-    const otp = await getOtpFromMailtrap(request, talentEmail, 150000);
+    const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
     await page.waitForTimeout(25000);
 
     await enterOtpForTalent(page, otp);
     await page.waitForTimeout(30000);
 
-    //get pages
-    const pages = await getAllPages(request);
+    //get pages  🔴 FIX: use api
+    const pages = await getAllPages(api);
     const talentRegisterPage = new TalentRegisterPage(page);
 
     for (let i = 0; i < pages.length; i++) {
@@ -182,8 +193,8 @@ test.describe.serial('Talent registration scenarioes', () => {
       const p = pages[i];
       console.log("Checking page:", p.name);
 
-      //get active fields
-      const apiFields = await getFieldsByPageId(request, p.id);
+      //get active fields  🔴 FIX: use api
+      const apiFields = await getFieldsByPageId(api, p.id);
       const expectedLabels = apiFields.map(f => f.label.trim());
 
       console.log("API Labels:", expectedLabels);
@@ -191,7 +202,6 @@ test.describe.serial('Talent registration scenarioes', () => {
       //read UI
       let uiLabelsRaw = await page.locator("form label:visible").allTextContents();
 
-      // upload/photo page (no <label>)
       if (uiLabelsRaw.length === 0) {
         uiLabelsRaw = await page.locator(".font-bold:visible").allTextContents();
       }
@@ -207,7 +217,7 @@ test.describe.serial('Talent registration scenarioes', () => {
         expect(cleanedUiLabels).toContain(expected);
       }
 
-      // validate required fileds 
+      // validate required fields
       for (const field of apiFields) {
         if (!field.required) continue;
 
@@ -215,7 +225,6 @@ test.describe.serial('Talent registration scenarioes', () => {
           .locator(".n-form-item-label__text")
           .filter({ hasText: new RegExp(`^${field.label}\\b`) });
 
-        // if label element doesn't exist → skip (avatar/upload page)
         if (await label.count() === 0) {
           console.log(`Skipping star check for ${field.label}`);
           continue;
@@ -224,7 +233,7 @@ test.describe.serial('Talent registration scenarioes', () => {
         await expect(label.first()).toContainText("*");
       }
 
-      // fill required fields 
+      // fill required fields
       const requiredFields = apiFields.filter(f => f.required);
 
       for (const field of requiredFields) {
@@ -274,7 +283,9 @@ test.describe.serial('Talent registration scenarioes', () => {
 
       if (i < pages.length - 1) {
         const nextPage = pages[i + 1];
-        const nextFields = await getFieldsByPageId(request, nextPage.id);
+
+        // 🔴 FIX: use api
+        const nextFields = await getFieldsByPageId(api, nextPage.id);
         const nextLabel = nextFields[0]?.label;
 
         if (nextLabel) {

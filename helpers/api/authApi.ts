@@ -22,32 +22,23 @@ export async function getAccessTokenSmart(
 
   const body = await loginRes.json();
 
-  console.log("Login status:", loginRes.status());
-  console.log("Login body:", JSON.stringify(body, null, 2));
-
-  // NO 2FA
   if (body.access_token) {
-    console.log("Login success without 2FA");
     return body.access_token;
   }
 
-  // 2FA REQUIRED
-  console.log("2FA detected");
-
   const codeEndpoint: string = body?.data?.code_endpoint;
-
-  if (!codeEndpoint) {
-    throw new Error("No code_endpoint found in login response");
-  }
-
-  console.log("OTP verify endpoint:", codeEndpoint);
-
-  // GET OTP FROM MAILTRAP
   const otp = await getOtpFromMailtrap(request, email);
-  console.log("OTP fetched:", otp);
 
-  // VERIFY OTP
-  const verifyRes = await request.post(codeEndpoint, {
+  const fullVerifyUrl = codeEndpoint.startsWith("http")
+    ? codeEndpoint
+    : urls.casting_base.replace("/api/", "/") + codeEndpoint.replace("/api/", "");
+
+  console.log("VERIFY FULL URL:", fullVerifyUrl);
+
+  const verifyRes = await request.post(fullVerifyUrl, {
+    headers: {
+      "X-Tenant": validLogin.tenant_id
+    },
     data: {
       email,
       passcode: otp
@@ -55,11 +46,12 @@ export async function getAccessTokenSmart(
   });
 
   console.log("Verify status:", verifyRes.status());
+  console.log("Verify body:", await verifyRes.text());
+
+  if (verifyRes.status() !== 200) {
+    throw new Error("OTP verify failed");
+  }
 
   const verifyBody = await verifyRes.json();
-  console.log("Verify body:", JSON.stringify(verifyBody, null, 2));
-
-  expect(verifyRes.status()).toBe(200);
-
   return verifyBody.access_token;
 }

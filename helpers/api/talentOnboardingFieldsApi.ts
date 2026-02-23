@@ -2,13 +2,16 @@ import { APIRequestContext, request } from "@playwright/test";
 import { getAccessTokenSmart } from "@/helpers/api/authApi";
 import { urls } from "@/utils/urls";
 
-export async function getAllPages(api: APIRequestContext) {
-  const token = await getAccessTokenSmart(api);
 
-  const url = urls.casting_base + "registration-pages";
-  const response = await api.get(url, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
+export async function getAllPages(api: APIRequestContext) {
+  const response = await api.get(
+    urls.casting_base + "registration-pages"
+  );
+
+  if (!response.ok()) {
+    throw new Error(`getAllPages failed: ${response.status()} ${await response.text()}`);
+  }
+
   const body = await response.json();
 
   if (!Array.isArray(body.data)) {
@@ -22,16 +25,18 @@ export async function getFieldsByPageId(
   api: APIRequestContext,
   pageId: number
 ) {
-  const token = await getAccessTokenSmart(api);
-
   const url = urls.casting_base + `registration-pages/${pageId}/fields`;
 
   // retry up to 5 times if backend not ready yet
   for (let attempt = 0; attempt < 5; attempt++) {
 
-    const response = await api.get(url, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const response = await api.get(url);
+
+    if (!response.ok()) {
+      throw new Error(
+        `getFieldsByPageId failed: ${response.status()} ${await response.text()}`
+      );
+    }
 
     const body = await response.json();
 
@@ -43,12 +48,10 @@ export async function getFieldsByPageId(
       .filter((f: any) => f.status === true)
       .sort((a: any, b: any) => a.order - b.order);
 
-    // if fields found → return
     if (activeFields.length > 0) {
       return activeFields;
     }
 
-    // if empty → wait & retry (backend propagation)
     await new Promise(r => setTimeout(r, 500));
   }
 
@@ -56,13 +59,19 @@ export async function getFieldsByPageId(
   return [];
 }
 
-export async function getAllFieldsByPageId(api, pageId) {
-  const token = await getAccessTokenSmart(api);
-
+export async function getAllFieldsByPageId(
+  api: APIRequestContext,
+  pageId: number
+) {
   const url = urls.casting_base + `registration-pages/${pageId}/fields`;
-  const response = await api.get(url, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
+
+  const response = await api.get(url);
+
+  if (!response.ok()) {
+    throw new Error(
+      `getAllFieldsByPageId failed: ${response.status()} ${await response.text()}`
+    );
+  }
 
   const body = await response.json();
 
@@ -70,7 +79,7 @@ export async function getAllFieldsByPageId(api, pageId) {
     throw new Error("Fields API did not return array");
   }
 
-  return body.data; // 🔥 no filtering
+  return body.data; // no filtering
 }
 
 // export async function patchField(
@@ -106,7 +115,6 @@ export async function getAllFieldsByPageId(api, pageId) {
 // }
 
 
-
 type FieldConfig = {
   status: boolean;
   required?: boolean;
@@ -116,25 +124,22 @@ export async function applyRegistrationConfig(
   api: APIRequestContext,
   defaultConfig: Record<number, Record<string, FieldConfig>>
 ) {
-  const token = await getAccessTokenSmart(api);
-
   for (const pageId of Object.keys(defaultConfig)) {
+
     const pageNumber = Number(pageId);
     const pageConfig = defaultConfig[pageNumber];
 
-    // 🔹 GET fields for this page
     const res = await api.get(
-      urls.casting_base + `registration-pages/${pageNumber}/fields`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
+      urls.casting_base + `registration-pages/${pageNumber}/fields`
     );
 
-    const json = await res.json();
-    console.log(`PAGE ${pageNumber} FIELDS:`, json);
+    if (!res.ok()) {
+      throw new Error(
+        `Failed to fetch fields for page ${pageNumber}: ${res.status()}`
+      );
+    }
 
+    const json = await res.json();
     const fields = json.data;
 
     if (!Array.isArray(fields)) {
@@ -143,8 +148,8 @@ export async function applyRegistrationConfig(
     }
 
     for (const fieldName of Object.keys(pageConfig)) {
-      const fieldConfig = pageConfig[fieldName];
 
+      const fieldConfig = pageConfig[fieldName];
       const exists = fields.find((f: any) => f.name === fieldName);
 
       if (!exists) {
@@ -162,9 +167,6 @@ export async function applyRegistrationConfig(
       const patchRes = await api.patch(
         urls.casting_base + `registration-pages/${pageNumber}/fields/${fieldName}`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`
-          },
           data: payload
         }
       );
