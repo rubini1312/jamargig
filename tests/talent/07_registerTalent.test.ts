@@ -4,27 +4,60 @@ import { getOtpFromMailtrap, enterOtpForTalent } from "@/helpers/mailtrapOtp";
 import { test, expect } from './_setup/talentTest';
 import { TalentRegisterPage } from "@/pages/talent/register/registerPage";
 import { getAccessTokenSmart } from "@/helpers/api/authApi";
-import { getPublishedProjects } from "@/helpers/api/projectApi";
+import { createProject, deleteProject, getPublishedProjects, publishProject } from "@/helpers/api/projectApi";
 import { talentAuditionPageLocators } from "@/pages/talent/audition/auditionPageLocators";
 import { validLogin } from "@/test-data/loginData";
-import { applyRegistrationConfig, getAllPages, getFieldsByPageId } from "@/helpers/api/talentOnboardingFieldsApi";
+import { applyRegistrationConfig, deleteTalent, getAllPages, getFieldsByPageId, getTalentUuidByName } from "@/helpers/api/talentApi";
 import { defaultConfig, fullConfig } from "@/test-data/dataModelConfig";
 import { createCastingApiContext } from "@/helpers/api/castingApiContext";
 import { APIRequestContext } from "@playwright/test";
+import { ClientRequest, IncomingMessage, request, RequestOptions } from "http";
+import { URL } from "url";
 
 test.describe.serial('Talent registration scenarioes', () => {
-let api: APIRequestContext;
-test.beforeAll(async ({ request }) => {
-  api = await createCastingApiContext(request);
-});
+  let api: APIRequestContext;
+  let token: string;
+  let projectId: number;
+  let uniqueName: string;
+
+  test.beforeAll(async ({ request }) => {
+
+    // get token inside async scope
+    token = await getAccessTokenSmart(request, validLogin.email);
+    api = await createCastingApiContext(request);
+
+    const { response } = await createProject(request, token);
+    projectId = response.data.id;
+
+    await publishProject(request, token, projectId);
+    uniqueName = `Automation Talent-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  });
+
+  test.afterAll(async ({ request }) => {
+
+    if (projectId) {
+      await deleteProject(request, token, projectId);
+    }
+
+    if (uniqueName) {
+      try {
+        const uuid = await getTalentUuidByName(request, token, uniqueName);
+        await deleteTalent(request, token, uuid);
+      } catch (e) {
+        console.log("Talent not found during cleanup");
+      }
+    }
+
+  });
+
+  
   test("validate talent registration fields per page agaist casting default data model config",
     async ({ page, request, talentEmail }) => {
 
       test.setTimeout(300000);
-
-      // 🔐 create authenticated API context ONCE
-
       await applyRegistrationConfig(api, defaultConfig);
+      const uniqueName = `Autom-Talent ${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
       await page.waitForTimeout(15000);
 
       await expect.poll(async () => {
@@ -45,9 +78,7 @@ test.beforeAll(async ({ request }) => {
       await enterOtpForTalent(page, otp);
       await page.waitForTimeout(25000);
 
-      // 🔴 IMPORTANT: use api context here
       const pages = await getAllPages(api);
-
       const talentRegisterPage = new TalentRegisterPage(page);
 
       for (let i = 0; i < pages.length; i++) {
@@ -55,9 +86,7 @@ test.beforeAll(async ({ request }) => {
         const p = pages[i];
         console.log("Checking page:", p.name);
 
-        // 🔴 use api
         const apiFields = await getFieldsByPageId(api, p.id);
-
         const expectedLabels = apiFields.map(f => f.label.trim());
         console.log("API Labels:", expectedLabels);
 
@@ -101,7 +130,7 @@ test.beforeAll(async ({ request }) => {
           switch (field.name) {
 
             case "name":
-              await talentRegisterPage.enterFullName("Automation Talent");
+              await talentRegisterPage.enterFullName(uniqueName);
               break;
 
             case "stage_name":
@@ -142,7 +171,6 @@ test.beforeAll(async ({ request }) => {
         if (i < pages.length - 1) {
           const nextPage = pages[i + 1];
 
-          // 🔴 use api
           const nextFields = await getFieldsByPageId(api, nextPage.id);
           const nextLabel = nextFields[0]?.label;
 
@@ -151,13 +179,13 @@ test.beforeAll(async ({ request }) => {
           }
         }
       }
-    }
-  );
+
+    });
+
 
   test("talent registration with defined config", async ({ page, request, talentEmail }) => {
     test.setTimeout(350000);
 
-    // 🔐 create authenticated API context ONCE
     await page.waitForTimeout(15000);
     await page.waitForTimeout(30000);
 
@@ -184,7 +212,7 @@ test.beforeAll(async ({ request }) => {
     await enterOtpForTalent(page, otp);
     await page.waitForTimeout(30000);
 
-    //get pages  🔴 FIX: use api
+    //get pages
     const pages = await getAllPages(api);
     const talentRegisterPage = new TalentRegisterPage(page);
 
@@ -193,7 +221,7 @@ test.beforeAll(async ({ request }) => {
       const p = pages[i];
       console.log("Checking page:", p.name);
 
-      //get active fields  🔴 FIX: use api
+      //get active fields 
       const apiFields = await getFieldsByPageId(api, p.id);
       const expectedLabels = apiFields.map(f => f.label.trim());
 
@@ -283,8 +311,6 @@ test.beforeAll(async ({ request }) => {
 
       if (i < pages.length - 1) {
         const nextPage = pages[i + 1];
-
-        // 🔴 FIX: use api
         const nextFields = await getFieldsByPageId(api, nextPage.id);
         const nextLabel = nextFields[0]?.label;
 
@@ -327,3 +353,7 @@ test.beforeAll(async ({ request }) => {
   });
 
 });
+
+function async(arg0: { request: { (options: RequestOptions | string | URL, callback?: (res: IncomingMessage) => void): ClientRequest; (url: string | URL, options: RequestOptions, callback?: (res: IncomingMessage) => void): ClientRequest; }; }): (args: import("@playwright/test").PlaywrightTestArgs & import("@playwright/test").PlaywrightTestOptions & { talentEmail: string; } & import("@playwright/test").PlaywrightWorkerArgs & import("@playwright/test").PlaywrightWorkerOptions, testInfo: import("@playwright/test").TestInfo) => Promise<any> | any {
+  throw new Error("Function not implemented.");
+}

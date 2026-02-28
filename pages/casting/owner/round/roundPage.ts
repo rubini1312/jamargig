@@ -49,25 +49,25 @@ export default class RoundPage {
 
         await expect(async () => {
 
-            // 1️⃣ click + type
+            // 1 click + type
             await input.click();
             await input.fill(value);
 
             // wait for results
-            await this.page.waitForTimeout(2000);
+            await this.page.waitForTimeout(10000);
 
-            // 2️⃣ click again to stabilize dropdown
+            // click again to stabilize dropdown
             await input.click();
 
             const menu = this.page.locator('.n-base-select-menu:visible').last();
-            await menu.waitFor({ state: 'visible', timeout: 15000 });
+            await menu.waitFor({ state: 'visible', timeout: 25000 });
 
             // wait until options appear
             await this.page.waitForFunction(() => {
                 const menu = document.querySelector('.n-base-select-menu');
                 if (!menu) return false;
                 return menu.querySelector('.n-base-select-option');
-            }, { timeout: 15000 });
+            }, { timeout: 25000 });
 
             const option = menu.locator('.n-base-select-option').first();
             await option.click();

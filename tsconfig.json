@@ -5,7 +5,8 @@
       "@/*": ["*"],
       "@utils/*": ["utils/*"],
       "@api/*": ["helpers/api/*"],
-      "@pages/*": ["pages/*"]
+      "@pages/*": ["pages/*"],
+      "types": ["node", "playwright"]
     }
   },
   "include": ["tests", "pages", "utils", "helpers", "test-data/dataModelConfig.ts"]

@@ -1,10 +1,8 @@
+import { getProjectPayload } from "@/test-data/projectData";
 import { urls } from "@/utils/urls";
 import { APIRequestContext, expect } from "@playwright/test";
 
-export async function fetchAllProjectCount(
-  request: APIRequestContext,
-  token: string
-): Promise<any[]> {
+export async function fetchAllProjectCount(request: APIRequestContext, token: string): Promise<any[]> {
 
   let page = 1;
   let allItems: any[] = [];
@@ -24,7 +22,6 @@ export async function fetchAllProjectCount(
     expect(res.status()).toBe(200);
 
     const body = await res.json();
-
     const items = body.data || [];
     const meta = body.meta || body;
 
@@ -34,8 +31,6 @@ export async function fetchAllProjectCount(
     console.log(`Page ${page} → ${items.length} items (total: ${total})`);
 
     allItems.push(...items);
-
-    // stop if last page reached
     if (items.length === 0) break;
     if (allItems.length >= total) break;
 
@@ -47,10 +42,7 @@ export async function fetchAllProjectCount(
 }
 
 
-export async function getPublishedProjects(
-  request: APIRequestContext,
-  token: string
-): Promise<{ count: number; names: string[] }> {
+export async function getPublishedProjects(request: APIRequestContext, token: string): Promise<{ count: number; names: string[] }> {
 
   let page = 1;
   let all: any[] = [];
@@ -88,3 +80,68 @@ export async function getPublishedProjects(
   return { count, names };
 }
 
+
+export async function createProject(request: APIRequestContext, token: string): Promise<{ response: any; payload: any }> {
+
+  const payload = getProjectPayload();
+
+  const res = await request.post(
+    urls.casting_base + "projects/",
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      data: payload
+    }
+  );
+
+  expect(res.status()).toBe(201);
+
+  const body = await res.json();
+
+  return {
+    response: body,
+    payload: payload
+  };
+}
+
+
+export async function publishProject(request: APIRequestContext, token: string, projectId: number): Promise<any> {
+
+  const res = await request.patch(
+    urls.casting_base + `projects/${projectId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      data: {
+        is_published: 1
+      }
+    }
+  );
+
+  console.log("PATCH URL:", urls.casting_base + `projects/${projectId}`);
+  console.log("Status:", res.status());
+
+  expect(res.status()).toBe(201);
+
+  return await res.json();
+}
+
+
+export async function deleteProject(request: APIRequestContext, token: string, projectId: number): Promise<void> {
+
+  const res = await request.delete(
+    urls.casting_base + `projects/${projectId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  );
+
+  console.log("Delete Project Status:", res.status());
+  expect([200]).toContain(res.status());
+}

@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { APIRequestContext, expect, test } from "@playwright/test";
 import LoginPage from "../../pages/casting/owner/login/loginPage";
 import RolePage from "../../pages/casting/owner/role/rolePage";
 import { roleLocators } from "../../pages/casting/owner/role/rolePageLocators";
@@ -7,14 +7,37 @@ import { roleData } from "@/test-data/roleData";
 
 import { openFirstProject } from '../../helpers/projects';
 import { urls } from "@/utils/urls";
+import { getAccessTokenSmart } from "@/helpers/api/authApi";
+import { createCastingApiContext } from "@/helpers/api/castingApiContext";
+import { createProject, deleteProject } from "@/helpers/api/projectApi";
+import { deleteAllRoles } from "@/helpers/api/roleApi";
 
 test.describe('Casting owner create role scenarios', () => {
+    let token: string;
+    let api: APIRequestContext;
+    let projectId: number;
+    let uniqueName: string;
+
     test.beforeEach(async ({ page, request }) => {
+        token = await getAccessTokenSmart(request, validLogin.email);
+        api = await createCastingApiContext(request);
+
+        const { response } = await createProject(request, token);
+        projectId = response.data.id;
+        uniqueName = `Automation Talent-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
         await page.goto(urls.casting);
         const login = new LoginPage(page);
         const status = await login.validLoginwithUI(validLogin.email, validLogin.password, request);
         console.log("2FA Status:", status);
         await page.goto(urls.casting + "/projects"); await expect(page).toHaveURL(/projects/);
+    });
+
+    test.afterAll(async ({ request }) => {
+        if (projectId) {
+            await deleteAllRoles(request, token, projectId);
+            await deleteProject(request, token, projectId);
+        }
     });
 
     // =========================================================
@@ -26,7 +49,7 @@ test.describe('Casting owner create role scenarios', () => {
         await rolePage.openProjectById(projectId, { waitForUrl: new RegExp(`/projects/${projectId}`) });
         await rolePage.gotoRolesTab();
         await rolePage.createNewRole(roleData);
-        
+
         // small wait for list to refresh then verify
         await rolePage.verifyRoleCreated(roleData.name);
     });

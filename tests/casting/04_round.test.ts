@@ -1,19 +1,47 @@
-import { expect, test } from "@playwright/test";
+import { APIRequestContext, expect, test } from "@playwright/test";
 import LoginPage from "../../pages/casting/owner/login/loginPage";
 import RoundPage from "../../pages/casting/owner/round/roundPage";
 import { roundLocators } from "../../pages/casting/owner/round/roundPageLocators";
 import { validLogin } from "@/test-data/loginData";
 import { openFirstProject } from '../../helpers/projects';
 import { urls } from "@/utils/urls";
+import { getAccessTokenSmart } from "@/helpers/api/authApi";
+import { createCastingApiContext } from "@/helpers/api/castingApiContext";
+import { createProject, deleteProject } from "@/helpers/api/projectApi";
+import { createRole, deleteAllRoles } from "@/helpers/api/roleApi";
+import { deleteAllRounds } from "@/helpers/api/roundApi";
 
 test.describe('Casting owner create round scenarios', () => {
+    let token: string;
+    let api: APIRequestContext;
+    let projectId: number;
+    let uniqueName: string;
+
     test.beforeEach(async ({ page, request }) => {
+        token = await getAccessTokenSmart(request, validLogin.email);
+        api = await createCastingApiContext(request);
+
+        const { response } = await createProject(request, token);
+        projectId = response.data.id;
+        await createRole(request, token, projectId);
+
+        uniqueName = `Automation Talent-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
         await page.goto(urls.casting);
         const login = new LoginPage(page);
         const status = await login.validLoginwithUI(validLogin.email, validLogin.password, request);
         console.log("2FA Status:", status);
         await page.goto(urls.casting + "/projects"); await expect(page).toHaveURL(/projects/);
     });
+
+    test.afterAll(async ({ request }) => {
+        if (projectId) {
+            await deleteAllRoles(request, token, projectId);
+            await deleteAllRounds(request, token, projectId);
+            await deleteProject(request, token, projectId);
+        }
+    });
+
 
     // =========================================================
     test('Create new online round and verify it appears in rounds list', async ({ page, request }) => {

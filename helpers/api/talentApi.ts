@@ -1,4 +1,4 @@
-import { APIRequestContext, request } from "@playwright/test";
+import { APIRequestContext, expect, request } from "@playwright/test";
 import { getAccessTokenSmart } from "@/helpers/api/authApi";
 import { urls } from "@/utils/urls";
 
@@ -13,13 +13,13 @@ export async function getAllPages(api: APIRequestContext) {
   }
 
   const body = await response.json();
-
   if (!Array.isArray(body.data)) {
     throw new Error("Pages API did not return array");
   }
 
   return body.data;
 }
+
 
 export async function getFieldsByPageId(
   api: APIRequestContext,
@@ -55,7 +55,7 @@ export async function getFieldsByPageId(
     await new Promise(r => setTimeout(r, 500));
   }
 
-  console.warn(`⚠️ No active fields found for page ${pageId}`);
+  console.warn(`No active fields found for page ${pageId}`);
   return [];
 }
 
@@ -79,7 +79,7 @@ export async function getAllFieldsByPageId(
     throw new Error("Fields API did not return array");
   }
 
-  return body.data; // no filtering
+  return body.data;
 }
 
 // export async function patchField(
@@ -143,7 +143,7 @@ export async function applyRegistrationConfig(
     const fields = json.data;
 
     if (!Array.isArray(fields)) {
-      console.log(`❌ Could not fetch fields for page ${pageNumber}`);
+      console.log(`Could not fetch fields for page ${pageNumber}`);
       continue;
     }
 
@@ -153,7 +153,7 @@ export async function applyRegistrationConfig(
       const exists = fields.find((f: any) => f.name === fieldName);
 
       if (!exists) {
-        console.log(`⚠️ ${fieldName} not found on page ${pageNumber}`);
+        console.log(`${fieldName} not found on page ${pageNumber}`);
         continue;
       }
 
@@ -172,10 +172,78 @@ export async function applyRegistrationConfig(
       );
 
       if (!patchRes.ok()) {
-        console.log(`❌ ${fieldName}`, await patchRes.text());
+        console.log(` ${fieldName}`, await patchRes.text());
       } else {
-        console.log(`✅ ${fieldName}`);
+        console.log(`${fieldName}`);
       }
     }
   }
+}
+
+
+export async function getTalentUuidByName(
+  request: APIRequestContext,
+  token: string,
+  talentName: string
+): Promise<string> {
+
+  let page = 1;
+
+  while (true) {
+
+    const res = await request.post(
+      urls.casting_base + `talent/search?page=${page}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        data: {}
+      }
+    );
+
+    expect(res.status()).toBe(200);
+
+    const body = await res.json();
+
+    const talent = body.data.find(
+      (t: any) =>
+        t.name?.trim() === talentName.trim() ||
+        t.stage_name?.trim() === talentName.trim()
+    );
+
+    if (talent) {
+      console.log(`Found on page ${page}`);
+      return talent.uuid;
+    }
+
+    if (!body.data.length || body.to >= body.total) {
+      break;
+    }
+
+    page++;
+  }
+
+  throw new Error(`Talent "${talentName}" not found in any page`);
+}
+
+
+export async function deleteTalent(
+  request: APIRequestContext,
+  token: string,
+  uuid: string
+): Promise<void> {
+
+  const res = await request.delete(
+    urls.casting_base + `talent/${uuid}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  );
+
+  console.log("Delete Talent Status:", res.status());
+
+  expect([200, 204]).toContain(res.status());
 }
