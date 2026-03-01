@@ -400,13 +400,13 @@ export default class RoundPage {
 
         if (payload.submissionTypeIndex) {
             await this.setSubmissionType(payload.submissionTypeIndex);
-            await this.page.waitForTimeout(800); // UI refresh
+            await this.page.waitForTimeout(800); // to refresh ui
         }
 
         if (payload.displayApplicationNumberIndex)
             await this.setDisplayApplicationNumber(payload.displayApplicationNumberIndex);
 
-        // ---- SUBMISSION DATE (not for internal submission)
+        // submission date - not for internal submission
         if (
             payload.submissionTypeIndex !== 3 &&
             (payload.submissionDateFrom || payload.submissionDateTo)
@@ -417,7 +417,6 @@ export default class RoundPage {
             );
         }
 
-        // ---- ASSESSMENT DATE (always visible)
         if (payload.assessmentDateFrom || payload.assessmentDateTo) {
             await this.setAssessmentDate(
                 payload.assessmentDateFrom ?? "",
