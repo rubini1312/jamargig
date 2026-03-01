@@ -145,3 +145,73 @@ export async function deleteProject(request: APIRequestContext, token: string, p
   console.log("Delete Project Status:", res.status());
   expect([200]).toContain(res.status());
 }
+
+
+
+
+
+export async function getAllProjects(
+  request: APIRequestContext,
+  token: string
+): Promise<any[]> {
+
+  let page = 1;
+  let allProjects: any[] = [];
+  let total = Infinity;
+
+  while (allProjects.length < total) {
+
+    const res = await request.post(
+      urls.casting_base + `projects/search?page=${page}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        data: {
+          sort_by: {
+            sort: "created_at",
+            sort_dir: "desc"
+          }
+        }
+      }
+    );
+
+    expect(res.status()).toBe(200);
+
+    const body = await res.json();
+
+    const items = body.data || [];
+    total = body.total ?? total;
+
+    allProjects.push(...items);
+
+    if (items.length === 0) break;
+
+    page++;
+  }
+
+  return allProjects;
+}
+
+export async function deleteAutomationProjects(
+  request: APIRequestContext,
+  token: string
+): Promise<void> {
+
+  const projects = await getAllProjects(request, token);
+
+  for (const project of projects) {
+
+    const title = project.title;
+
+    if (
+      title.startsWith("Test Manual") ||
+      title.startsWith("Auto Project name")
+    ) {
+
+      console.log(`Deleting project: ${title}`);
+
+      await deleteProject(request, token, project.id);
+    }
+  }
+}

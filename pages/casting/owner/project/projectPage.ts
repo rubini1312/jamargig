@@ -1,8 +1,8 @@
-import { Page } from "@playwright/test";
+import { expect, Page } from "@playwright/test";
 import { projectLocators } from "./projectPageLocators";
 
 export default class ProjectPage {
-  constructor(public page: Page) {}
+  constructor(public page: Page) { }
 
   // ---------- OPEN CREATE MENU (FIXED) ----------
   async openCreateMenu() {
@@ -38,7 +38,7 @@ export default class ProjectPage {
   async fillLocation(location: string) {
     const loc = this.page.locator(projectLocators.locationInput);
     await loc.fill(location);
-    await loc.press("Enter").catch(()=>{});
+    await loc.press("Enter").catch(() => { });
   }
 
   async fillUrl(url: string) {
@@ -52,13 +52,13 @@ export default class ProjectPage {
   async openPhoneDropdown() {
     const dd = this.page.locator(projectLocators.phoneDropdown);
     await dd.click();
-    await dd.press("Enter").catch(()=>{});
+    await dd.press("Enter").catch(() => { });
   }
 
   async fillPhoneInput(phone: string) {
     const input = this.page.locator(projectLocators.phoneInput);
     await input.fill(phone);
-    await input.press("Enter").catch(()=>{});
+    await input.press("Enter").catch(() => { });
   }
 
   async setContractDate(from?: string, to?: string) {
@@ -115,13 +115,13 @@ export default class ProjectPage {
     // wait modal close
     await this.page.locator(projectLocators.titleInput)
       .waitFor({ state: "detached", timeout: 60000 })
-      .catch(()=>{});
+      .catch(() => { });
 
     // 🔥 wait skeleton loader disappear
     await this.page.locator(".n-skeleton")
       .first()
       .waitFor({ state: "detached", timeout: 60000 })
-      .catch(()=>{});
+      .catch(() => { });
 
     // small settle
     await this.page.waitForTimeout(500);
@@ -181,4 +181,20 @@ export default class ProjectPage {
   async isProjectPresent(name: string) {
     return (await this.page.locator(`text=${name}`).count()) > 0;
   }
+
+  async openSearchedProject(name: string): Promise<void> {
+    const searchIcon = this.page.locator(projectLocators.projectSearchIcon);
+
+    // hover icon to expand search
+    await expect(searchIcon).toBeVisible();
+    await searchIcon.hover();
+
+    // pick the visible search input only
+    const searchInput = this.page.locator('input[placeholder*="Search"]:visible');
+
+    await expect(searchInput).toBeVisible({ timeout: 10000 });
+
+    await searchInput.fill(name);
+  }
+
 }

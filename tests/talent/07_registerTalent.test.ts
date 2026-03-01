@@ -1,6 +1,6 @@
 import LoginPage from "../../pages/talent/login/loginPage";
 import { urls } from "@/utils/urls";
-import { getOtpFromMailtrap, enterOtpForTalent } from "@/helpers/mailtrapOtp";
+import { getOtpFromMailtrap, enterOtpForTalent } from "@/utils/mailtrapOtp";
 import { test, expect } from './_setup/talentTest';
 import { TalentRegisterPage } from "@/pages/talent/register/registerPage";
 import { getAccessTokenSmart } from "@/helpers/api/authApi";
@@ -9,28 +9,29 @@ import { talentAuditionPageLocators } from "@/pages/talent/audition/auditionPage
 import { validLogin } from "@/test-data/loginData";
 import { applyRegistrationConfig, deleteTalent, getAllPages, getFieldsByPageId, getTalentUuidByName } from "@/helpers/api/talentApi";
 import { defaultConfig, fullConfig } from "@/test-data/dataModelConfig";
-import { createCastingApiContext } from "@/helpers/api/castingApiContext";
 import { APIRequestContext } from "@playwright/test";
 import { ClientRequest, IncomingMessage, request, RequestOptions } from "http";
 import { URL } from "url";
+import { generateEmail } from "@/test-data/random-data";
 
-test.describe.serial('Talent registration scenarioes', () => {
-  let api: APIRequestContext;
+test.describe('Talent registration scenarioes', () => {
   let token: string;
   let projectId: number;
   let uniqueName: string;
+  let talentRegistrationEmail: string;
+  let talentRegistrationName: string;
 
   test.beforeAll(async ({ request }) => {
 
     // get token inside async scope
     token = await getAccessTokenSmart(request, validLogin.email);
-    api = await createCastingApiContext(request);
+    talentRegistrationEmail = generateEmail();
 
     const { response } = await createProject(request, token);
     projectId = response.data.id;
 
     await publishProject(request, token, projectId);
-    uniqueName = `Automation Talent-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    talentRegistrationName = `Automation Talent-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
   });
 
   test.afterAll(async ({ request }) => {
@@ -39,9 +40,9 @@ test.describe.serial('Talent registration scenarioes', () => {
       await deleteProject(request, token, projectId);
     }
 
-    if (uniqueName) {
+    if (talentRegistrationName) {
       try {
-        const uuid = await getTalentUuidByName(request, token, uniqueName);
+        const uuid = await getTalentUuidByName(request, token, talentRegistrationName);
         await deleteTalent(request, token, uuid);
       } catch (e) {
         console.log("Talent not found during cleanup");
@@ -50,18 +51,18 @@ test.describe.serial('Talent registration scenarioes', () => {
 
   });
 
-  
+
   test("validate talent registration fields per page agaist casting default data model config",
-    async ({ page, request, talentEmail }) => {
+    async ({ page, request }) => {
 
       test.setTimeout(300000);
-      await applyRegistrationConfig(api, defaultConfig);
+      await applyRegistrationConfig(request, token, defaultConfig);
       const uniqueName = `Autom-Talent ${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-
+      const talentEmail = generateEmail();
       await page.waitForTimeout(15000);
 
       await expect.poll(async () => {
-        const f = await getFieldsByPageId(api, 1);
+        const f = await getFieldsByPageId(request, 1, token);
         return f.length;
       }).toBeGreaterThan(0);
 
@@ -78,7 +79,7 @@ test.describe.serial('Talent registration scenarioes', () => {
       await enterOtpForTalent(page, otp);
       await page.waitForTimeout(25000);
 
-      const pages = await getAllPages(api);
+      const pages = await getAllPages(request, token);
       const talentRegisterPage = new TalentRegisterPage(page);
 
       for (let i = 0; i < pages.length; i++) {
@@ -86,7 +87,7 @@ test.describe.serial('Talent registration scenarioes', () => {
         const p = pages[i];
         console.log("Checking page:", p.name);
 
-        const apiFields = await getFieldsByPageId(api, p.id);
+        const apiFields = await getFieldsByPageId(request, p.id, token);
         const expectedLabels = apiFields.map(f => f.label.trim());
         console.log("API Labels:", expectedLabels);
 
@@ -171,7 +172,7 @@ test.describe.serial('Talent registration scenarioes', () => {
         if (i < pages.length - 1) {
           const nextPage = pages[i + 1];
 
-          const nextFields = await getFieldsByPageId(api, nextPage.id);
+          const nextFields = await getFieldsByPageId(request, nextPage.id, token);
           const nextLabel = nextFields[0]?.label;
 
           if (nextLabel) {
@@ -180,21 +181,25 @@ test.describe.serial('Talent registration scenarioes', () => {
         }
       }
 
+      //make sure talent is not registered
+      await expect(
+        getTalentUuidByName(request, token, uniqueName)
+      ).rejects.toThrow();
     });
 
 
-  test("talent registration with defined config", async ({ page, request, talentEmail }) => {
+  test("talent registration with defined config", async ({ page, request }) => {
     test.setTimeout(350000);
 
-    await page.waitForTimeout(15000);
     await page.waitForTimeout(30000);
 
     //config preperation
-    await applyRegistrationConfig(api, fullConfig);
+    await applyRegistrationConfig(request, token, fullConfig);
+    const uniqueName = `Autom-Talent ${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     await page.waitForTimeout(30000);
 
     await expect.poll(async () => {
-      const f = await getFieldsByPageId(api, 1);
+      const f = await getFieldsByPageId(request, 1, token);
       return f.length;
     }).toBeGreaterThan(0);
     await page.waitForTimeout(30000);
@@ -203,17 +208,17 @@ test.describe.serial('Talent registration scenarioes', () => {
     await page.goto(urls.talent, { waitUntil: "domcontentloaded" });
 
     const login = new LoginPage(page);
-    await login.validTalentLogin(talentEmail);
+    await login.validTalentLogin(talentRegistrationEmail);
     await page.waitForTimeout(5000);
 
-    const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
+    const otp = await getOtpFromMailtrap(request, talentRegistrationEmail, 120000);
     await page.waitForTimeout(25000);
 
     await enterOtpForTalent(page, otp);
     await page.waitForTimeout(30000);
 
     //get pages
-    const pages = await getAllPages(api);
+    const pages = await getAllPages(request, token);
     const talentRegisterPage = new TalentRegisterPage(page);
 
     for (let i = 0; i < pages.length; i++) {
@@ -222,7 +227,7 @@ test.describe.serial('Talent registration scenarioes', () => {
       console.log("Checking page:", p.name);
 
       //get active fields 
-      const apiFields = await getFieldsByPageId(api, p.id);
+      const apiFields = await getFieldsByPageId(request, p.id, token);
       const expectedLabels = apiFields.map(f => f.label.trim());
 
       console.log("API Labels:", expectedLabels);
@@ -268,7 +273,7 @@ test.describe.serial('Talent registration scenarioes', () => {
         switch (field.name) {
 
           case "name":
-            await talentRegisterPage.enterFullName("Automation Talent");
+            await talentRegisterPage.enterFullName(uniqueName);
             break;
 
           case "stage_name":
@@ -311,7 +316,7 @@ test.describe.serial('Talent registration scenarioes', () => {
 
       if (i < pages.length - 1) {
         const nextPage = pages[i + 1];
-        const nextFields = await getFieldsByPageId(api, nextPage.id);
+        const nextFields = await getFieldsByPageId(request, nextPage.id, token);
         const nextLabel = nextFields[0]?.label;
 
         if (nextLabel) {
@@ -319,30 +324,35 @@ test.describe.serial('Talent registration scenarioes', () => {
         }
       }
     }
+
+    //make sure talent is registred
+    const uuid = await getTalentUuidByName(request, token, uniqueName);
+    expect(uuid).toBeTruthy();
+
   });
 
-  test('login as newly registred new talent', async ({ request, page, talentEmail }) => {
+  test('login as newly registred new talent', async ({ request, page }) => {
     test.setTimeout(100000);
 
     const login = new LoginPage(page);
-    await login.validTalentLogin(talentEmail);
+    await login.validTalentLogin(talentRegistrationEmail);
     await page.waitForTimeout(30000);
 
-    const otp = await getOtpFromMailtrap(request, talentEmail, 240000);
+    const otp = await getOtpFromMailtrap(request, talentRegistrationEmail, 240000);
     await enterOtpForTalent(page, otp);
     await page.waitForURL(urls.talent, { timeout: 60000 });
   });
 
-  test("verify listed projects to a newly registered talent", async ({ page, request, talentEmail }) => {
+  test("verify listed projects to a newly registered talent", async ({ page, request }) => {
 
     const token = await getAccessTokenSmart(request, validLogin.email);
     const result = await getPublishedProjects(request, token);
 
     const login = new LoginPage(page);
-    await login.validTalentLogin(talentEmail);
+    await login.validTalentLogin(talentRegistrationEmail);
     await page.waitForTimeout(30000);
 
-    const otp = await getOtpFromMailtrap(request, talentEmail, 240000);
+    const otp = await getOtpFromMailtrap(request, talentRegistrationEmail, 240000);
     await enterOtpForTalent(page, otp);
     await page.waitForURL(urls.talent, { timeout: 60000 });
 
@@ -354,6 +364,4 @@ test.describe.serial('Talent registration scenarioes', () => {
 
 });
 
-function async(arg0: { request: { (options: RequestOptions | string | URL, callback?: (res: IncomingMessage) => void): ClientRequest; (url: string | URL, options: RequestOptions, callback?: (res: IncomingMessage) => void): ClientRequest; }; }): (args: import("@playwright/test").PlaywrightTestArgs & import("@playwright/test").PlaywrightTestOptions & { talentEmail: string; } & import("@playwright/test").PlaywrightWorkerArgs & import("@playwright/test").PlaywrightWorkerOptions, testInfo: import("@playwright/test").TestInfo) => Promise<any> | any {
-  throw new Error("Function not implemented.");
-}
+

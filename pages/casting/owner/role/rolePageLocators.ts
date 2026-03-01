@@ -8,7 +8,7 @@ export const roleLocators = {
   // basic inputs
   roleNameInput: '[data-testid="role-name"]',
   roleImageDragger: '[data-testid="role-image-dragger"]',
-  roleImage:'[data-testid="role-image"]',
+  roleImage: '[data-testid="role-image"]',
   roleDescriptionContent: 'div[data-testid="role-description-content"]',
   roleNumberOfPeopleInput: '[data-testid="role-number-of-people"]',
 

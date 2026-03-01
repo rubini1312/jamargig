@@ -4,28 +4,27 @@ import RolePage from "../../pages/casting/owner/role/rolePage";
 import { roleLocators } from "../../pages/casting/owner/role/rolePageLocators";
 import { validLogin } from "@/test-data/loginData";
 import { roleData } from "@/test-data/roleData";
-
-import { openFirstProject } from '../../helpers/projects';
 import { urls } from "@/utils/urls";
 import { getAccessTokenSmart } from "@/helpers/api/authApi";
-import { createCastingApiContext } from "@/helpers/api/castingApiContext";
 import { createProject, deleteProject } from "@/helpers/api/projectApi";
 import { deleteAllRoles } from "@/helpers/api/roleApi";
+import ProjectPage from "@/pages/casting/owner/project/projectPage";
 
 test.describe('Casting owner create role scenarios', () => {
     let token: string;
-    let api: APIRequestContext;
     let projectId: number;
-    let uniqueName: string;
+    let projectName: string;
 
-    test.beforeEach(async ({ page, request }) => {
+    test.beforeAll(async ({request }) => {
         token = await getAccessTokenSmart(request, validLogin.email);
-        api = await createCastingApiContext(request);
-
         const { response } = await createProject(request, token);
         projectId = response.data.id;
-        uniqueName = `Automation Talent-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        projectName = response.data.title;
+        console.log(projectName);
+        console.log(projectId);
+    });
 
+    test.beforeEach(async ({ page, request }) => {
         await page.goto(urls.casting);
         const login = new LoginPage(page);
         const status = await login.validLoginwithUI(validLogin.email, validLogin.password, request);
@@ -45,8 +44,8 @@ test.describe('Casting owner create role scenarios', () => {
         test.setTimeout(60000);
 
         const rolePage = new RolePage(page);
-        const projectId = await openFirstProject(page);
-        await rolePage.openProjectById(projectId, { waitForUrl: new RegExp(`/projects/${projectId}`) });
+        const projectPage = new ProjectPage(page);
+        projectPage.openSearchedProject(projectName);
         await rolePage.gotoRolesTab();
         await rolePage.createNewRole(roleData);
 
@@ -58,6 +57,8 @@ test.describe('Casting owner create role scenarios', () => {
     test('Submitting empty New Role form shows validation (required fields)', async ({ page, request }) => {
 
         const rolePage = new RolePage(page);
+        const projectPage = new ProjectPage(page);
+        projectPage.openSearchedProject(projectName);
         await rolePage.gotoRolesTab();
         await rolePage.openCreateRole();
 

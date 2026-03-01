@@ -1,5 +1,5 @@
 import { Page } from "playwright";
-import { talentApplyPageLocators } from "./applyRoundLocators";
+import { talentApplyPageLocators } from "./applyRoundPageLocators";
 
 
 export class TalentApplyPage {
@@ -7,6 +7,10 @@ export class TalentApplyPage {
 
     async clickApplyOnlineround() {
         await this.page.locator(talentApplyPageLocators.applyBtn_onlineRound).click();
+    }
+
+    async enterSubmission(submission : string ) {
+        await this.page.locator(talentApplyPageLocators.questionSubmissionInput).fill(submission);
     }
 
     async clickSubmit() {

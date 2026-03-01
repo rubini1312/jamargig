@@ -3,9 +3,14 @@ import { getAccessTokenSmart } from "@/helpers/api/authApi";
 import { urls } from "@/utils/urls";
 
 
-export async function getAllPages(api: APIRequestContext) {
-  const response = await api.get(
-    urls.casting_base + "registration-pages"
+export async function getAllPages(request: APIRequestContext, token: string) {
+  const response = await request.get(
+    urls.casting_base + "registration-pages",
+    {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
   );
 
   if (!response.ok()) {
@@ -22,15 +27,20 @@ export async function getAllPages(api: APIRequestContext) {
 
 
 export async function getFieldsByPageId(
-  api: APIRequestContext,
-  pageId: number
+  request: APIRequestContext,
+  pageId: number,
+  token: string
 ) {
   const url = urls.casting_base + `registration-pages/${pageId}/fields`;
 
   // retry up to 5 times if backend not ready yet
   for (let attempt = 0; attempt < 5; attempt++) {
 
-    const response = await api.get(url);
+    const response = await request.get(url,{
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
 
     if (!response.ok()) {
       throw new Error(
@@ -59,69 +69,10 @@ export async function getFieldsByPageId(
   return [];
 }
 
-export async function getAllFieldsByPageId(
-  api: APIRequestContext,
-  pageId: number
-) {
-  const url = urls.casting_base + `registration-pages/${pageId}/fields`;
-
-  const response = await api.get(url);
-
-  if (!response.ok()) {
-    throw new Error(
-      `getAllFieldsByPageId failed: ${response.status()} ${await response.text()}`
-    );
-  }
-
-  const body = await response.json();
-
-  if (!Array.isArray(body.data)) {
-    throw new Error("Fields API did not return array");
-  }
-
-  return body.data;
-}
-
-// export async function patchField(
-//   api: APIRequestContext,
-//   pageId: number,
-//   fieldName: string,
-//   payload: {
-//     status: boolean;
-//     required?: boolean;
-//     label?: string;
-//     description?: string;
-//   }
-// ) {
-//   const token = await getAccessTokenSmart(api);
-
-//   const fullUrl = `${urls.casting_base}registration-pages/${pageId}/fields/${fieldName}`;
-
-//   const response = await api.patch(fullUrl, {
-//     headers: {
-//       Authorization: `Bearer ${token}`,
-//       "Content-Type": "application/json"
-//     },
-//     data: {
-//       status: payload.status,
-//       required: payload.required ?? false,
-//       label: payload.label ?? fieldName,
-//       description: payload.description ?? ""
-//     }
-//   });
-
-//   console.log("PATCH status:", response.status());
-//   console.log("PATCH response:", await response.text());
-// }
-
-
-type FieldConfig = {
-  status: boolean;
-  required?: boolean;
-};
+type FieldConfig = {status: boolean; required?: boolean;};
 
 export async function applyRegistrationConfig(
-  api: APIRequestContext,
+  request: APIRequestContext, token : string,
   defaultConfig: Record<number, Record<string, FieldConfig>>
 ) {
   for (const pageId of Object.keys(defaultConfig)) {
@@ -129,8 +80,13 @@ export async function applyRegistrationConfig(
     const pageNumber = Number(pageId);
     const pageConfig = defaultConfig[pageNumber];
 
-    const res = await api.get(
-      urls.casting_base + `registration-pages/${pageNumber}/fields`
+    const res = await request.get(
+      urls.casting_base + `registration-pages/${pageNumber}/fields`,
+      {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
     );
 
     if (!res.ok()) {
@@ -164,7 +120,7 @@ export async function applyRegistrationConfig(
 
       console.log(`Updating page ${pageNumber} → ${fieldName}`, payload);
 
-      const patchRes = await api.patch(
+      const patchRes = await request.patch(
         urls.casting_base + `registration-pages/${pageNumber}/fields/${fieldName}`,
         {
           data: payload
@@ -227,6 +183,71 @@ export async function getTalentUuidByName(
   throw new Error(`Talent "${talentName}" not found in any page`);
 }
 
+export async function getProjectTalentUuidByName(
+  request: APIRequestContext,
+  token: string,
+  projectId: number,
+  talentName: string
+): Promise<string> {
+
+  const res = await request.post(
+    urls.casting_base + `projects/${projectId}/talent/search?page=1`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      data: {
+        filter: {
+          "in-projects": [projectId]
+        }
+      }
+    }
+  );
+
+  console.log("Talent Search Status:", res.status());
+  expect(res.status()).toBe(200);
+
+  const body = await res.json();
+
+  const talent = body.data.find(
+    (t: any) => t.name === talentName
+  );
+
+  if (!talent) {
+    throw new Error(`Talent "${talentName}" not found in project`);
+  }
+
+  return talent.uuid;
+}
+
+export async function getProjectTalentNames(
+  request: APIRequestContext,
+  token: string,
+  projectId: number
+): Promise<string[]> {
+
+  const res = await request.post(
+    urls.casting_base + `projects/${projectId}/talent/search?page=1`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      data: {
+        filter: { "in-projects": [projectId] }
+      }
+    }
+  );
+
+  expect(res.status()).toBe(200);
+
+  const body = await res.json();
+
+  const names = body.data.map((talent: any) => talent.name);
+
+  return names;
+}
 
 export async function deleteTalent(
   request: APIRequestContext,

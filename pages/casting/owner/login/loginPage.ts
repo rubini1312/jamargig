@@ -2,7 +2,7 @@ import { Page, APIRequestContext, expect } from "@playwright/test";
 import { loginLocators } from "./loginPageLocators";
 import { urls } from "@/utils/urls";
 import { isTwoFactorEnabled } from "../../../../helpers/api/settingsApi";
-import { enterOtpForCasting, getOtpFromMailtrap } from "../../../../helpers/mailtrapOtp";
+import { enterOtpForCasting, getOtpFromMailtrap } from "../../../../utils/mailtrapOtp";
 
 export default class loginPage {
   constructor(public page: Page) { }
@@ -72,9 +72,14 @@ export default class loginPage {
     // check for otp
     if (await otpField.isVisible().catch(() => false)) {
 
-      const otp = await getOtpFromMailtrap(request, email, 60000);
+      await expect(otpField).toBeVisible({ timeout: 20000 });
+      await this.page.waitForTimeout(4000);
+
+      const otp = await getOtpFromMailtrap(request, email, 120000);
       await enterOtpForCasting(this.page, otp);
       await this.page.waitForURL("**/projects", { timeout: 60000 });
+      await this.page.waitForLoadState("networkidle");
+
       flowStatus = "enabled";
     }
 
@@ -97,7 +102,6 @@ export default class loginPage {
 
     return flowStatus;
   }
-
 
   async enterEmail(email: string) {
     await this.page.locator(loginLocators.email).fill(email);

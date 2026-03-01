@@ -1,7 +1,7 @@
 import { urls } from "@/utils/urls";
 import { APIRequestContext, expect } from "@playwright/test";
 import { validLogin } from "@/test-data/loginData";
-import { getOtpFromMailtrap } from "../mailtrapOtp";
+import { getOtpFromMailtrap } from "../../utils/mailtrapOtp";
 
 export async function getAccessTokenSmart(
   request: APIRequestContext,
@@ -27,6 +27,7 @@ export async function getAccessTokenSmart(
   }
 
   const codeEndpoint: string = body?.data?.code_endpoint;
+  await new Promise(r => setTimeout(r, 10000));
   const otp = await getOtpFromMailtrap(request, email);
 
   const fullVerifyUrl = codeEndpoint.startsWith("http")

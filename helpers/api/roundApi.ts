@@ -1,6 +1,9 @@
 import { urls } from "@/utils/urls";
 import { APIRequestContext, expect } from "playwright/test";
 
+const uniqueName = `test round ${Date.now()}`;
+
+
 export async function createOnlineRound(request: APIRequestContext, token: string, projectId: number, roleId?: number): Promise<any> {
 
   const res = await request.post(
@@ -17,7 +20,7 @@ export async function createOnlineRound(request: APIRequestContext, token: strin
         instruction: "",
         enforce_location: true,
         enforce_selfie: true,
-        round_name: `test round ${Date.now()}`,
+        round_name: uniqueName,
         round_type: 1,
         submission_type: 1,
         location: null,
@@ -49,7 +52,7 @@ export async function createInPersonRound(request: APIRequestContext, token: str
         instruction: "",
         enforce_location: true,
         enforce_selfie: true,
-        round_name: `test round ${Date.now()}`,
+        round_name: uniqueName,
         round_type: 2,
         submission_type: 1,
         location: "Colorado, USA",

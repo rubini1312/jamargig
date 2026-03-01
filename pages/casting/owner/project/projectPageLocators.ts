@@ -66,5 +66,9 @@ export const projectLocators = {
     termsUrl: '[data-testid="terms-url"]',
 
     //project cover
-    projectCoverimage : '[data-testid^="project-list-card-"][data-testid$="-cover-image"]'
+    projectCoverimage: '[data-testid^="project-list-card-"][data-testid$="-cover-image"]',
+
+    //project search
+    projectSearchIcon: '[data-testid="project-list-filters-header"] .filters-header-search',
+    projectSearchInput: 'input[placeholder*="Search"]'
 };

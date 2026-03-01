@@ -5,5 +5,6 @@ export const talentApplyPageLocators = {
   emptyRole_errorMsg: "//div[contains(@class,'n-form-item-feedback--error')]",
   role_selector: "//div[@class='n-checkbox-box__border']",
   submitedTag: "//span[@class='main-tag']",
-  submitedRole: "//span[contains(@class,'text-center')]"
+  submitedRole: "//span[contains(@class,'text-center')]",
+  questionSubmissionInput : "//div[@aria-label='Editor editing area: main']"
 };

@@ -91,8 +91,9 @@ export default class RolePage {
     }
 
     async selectContractType(index: number) {
-        const selector = `[data-testid="role-contract-type-${index}"] input[type=radio], [data-testid="role-contract-type-${index}"]`;
-        await this.page.locator(selector).first().click();
+        const contractType = this.page.locator(`[data-testid="role-contract-type-${index}"]`);
+        await expect(contractType).toBeVisible();
+        await contractType.click();
     }
 
     async setContractDate(from?: string, to?: string) {
@@ -375,8 +376,10 @@ export default class RolePage {
         maxWeight?: string;
         weightUnit?: string;
     }) {
+
         await this.openCreateRole();
         await this.fillRoleName(payload.name);
+
         if (payload.imagePath) await this.uploadRoleImage(payload.imagePath);
         if (payload.descriptionHtml) await this.fillRoleDescription(payload.descriptionHtml);
         if (payload.numberOfPeople !== undefined) await this.setNumberOfPeople(payload.numberOfPeople);
@@ -391,6 +394,11 @@ export default class RolePage {
         if (payload.nudity) await this.setNudityStatus(payload.nudity);
         if (payload.minHeight || payload.maxHeight || payload.heightUnit) await this.setHeight(payload.minHeight, payload.maxHeight, payload.heightUnit);
         if (payload.minWeight || payload.maxWeight || payload.weightUnit) await this.setWeight(payload.minWeight, payload.maxWeight, payload.weightUnit);
+
+        const roleNameInput = this.page.getByTestId('role-name').first();
+        await roleNameInput.fill(payload.name);
+        await expect(roleNameInput).toHaveValue(payload.name);
+        await expect(roleNameInput).toHaveValue(payload.name);
 
         await this.submitNewRole();
     }

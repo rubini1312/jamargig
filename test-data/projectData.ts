@@ -24,13 +24,15 @@ export const projectData = {
 };
 
 export function getProjectPayload(overrides: Partial<any> = {}) {
+  const uniqueTitle = `Automation Project-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
   return {
     description: "<p>test description</p>",
     personnel_information: "",
     additional_info: "",
     other_info: "",
     phone: "",
-    title: `Test Manual ${Date.now()}`,
+    title: uniqueTitle,
     production_company: "test",
     location: "Colorado, USA",
     location_raw: {
@@ -59,6 +61,6 @@ export function getProjectPayload(overrides: Partial<any> = {}) {
     image:
       "https://d1saerzfk5q61c.cloudfront.net/63e31adc898a4/c/8961bcd8-a292-4361-be31-d5e8d00dbeb5_1772193256568.png",
 
-    ...overrides 
+    ...overrides
   };
 }

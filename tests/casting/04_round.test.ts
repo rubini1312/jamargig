@@ -3,30 +3,32 @@ import LoginPage from "../../pages/casting/owner/login/loginPage";
 import RoundPage from "../../pages/casting/owner/round/roundPage";
 import { roundLocators } from "../../pages/casting/owner/round/roundPageLocators";
 import { validLogin } from "@/test-data/loginData";
-import { openFirstProject } from '../../helpers/projects';
 import { urls } from "@/utils/urls";
 import { getAccessTokenSmart } from "@/helpers/api/authApi";
-import { createCastingApiContext } from "@/helpers/api/castingApiContext";
 import { createProject, deleteProject } from "@/helpers/api/projectApi";
 import { createRole, deleteAllRoles } from "@/helpers/api/roleApi";
 import { deleteAllRounds } from "@/helpers/api/roundApi";
+import ProjectPage from "@/pages/casting/owner/project/projectPage";
 
 test.describe('Casting owner create round scenarios', () => {
     let token: string;
-    let api: APIRequestContext;
     let projectId: number;
+    let projectName: string;
     let uniqueName: string;
 
-    test.beforeEach(async ({ page, request }) => {
+    test.beforeAll(async ({request }) => {
         token = await getAccessTokenSmart(request, validLogin.email);
-        api = await createCastingApiContext(request);
 
         const { response } = await createProject(request, token);
         projectId = response.data.id;
+        projectName = response.data.title;
+        console.log(projectId);
         await createRole(request, token, projectId);
 
         uniqueName = `Automation Talent-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    });
 
+    test.beforeEach(async ({ page, request }) => {
         await page.goto(urls.casting);
         const login = new LoginPage(page);
         const status = await login.validLoginwithUI(validLogin.email, validLogin.password, request);
@@ -48,7 +50,8 @@ test.describe('Casting owner create round scenarios', () => {
         test.setTimeout(90000);
 
         const roundPage = new RoundPage(page);
-        const projectId = await openFirstProject(page);
+        const projectPage = new ProjectPage(page);
+        projectPage.openSearchedProject(projectName);
         await roundPage.openProjectById(projectId, { waitForUrl: new RegExp(`/projects/${projectId}`) });
         await roundPage.gotoRoundsTab();
 
@@ -78,7 +81,8 @@ test.describe('Casting owner create round scenarios', () => {
         test.setTimeout(90000);
 
         const roundPage = new RoundPage(page);
-        const projectId = await openFirstProject(page);
+        const projectPage = new ProjectPage(page);
+        projectPage.openSearchedProject(projectName);
         await roundPage.openProjectById(projectId, { waitForUrl: new RegExp(`/projects/${projectId}`) });
         await roundPage.gotoRoundsTab();
 
@@ -113,6 +117,8 @@ test.describe('Casting owner create round scenarios', () => {
     test('Submitting empty New Round form shows validation (required fields)', async ({ page, request }) => {
 
         const roundPage = new RoundPage(page);
+        const projectPage = new ProjectPage(page);
+        projectPage.openSearchedProject(projectName);
         await roundPage.gotoRoundsTab();
         await roundPage.openCreateRound();
 

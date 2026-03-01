@@ -1,7 +1,5 @@
 import { Page, expect } from '@playwright/test';
 import LoginPage from "../pages/casting/owner/login/loginPage";
-import * as data from "../test-data/test-data.json";
-import { logout } from './logout';
 
 /**
  * Navigates to settings and ensures that Two-Factor Authentication is enabled.

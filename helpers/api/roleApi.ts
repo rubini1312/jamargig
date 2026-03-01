@@ -1,6 +1,8 @@
 import { urls } from "@/utils/urls";
 import { APIRequestContext, expect } from "playwright/test";
 
+const uniqueName = `Test role ${Date.now()}`;
+
 export async function createRole(request: APIRequestContext, token: string, projectId: number): Promise<any> {
 
   const res = await request.post(
@@ -15,7 +17,7 @@ export async function createRole(request: APIRequestContext, token: string, proj
         height_unit: "cm",
         weight_unit: "kg",
         description: "<p>test for talent</p>",
-        role_name: `Test role ${Date.now()}`,
+        role_name: uniqueName,
         contract_type: 1,
         project_id: projectId
       }
