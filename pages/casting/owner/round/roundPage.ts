@@ -350,6 +350,7 @@ export default class RoundPage {
         throw new Error(`Could not select option "${value}" for dropdown ${selector} — no visible option found after ${maxWait}ms.`);
     }
 
+
     async createNewRound(payload: {
         name: string;
         typeIndex?: number;
@@ -369,27 +370,95 @@ export default class RoundPage {
         assessmentDateTo?: string;
         instructionHtml?: string;
     }) {
+
         await this.openCreateRound();
         await this.fillRoundName(payload.name);
-        if (payload.typeIndex) await this.selectRoundType(payload.typeIndex);
-        if (payload.timezone) await this.setTimezone(payload.timezone);
-        if (payload.location) await this.setLocation(payload.location);
-        if (payload.radius) await this.setRadius(payload.radius);
-        if (payload.units) await this.selectDropdownOption(roundLocators.roundUnitsInput, payload.units);
-        if (payload.defaultNumberOfTalents) await this.setDefaultNumberOfTalents(payload.defaultNumberOfTalents);
-        if (payload.minimumNumberOfTalents) await this.setMinimumNumberOfTalents(payload.minimumNumberOfTalents);
-        if (payload.roundDateFrom || payload.roundDateTo) await this.setRoundDate(payload.roundDateFrom ?? "", payload.roundDateTo);
-        if (payload.submissionTypeIndex) await this.setSubmissionType(payload.submissionTypeIndex);
-        if (payload.displayApplicationNumberIndex) await this.setDisplayApplicationNumber(payload.displayApplicationNumberIndex);
-        if (payload.submissionDateFrom || payload.submissionDateTo) await this.setSubmissionDate(payload.submissionDateFrom ?? "", payload.submissionDateTo);
-        if (payload.assessmentDateFrom || payload.assessmentDateTo) await this.setAssessmentDate(payload.assessmentDateFrom ?? "", payload.assessmentDateTo);
-        if (payload.instructionHtml) await this.fillInstruction(payload.instructionHtml);
+
+        if (payload.typeIndex)
+            await this.selectRoundType(payload.typeIndex);
+
+        if (payload.timezone)
+            await this.setTimezone(payload.timezone);
+
+        if (payload.location)
+            await this.setLocation(payload.location);
+
+        if (payload.radius)
+            await this.setRadius(payload.radius);
+
+        if (payload.units)
+            await this.selectDropdownOption(roundLocators.roundUnitsInput, payload.units);
+
+        if (payload.defaultNumberOfTalents)
+            await this.setDefaultNumberOfTalents(payload.defaultNumberOfTalents);
+
+        if (payload.minimumNumberOfTalents)
+            await this.setMinimumNumberOfTalents(payload.minimumNumberOfTalents);
+
+        if (payload.roundDateFrom || payload.roundDateTo)
+            await this.setRoundDate(payload.roundDateFrom ?? "", payload.roundDateTo);
+
+        if (payload.submissionTypeIndex) {
+            await this.setSubmissionType(payload.submissionTypeIndex);
+            await this.page.waitForTimeout(800); // UI refresh
+        }
+
+        if (payload.displayApplicationNumberIndex)
+            await this.setDisplayApplicationNumber(payload.displayApplicationNumberIndex);
+
+        // ---- SUBMISSION DATE (not for internal submission)
+        if (
+            payload.submissionTypeIndex !== 3 &&
+            (payload.submissionDateFrom || payload.submissionDateTo)
+        ) {
+            await this.setSubmissionDate(
+                payload.submissionDateFrom ?? "",
+                payload.submissionDateTo
+            );
+        }
+
+        // ---- ASSESSMENT DATE (always visible)
+        if (payload.assessmentDateFrom || payload.assessmentDateTo) {
+            await this.setAssessmentDate(
+                payload.assessmentDateFrom ?? "",
+                payload.assessmentDateTo
+            );
+        }
+
+        if (payload.instructionHtml)
+            await this.fillInstruction(payload.instructionHtml);
+
         await this.submitNewRound(payload.name);
     }
 
-    async isRoundPresent(name: string) {
-        const loc = this.page.locator(`text=${name}`);
-        return (await loc.count()) > 0;
+    async verifyRoundRow(data: {
+        name: string;
+        submissionType?: string;
+        roundType?: string;
+        status?: string;
+    }) {
+        const row = this.page.locator('tbody tr.n-data-table-tr').first();
+
+        row.filter({
+            has: this.page.locator(`[data-col-key="round_name"]`, { hasText: data.name })
+        });
+
+        await expect(row).toBeVisible();
+
+        if (data.submissionType) {
+            await expect(row.locator('[data-col-key="submission_type"]'))
+                .toHaveText(data.submissionType);
+        }
+
+        if (data.roundType) {
+            await expect(row.locator('[data-col-key="round_type"]'))
+                .toHaveText(data.roundType);
+        }
+
+        if (data.status) {
+            await expect(row.locator('[data-col-key="status"]'))
+                .toHaveText(data.status);
+        }
     }
 
     /**

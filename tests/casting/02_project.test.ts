@@ -94,7 +94,7 @@ test.describe("Casting owner create project flow", () => {
   });
 
   // =========================================================
-  test('Click project cover image (dynamic data-testid) and verify project page opens', async ({ page, request }) => {
+  test('Click project cover image and verify the added project page opens', async ({ page, request }) => {
 
     const rolePage = new RolePage(page);
 

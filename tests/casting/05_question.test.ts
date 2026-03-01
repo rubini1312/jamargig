@@ -24,7 +24,6 @@ test.describe('Casting owner create question scenarios', () => {
 
     test.beforeAll(async ({request }) => {
         token = await getAccessTokenSmart(request, validLogin.email);
-        //api = await createCastingApiContext(request);
 
         const { response } = await createProject(request, token);
         projectId = response.data.id;
