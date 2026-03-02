@@ -16,7 +16,7 @@ import { generateEmail } from "@/test-data/random-data";
 import { activateQuestion, createQuestion, deleteQuestion, getSubmittedForm } from "@/helpers/api/questionApi";
 import { TalentApplyPage } from "@/pages/talent/apply/applyRoundPage";
 
-test.describe.serial('Apply talent scenarioes', () => {
+test.describe('Apply talent scenarioes', () => {
 
     let token: string;
 
