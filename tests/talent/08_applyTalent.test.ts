@@ -208,6 +208,7 @@ test.describe('Apply talent scenarioes', () => {
         await page.waitForTimeout(3000);
 
         talentApply.clickSubmit();
+        await page.waitForTimeout(10000);
 
         //to be true
         expect((await talentApply.getSubmitedTagText())?.trim()).toBe("Submitted");
@@ -415,6 +416,7 @@ test.describe('Apply talent scenarioes', () => {
         talentApply.enterSubmission("Test submission")
 
         talentApply.clickSubmit();
+        await page.waitForTimeout(10000);
 
         //to be true
         expect((await talentApply.getSubmitedTagText())?.trim()).toBe("Submitted");
@@ -630,6 +632,7 @@ test.describe('Apply talent scenarioes', () => {
         await page.waitForTimeout(3000);
 
         talentApply.clickSubmit();
+        await page.waitForTimeout(10000);
 
         //to be true
         expect((await talentApply.getSubmitedTagText())?.trim()).toBe("Submitted");
@@ -838,6 +841,7 @@ test.describe('Apply talent scenarioes', () => {
         await page.waitForTimeout(3000);
         talentApply.enterSubmission("Test submission")
         talentApply.clickSubmit();
+        await page.waitForTimeout(10000);
 
         //to be true
         expect((await talentApply.getSubmitedTagText())?.trim()).toBe("Submitted");
@@ -865,4 +869,5 @@ test.describe('Apply talent scenarioes', () => {
 
     });
 
+    
 });
