@@ -32,13 +32,13 @@ export default class QuestionPage {
     }
 
     async gotoQuestionsTab() {
-    await this.openFirstProjectIfNeeded();
+        await this.openFirstProjectIfNeeded();
 
-    const tab = this.page.getByText("Questions");
-    await tab.waitFor({ state: "visible", timeout: 30000 });
-    await tab.click();
+        const tab = this.page.getByText("Questions");
+        await tab.waitFor({ state: "visible", timeout: 30000 });
+        await tab.click();
 
-    await this.page.getByText("Create Question").waitFor({ timeout: 30000 });
+        await this.page.getByText("Create Question").waitFor({ timeout: 30000 });
     }
 
 
@@ -91,23 +91,23 @@ export default class QuestionPage {
             throw new Error(`Could not select question type ${typeIndex} — no matching locator found or clickable.`);
         }
     }
-async selectQuestionTypeByText(typeText: string) {
-  const dropdown = this.page.locator(questionLocators.questionTypeGroup);
+    async selectQuestionTypeByText(typeText: string) {
+        const dropdown = this.page.locator(questionLocators.questionTypeGroup);
 
-  await dropdown.click();
+        await dropdown.click();
 
-  const menu = this.page.locator('.n-base-select-menu:visible').first();
-  await expect(menu).toBeVisible();
+        const menu = this.page.locator('.n-base-select-menu:visible').first();
+        await expect(menu).toBeVisible();
 
-  const option = menu.getByText(typeText, { exact: true });
-  await option.click();
+        const option = menu.getByText(typeText, { exact: true });
+        await option.click();
 
-  // wait for close
-  await expect(menu).toBeHidden();
+        // wait for close
+        await expect(menu).toBeHidden();
 
-  // verify selected value
-  await expect(dropdown).toContainText(typeText);
-}
+        // verify selected value
+        await expect(dropdown).toContainText(typeText);
+    }
 
 
 
@@ -116,7 +116,7 @@ async selectQuestionTypeByText(typeText: string) {
     async fillCheckboxOption(optionIndex: number, value: string) {
         const locator = `[data-testid="question-options-option-${optionIndex}"]`;
         const input = this.page.locator(locator);
-        
+
         // Wait for the input to exist and be visible
         try {
             await input.waitFor({ state: 'visible', timeout: 3000 });
@@ -124,14 +124,14 @@ async selectQuestionTypeByText(typeText: string) {
             console.log(`✗ Option ${optionIndex} not found:`, e);
             return;
         }
-        
+
         // Scroll into view
         try {
             await input.scrollIntoViewIfNeeded();
         } catch (e) {
             // Continue anyway
         }
-        
+
         // Fill the value
         try {
             await input.fill(value);
@@ -145,17 +145,17 @@ async selectQuestionTypeByText(typeText: string) {
 
     async addCheckboxOption() {
         const addButton = this.page.locator(questionLocators.questionAddCheckboxOptionButton);
-        
+
         // Wait for button to be visible
-        await addButton.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
-        
+        await addButton.waitFor({ state: 'visible', timeout: 3000 }).catch(() => { });
+
         // Scroll into view if needed
         try {
             await addButton.scrollIntoViewIfNeeded();
         } catch (e) {
             // If scroll fails, try clicking anyway
         }
-        
+
         // Click the add button with explicit timeout
         try {
             await addButton.click({ timeout: 3000 });
@@ -164,7 +164,7 @@ async selectQuestionTypeByText(typeText: string) {
             console.log('✗ Could not click Add button:', e);
             return;
         }
-        
+
         // Wait for new option field to appear
         await this.page.waitForTimeout(500);
     }
@@ -199,7 +199,7 @@ async selectQuestionTypeByText(typeText: string) {
         if (isChecked !== checked) await toggle.click();
     }
 
-    
+
     async getAvailableRounds(): Promise<string[]> {
 
         const dropdown = this.page.locator('[data-testid="question-rounds"] .n-base-selection');
@@ -250,55 +250,52 @@ async selectQuestionTypeByText(typeText: string) {
     }
 
 
-    async setQuestionRound() {
+    async setQuestionRound(roundName: string) {
         const field = this.page.locator('[data-testid="question-rounds-field"]');
 
         // open dropdown
         await field.locator('.n-base-selection').click();
 
-        // wait for menu
+        // wait for dropdown menu
         const menu = this.page.locator('.n-base-select-menu:visible').last();
         await menu.waitFor({ state: 'visible' });
 
-        // wait for options to load
-        const options = menu.locator('.n-base-select-option');
-        await options.first().waitFor({ state: 'visible', timeout: 30000 });
+        // find option by text
+        const option = menu.locator('.n-base-select-option', { hasText: roundName });
 
-        // click FIRST option
-        await options.first().click();
+        await option.waitFor({ state: 'visible', timeout: 15000 });
+        await option.click();
     }
- 
-    async setQuestionRole() {
-  const field = this.page.locator('[data-testid="question-roles-field"]');
 
-  // open dropdown
-  await field.locator('.n-base-selection-tags').click();
+    async setQuestionRole(roleName: string) {
+        const field = this.page.locator('[data-testid="question-roles-field"]');
 
-  // wait for menu portal
-  const menu = this.page.locator('.n-base-select-menu:visible').last();
-  await menu.waitFor({ state: 'visible' });
+        // open dropdown
+        await field.locator('.n-base-selection-tags').click();
 
-  // wait until options exist (important!)
-  const options = menu.locator('.n-base-select-option');
-  await expect(options.first()).toBeVisible({ timeout: 15000 });
+        // wait for dropdown menu
+        const menu = this.page.locator('.n-base-select-menu:visible').last();
+        await menu.waitFor({ state: 'visible' });
 
-  // click first
-  await options.first().click();
-}
+        // find option by text
+        const option = menu.locator('.n-base-select-option', { hasText: roleName });
 
+        await option.waitFor({ state: 'visible', timeout: 15000 });
+        await option.click();
+    }
 
 
     async submitQuestion() {
-    await this.page.locator(questionLocators.questionSaveButton).click();
+        await this.page.locator(questionLocators.questionSaveButton).click();
 
-    // wait modal close
-    await this.page.locator(questionLocators.questionTextInput)
-        .waitFor({ state: 'detached', timeout: 10000 })
-        .catch(() => {});
+        // wait modal close
+        await this.page.locator(questionLocators.questionTextInput)
+            .waitFor({ state: 'detached', timeout: 10000 })
+            .catch(() => { });
 
-    // wait for question to appear instead
-    await this.page.waitForTimeout(500); // UI settle
-}
+        // wait for question to appear instead
+        await this.page.waitForTimeout(500); // UI settle
+    }
 
 
     async closeNewQuestionModal() {
@@ -468,40 +465,89 @@ async selectQuestionTypeByText(typeText: string) {
         text: string;
         typeIndex: number;
         options?: string[];
+        mediaOptions?: number[];   // indexes of media checkboxes
         description?: string;
         required?: boolean;
         active?: boolean;
-        roundNames?: string;
-        roleNames?: string;
+        roundNames?: string[];
+        roleNames?: string[];
     }) {
+
+
         await this.openCreateQuestion();
+
+        // question text
         await this.fillQuestionText(payload.text);
+
+        // select question type
         await this.selectQuestionType(payload.typeIndex);
 
-        // Add options for checkbox/radio/dropdown/availability questions (types 2-7)
-        if (payload.options && payload.options.length > 0) {
+
+        // MEDIA QUESTION TYPE (typeIndex = 5)
+        if (payload.typeIndex === 5 && payload.mediaOptions?.length) {
+
+            const mediaCheckboxes = this.page.locator('.n-checkbox-group .n-checkbox');
+
+            for (const index of payload.mediaOptions) {
+                await mediaCheckboxes.nth(index).click();
+            }
+        }
+
+
+        // OPTIONS for checkbox / radio / dropdown / availability
+        else if (payload.options?.length) {
+
             for (let i = 0; i < payload.options.length; i++) {
-                if (i > 0) await this.addCheckboxOption();
+
+                if (i > 0) {
+                    await this.addCheckboxOption();
+                }
+
                 await this.fillCheckboxOption(i, payload.options[i]);
             }
         }
 
-        if (payload.description) await this.fillQuestionDescription(payload.description);
-        if (payload.required !== undefined) await this.toggleRequiredCheckbox(payload.required);
-        if (payload.active !== undefined) await this.toggleStatusToggle(payload.active);
-        if (payload.roundNames && payload.roundNames.length > 0) {
-            for (const roundName of payload.roundNames) {
-                await this.setQuestionRound();
-            }
+
+        // description
+        if (payload.description) {
+            await this.fillQuestionDescription(payload.description);
         }
-        if (payload.roleNames && payload.roleNames.length > 0) {
-            for (const roleName of payload.roleNames) {
-                await this.setQuestionRole();
+
+
+        // required checkbox
+        if (payload.required !== undefined) {
+            await this.toggleRequiredCheckbox(payload.required);
+        }
+
+
+        // status toggle
+        if (payload.active !== undefined) {
+            await this.toggleStatusToggle(payload.active);
+        }
+
+
+        // select rounds
+        if (payload.roundNames?.length) {
+            for (const roundName of payload.roundNames) {
+                await this.setQuestionRound(roundName);
             }
         }
 
+
+        // select roles
+        if (payload.roleNames?.length) {
+            for (const roleName of payload.roleNames) {
+                await this.setQuestionRole(roleName);
+            }
+        }
+
+
+        // save
         await this.submitQuestion();
+
+
     }
+
 
     async isQuestionPresent(text: string) {
         const loc = this.page.locator(`text=${text}`);
@@ -581,10 +627,10 @@ async selectQuestionTypeByText(typeText: string) {
         await locator.click();
 
         await Promise.race([
-            this.page.waitForURL(/\/projects\/\d+/, { timeout: 15000 }).catch(()=>{}),
+            this.page.waitForURL(/\/projects\/\d+/, { timeout: 15000 }).catch(() => { }),
             this.page.locator(questionLocators.questionTab)
                 .waitFor({ state: 'visible', timeout: 15000 })
-                .catch(()=>{})
+                .catch(() => { })
         ]);
 
 

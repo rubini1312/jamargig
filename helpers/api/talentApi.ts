@@ -36,7 +36,7 @@ export async function getFieldsByPageId(
   // retry up to 5 times if backend not ready yet
   for (let attempt = 0; attempt < 5; attempt++) {
 
-    const response = await request.get(url,{
+    const response = await request.get(url, {
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -69,10 +69,10 @@ export async function getFieldsByPageId(
   return [];
 }
 
-type FieldConfig = {status: boolean; required?: boolean;};
+type FieldConfig = { status: boolean; required?: boolean; };
 
 export async function applyRegistrationConfig(
-  request: APIRequestContext, token : string,
+  request: APIRequestContext, token: string,
   defaultConfig: Record<number, Record<string, FieldConfig>>
 ) {
   for (const pageId of Object.keys(defaultConfig)) {
@@ -83,10 +83,10 @@ export async function applyRegistrationConfig(
     const res = await request.get(
       urls.casting_base + `registration-pages/${pageNumber}/fields`,
       {
-      headers: {
-        Authorization: `Bearer ${token}`
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       }
-    }
     );
 
     if (!res.ok()) {
@@ -267,4 +267,32 @@ export async function deleteTalent(
   console.log("Delete Talent Status:", res.status());
 
   expect([200, 204]).toContain(res.status());
+}
+
+
+export async function updateTalentRegistration(
+  request: APIRequestContext,
+  token: string,
+  payload: any
+) {
+
+  console.log("Talent Registration Payload:");
+  console.log(JSON.stringify(payload, null, 2));
+
+  const res = await request.patch(
+    urls.talent_base + "registration",
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      data: payload
+    }
+  );
+
+  console.log("Status:", res.status());
+
+  expect(res.status()).toBe(201);
+
+  return await res.json();
 }

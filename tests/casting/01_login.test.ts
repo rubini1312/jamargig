@@ -36,7 +36,7 @@ test.describe("Casting owner login", () => {
     expect(validationText).toContain("Value is not a valid email address");
 
     // unAuthorized email
-    await login.enterEmail(invalidEmailLogin.unAuthorixedEmail);
+    await login.enterEmail(invalidEmailLogin.unAuthorizedEmail);
     const loginBtn = page.locator(loginLocators.logInButton);
     await loginBtn.waitFor({ state: "visible", timeout: 15000 });
     await expect(loginBtn).toBeEnabled();

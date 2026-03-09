@@ -19,5 +19,5 @@ export const emptyLogin = {
 
 export const invalidEmailLogin = {
   invalidformatemail: Math.random().toString(36).slice(2),
-  unAuthorixedEmail : generateEmail()
+  unAuthorizedEmail : generateEmail()
 };

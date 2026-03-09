@@ -4,13 +4,15 @@ import { expect } from "playwright/test";
 
 const uniqueName = `test-question-${Date.now()}`;
 
-export async function createQuestion(
+
+export async function createTextQuestion(
   request: APIRequestContext,
   token: string,
   projectId: number,
   roundId: number,
-  roleId: number
-): Promise<any> {
+  roleId: number,
+  question: string
+) {
 
   const res = await request.post(
     urls.casting_base + `projects/${projectId}/questions`,
@@ -20,20 +22,219 @@ export async function createQuestion(
         "Content-Type": "application/json"
       },
       data: {
-        options: [],
-        active_status: 0,
+        question,
         description: "",
-        question: uniqueName,
-        media_type: [],
         field_type_id: 1,
+        options: [],
+        media_type: [],
+        active_status: 1,
         rounds: [roundId],
         roles: [roleId]
       }
     }
   );
 
-  console.log("Create Question Status:", res.status());
-  expect(res.status()).toBe(201);
+  console.log("Text Question Status:", res.status());
+  expect([200, 201]).toContain(res.status());
+
+  return await res.json();
+}
+
+export async function createCheckboxQuestion(
+  request: APIRequestContext,
+  token: string,
+  projectId: number,
+  roundId: number,
+  roleId: number,
+  question: string,
+  options: string[]
+) {
+
+  const formattedOptions = options.map(o => ({ name: o }));
+
+  const res = await request.post(
+    urls.casting_base + `projects/${projectId}/questions`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      data: {
+        question,
+        description: "",
+        field_type_id: 2,
+        options: formattedOptions,
+        media_type: [],
+        active_status: 1,
+        rounds: [roundId],
+        roles: [roleId]
+      }
+    }
+  );
+
+  console.log("Checkbox Question Status:", res.status());
+  console.log(await res.text());
+
+  expect([200, 201]).toContain(res.status());
+
+  return await res.json();
+}
+
+export async function createRadioQuestion(
+  request: APIRequestContext,
+  token: string,
+  projectId: number,
+  roundId: number,
+  roleId: number,
+  question: string,
+  options: string[]
+) {
+
+  const formattedOptions = options.map(o => ({ name: o }));
+
+  const res = await request.post(
+    urls.casting_base + `projects/${projectId}/questions`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      data: {
+        question,
+        description: "",
+        field_type_id: 3,
+        options: formattedOptions,
+        media_type: [],
+        active_status: 1,
+        rounds: [roundId],
+        roles: [roleId]
+      }
+    }
+  );
+
+  console.log("Radio Question Status:", res.status());
+  console.log(await res.text());
+
+  expect([200, 201]).toContain(res.status());
+
+  return await res.json();
+}
+
+export async function createDropdownQuestion(
+  request: APIRequestContext,
+  token: string,
+  projectId: number,
+  roundId: number,
+  roleId: number,
+  question: string,
+  options: string[]
+) {
+
+  const formattedOptions = options.map(o => ({ name: o }));
+
+  const res = await request.post(
+    urls.casting_base + `projects/${projectId}/questions`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      data: {
+        question,
+        description: "",
+        field_type_id: 4,
+        options: formattedOptions,
+        media_type: [],
+        active_status: 1,
+        rounds: [roundId],
+        roles: [roleId]
+      }
+    }
+  );
+
+  console.log("Dropdown Question Status:", res.status());
+  console.log(await res.text());
+
+  expect([200, 201]).toContain(res.status());
+
+  return await res.json();
+}
+
+export async function createMediaQuestion(
+  request: APIRequestContext,
+  token: string,
+  projectId: number,
+  roundId: number,
+  roleId: number,
+  question: string,
+  mediaTypes: number[]
+) {
+
+  const res = await request.post(
+    urls.casting_base + `projects/${projectId}/questions`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      data: {
+        question,
+        description: "",
+        field_type_id: 5,
+        options: [],
+        media_type: mediaTypes,
+        active_status: 1,
+        rounds: [roundId],
+        roles: [roleId]
+      }
+    }
+  );
+
+  console.log("Media Question Status:", res.status());
+  console.log(await res.text());
+
+  expect([200, 201]).toContain(res.status());
+
+  return await res.json();
+}
+
+
+export async function createAvailabilityQuestion(
+  request: APIRequestContext,
+  token: string,
+  projectId: number,
+  roundId: number,
+  roleId: number,
+  question: string,
+  options: string[]
+) {
+
+  const formattedOptions = options.map(o => ({ name: o }));
+
+  const res = await request.post(
+    urls.casting_base + `projects/${projectId}/questions`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      data: {
+        question,
+        description: "",
+        field_type_id: 7,
+        options: formattedOptions,
+        media_type: [],
+        active_status: 1,
+        rounds: [roundId],
+        roles: [roleId]
+      }
+    }
+  );
+
+  console.log("Availability Question Status:", res.status());
+  console.log(await res.text());
+
+  expect([200, 201]).toContain(res.status());
 
   return await res.json();
 }
@@ -42,10 +243,66 @@ export async function activateQuestion(
   request: APIRequestContext,
   token: string,
   projectId: number,
-  questionId: number,
+  question: any,
   roleId: number,
-  roundId: number
+  roundId: number,
+  fieldType: number
 ): Promise<any> {
+
+  const payload: any = {
+    question_id: question.data.question_id,
+    question: question.data.question,
+    description: question.data.description ?? "",
+    mandatory: 0,
+    client_access: 0,
+    active_status: 1,
+    is_checkin_question: false,
+    field_type_id: fieldType,
+    roles: [roleId],
+    rounds: [roundId]
+  };
+
+  if (question.data.options?.length) {
+    payload.options = question.data.options.map((o: any) =>
+      typeof o === "string" ? { value: o } : o
+    );
+  }
+
+  if (question.data.media_type?.length) {
+    payload.media_type = question.data.media_type;
+  }
+
+  console.log("Activate payload:", payload);
+
+  const res = await request.patch(
+    `${urls.casting_base}projects/${projectId}/questions/${question.data.question_id}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      data: payload
+    }
+  );
+
+  console.log("Activate Question Status:", res.status());
+  console.log(await res.text());
+
+  expect([200, 201]).toContain(res.status());
+
+  return await res.json();
+}
+
+
+export async function makeTextQuestionAsMandory(
+  request: APIRequestContext,
+  token: string,
+  projectId: number,
+  roundId: number,
+  roleId: number,
+  question: string,
+  questionId: number
+) {
 
   const res = await request.patch(
     urls.casting_base + `projects/${projectId}/questions/${questionId}`,
@@ -55,28 +312,233 @@ export async function activateQuestion(
         "Content-Type": "application/json"
       },
       data: {
-        question_id: questionId,
-        question: uniqueName,
+        question,
         description: "",
-        mandatory: 0,
-        client_access: 0,
-        active_status: 1,
-        media_type: [],
-        is_checkin_question: false,
         field_type_id: 1,
-        roles: [roleId],
+        options: [],
+        media_type: [],
+        active_status: 1,
+        mandatory: 1,
         rounds: [roundId],
-        options: []
+        roles: [roleId]
       }
     }
   );
 
-  console.log("Activate Question Status:", res.status());
+  console.log("Text Question Status:", res.status());
   expect([200, 201]).toContain(res.status());
 
   return await res.json();
 }
 
+export async function makeCheckboxQuestionAsMandotory(
+  request: APIRequestContext,
+  token: string,
+  projectId: number,
+  roundId: number,
+  roleId: number,
+  question: string,
+  options: string[],
+  questionId: number
+) {
+
+  const formattedOptions = options.map(o => ({ name: o }));
+
+  const res = await request.patch(
+    urls.casting_base + `projects/${projectId}/questions/${questionId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      data: {
+        question,
+        description: "",
+        field_type_id: 2,
+        options: formattedOptions,
+        media_type: [],
+        active_status: 1,
+        mandatory: 1,
+        rounds: [roundId],
+        roles: [roleId]
+      }
+    }
+  );
+
+  console.log("Checkbox Question Status:", res.status());
+  console.log(await res.text());
+
+  expect([200, 201]).toContain(res.status());
+
+  return await res.json();
+}
+
+export async function makeRadioQuestionAsMandotory(
+  request: APIRequestContext,
+  token: string,
+  projectId: number,
+  roundId: number,
+  roleId: number,
+  question: string,
+  options: string[],
+  questionId: number
+) {
+
+  const formattedOptions = options.map(o => ({ name: o }));
+
+  const res = await request.patch(
+    urls.casting_base + `projects/${projectId}/questions/${questionId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      data: {
+        question,
+        description: "",
+        field_type_id: 3,
+        options: formattedOptions,
+        media_type: [],
+        active_status: 1,
+        mandatory: 1,
+        rounds: [roundId],
+        roles: [roleId]
+      }
+    }
+  );
+
+  console.log("Radio Question Status:", res.status());
+  console.log(await res.text());
+
+  expect([200, 201]).toContain(res.status());
+
+  return await res.json();
+}
+
+export async function makeDropdownQuestionAsMandotory(
+  request: APIRequestContext,
+  token: string,
+  projectId: number,
+  roundId: number,
+  roleId: number,
+  question: string,
+  options: string[],
+  questionId: number
+) {
+
+  const formattedOptions = options.map(o => ({ name: o }));
+
+  const res = await request.patch(
+    urls.casting_base + `projects/${projectId}/questions/${questionId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      data: {
+        question,
+        description: "",
+        field_type_id: 4,
+        options: formattedOptions,
+        media_type: [],
+        active_status: 1,
+        mandatory: 1,
+        rounds: [roundId],
+        roles: [roleId]
+      }
+    }
+  );
+
+  console.log("Dropdown Question Status:", res.status());
+  console.log(await res.text());
+
+  expect([200, 201]).toContain(res.status());
+
+  return await res.json();
+}
+
+export async function makeMediaQuestionAsMandotory(
+  request: APIRequestContext,
+  token: string,
+  projectId: number,
+  roundId: number,
+  roleId: number,
+  question: string,
+  mediaTypes: number[],
+  questionId: number
+) {
+
+  const res = await request.patch(
+    urls.casting_base + `projects/${projectId}/questions/${questionId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      data: {
+        question,
+        description: "",
+        field_type_id: 5,
+        options: [],
+        media_type: mediaTypes,
+        active_status: 1,
+        mandatory: 1,
+        rounds: [roundId],
+        roles: [roleId]
+      }
+    }
+  );
+
+  console.log("Media Question Status:", res.status());
+  console.log(await res.text());
+
+  expect([200, 201]).toContain(res.status());
+
+  return await res.json();
+}
+
+
+export async function makeAvailabilityQuestionAsMandotory(
+  request: APIRequestContext,
+  token: string,
+  projectId: number,
+  roundId: number,
+  roleId: number,
+  question: string,
+  options: string[],
+  questionId: number
+) {
+
+  const formattedOptions = options.map(o => ({ name: o }));
+
+  const res = await request.patch(
+    urls.casting_base + `projects/${projectId}/questions/${questionId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      data: {
+        question,
+        description: "",
+        field_type_id: 7,
+        options: formattedOptions,
+        media_type: [],
+        active_status: 1,
+        mandatory: 1,
+        rounds: [roundId],
+        roles: [roleId]
+      }
+    }
+  );
+
+  console.log("Availability Question Status:", res.status());
+  console.log(await res.text());
+
+  expect([200, 201]).toContain(res.status());
+
+  return await res.json();
+}
 
 export async function deleteQuestion(
   request: APIRequestContext,

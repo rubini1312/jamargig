@@ -20,13 +20,13 @@ export const defaultConfig = {
   },
   4: {
     production_types: { status: true, required: true },
-    m_CmsQ: { status: false } 
+    m_CmsQ: { status: false }
   }
 };
 
 //full config
 export const fullConfig = {
-    1: {
+  1: {
     name: { status: true, required: true },
     stage_name: { status: true },
     location: { status: true },
@@ -44,7 +44,33 @@ export const fullConfig = {
     description: { status: true }
   },
   4: {
-    production_types: { status: true},
-    m_CmsQ: { status: false } 
+    production_types: { status: true },
+    m_CmsQ: { status: false }
   }
-};
+}
+
+
+  //config for API
+export const apiConfig = {
+    1: {
+      name: { status: true, required: true },
+      stage_name: { status: true },
+      location: { status: true },
+      gender: { status: true },
+      birth: { status: true, required: true },
+      weight: { status: false },
+      languages: { status: false }
+    },
+    2: {
+      avatar: { status: false}
+    },
+    3: {
+      self_rated_skills: { status: true },
+      unions: { status: true },
+      description: { status: true }
+    },
+    4: {
+      production_types: { status: false },
+      m_CmsQ: { status: false }
+    }
+  };

@@ -49,7 +49,14 @@ export const questionLocators = {
     //questionRoleSelect:"//div[@data-testid='question-roles']//div[@class='n-base-selection n-base-selection--multiple']",
 
     // actions
-    questionSaveButton: '[data-testid="questions-form-save-button"]'
+    questionSaveButton: '[data-testid="questions-form-save-button"]',
+
+    // individual checkboxes
+    imageCheckbox: '.n-checkbox-group .n-checkbox >> nth=0',
+    videoCheckbox: '.n-checkbox-group .n-checkbox >> nth=1',
+    AudioCheckbox: '.n-checkbox-group .n-checkbox >> nth=2',
+    pdfCheckbox: '.n-checkbox-group .n-checkbox >> nth=3',
+
 
 };
 

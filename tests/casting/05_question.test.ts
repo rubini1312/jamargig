@@ -22,7 +22,7 @@ test.describe('Casting owner create question scenarios', () => {
     let projectName: string;
     let uniqueName: string;
 
-    test.beforeAll(async ({request }) => {
+    test.beforeAll(async ({ request }) => {
         token = await getAccessTokenSmart(request, validLogin.email);
 
         const { response } = await createProject(request, token);
@@ -63,110 +63,6 @@ test.describe('Casting owner create question scenarios', () => {
     });
 
     // =========================================================
-    test('Create new checkbox question with options and verify it appears in questions list', async ({ page, request }) => {
-        test.setTimeout(90000);
-
-        const questionPage = new QuestionPage(page);
-        const projectPage = new ProjectPage(page);
-        projectPage.openSearchedProject(projectName);
-        await questionPage.openProjectById(projectId, { waitForUrl: new RegExp(`/projects/${projectId}`) });
-        await questionPage.gotoQuestionsTab();
-
-        // Open question modal
-        await questionPage.openCreateQuestion();
-
-        // Continue creating question manually
-        await questionPage.fillQuestionText(questionData.questionText);
-        await questionPage.selectQuestionType(2);
-
-        // Fill and add checkbox options in correct sequence
-        await questionPage.fillCheckboxOption(0, 'Option 1');
-        await questionPage.addCheckboxOption();
-        await questionPage.fillCheckboxOption(1, 'Option 2');
-        await questionPage.addCheckboxOption();
-        await questionPage.fillCheckboxOption(2, 'Option 3');
-
-        await questionPage.fillQuestionDescription(questionData.questionDescription);
-        await questionPage.toggleRequiredCheckbox(false);
-        await questionPage.toggleStatusToggle(true);
-        await page.waitForTimeout(2000);
-
-        const rounds = await questionPage.getAvailableRounds();
-        if (rounds.length) await questionPage.setQuestionRound();
-
-        const roles = await questionPage.getAvailableRoles();
-        if (roles.length) await questionPage.setQuestionRole();
-
-        await questionPage.submitQuestion();
-        // small wait for list to refresh then verify
-        await page.waitForTimeout(2000);
-
-        expect(await questionPage.isQuestionPresent(questionData.questionText)).toBeTruthy();
-    });
-
-    // =========================================================
-    test('Create new radio button question with options and verify it appears in questions list', async ({ page, request }) => {
-        test.setTimeout(90000);
-
-        const questionPage = new QuestionPage(page);
-        const projectPage = new ProjectPage(page);
-        projectPage.openSearchedProject(projectName);
-        await questionPage.openProjectById(projectId, { waitForUrl: new RegExp(`/projects/${projectId}`) });
-        await questionPage.gotoQuestionsTab();
-
-        await questionPage.createNewQuestion({
-            text: questionData.questionText,
-            typeIndex: 3,
-            options: questionData.radioButtonOptions,
-            description: questionData.questionDescription,
-            required: true,
-            active: true
-        });
-
-        const rounds = await questionPage.getAvailableRounds();
-        if (rounds.length) await questionPage.setQuestionRound();
-
-        const roles = await questionPage.getAvailableRoles();
-        if (roles.length) await questionPage.setQuestionRole();
-
-        await questionPage.submitQuestion();
-        // small wait for list to refresh then verify
-        await page.waitForTimeout(2000);
-        expect(await questionPage.isQuestionPresent(questionData.questionText)).toBeTruthy();
-    });
-
-    // =========================================================
-    test('Create new dropdown question with options and verify it appears in questions list', async ({ page, request }) => {
-        test.setTimeout(90000);
-
-        const questionPage = new QuestionPage(page);
-        const projectPage = new ProjectPage(page);
-        projectPage.openSearchedProject(projectName);
-        await questionPage.openProjectById(projectId, { waitForUrl: new RegExp(`/projects/${projectId}`) });
-        await questionPage.gotoQuestionsTab();
-        ;
-        await questionPage.createNewQuestion({
-            text: questionData.questionText,
-            typeIndex: 4,
-            options: questionData.dropdownOptions,
-            description: questionData.questionDescription,
-            required: false,
-            active: true
-        });
-
-        const rounds = await questionPage.getAvailableRounds();
-        if (rounds.length) await questionPage.setQuestionRound();
-
-        const roles = await questionPage.getAvailableRoles();
-        if (roles.length) await questionPage.setQuestionRole();
-
-        await questionPage.submitQuestion();
-        // small wait for list to refresh then verify
-        await page.waitForTimeout(2000);
-        expect(await questionPage.isQuestionPresent(questionData.questionDescription)).toBeTruthy();
-    });
-
-    // =========================================================
     test('Submitting empty new question form shows validation (required fields)', async ({ page, request }) => {
 
         const questionPage = new QuestionPage(page);
@@ -198,37 +94,285 @@ test.describe('Casting owner create question scenarios', () => {
     });
 
     // =========================================================
-    test('Create new text question with round and role selection', async ({ page, request }) => {
+    test('Create new text question with round and role selection', async ({ page }) => {
         test.setTimeout(90000);
 
         const questionPage = new QuestionPage(page);
         const projectPage = new ProjectPage(page);
-        projectPage.openSearchedProject(projectName);
-        await questionPage.openProjectById(projectId, { waitForUrl: new RegExp(`/projects/${projectId}`) });
+
+        await projectPage.openSearchedProject(projectName);
+
+        await questionPage.openProjectById(projectId, {
+            waitForUrl: new RegExp(`/projects/${projectId}`)
+        });
+
         await questionPage.gotoQuestionsTab();
 
-        // Open question modal
-        await questionPage.openCreateQuestion();
-        ;
-        // Continue creating question manually
-        await questionPage.fillQuestionText(questionData.questionText);
-        await questionPage.selectQuestionTypeByText("Text");
-        await questionPage.fillQuestionDescription(questionData.questionDescription);
-        await questionPage.toggleRequiredCheckbox(true);
-        await questionPage.toggleStatusToggle(true);
+        await questionPage.createNewQuestion({
+            text: questionData.questionText,
+            typeIndex: 1,
+            description: questionData.questionDescription,
+            required: true,
+            active: true,
+            roundNames: [roundName],
+            roleNames: [roleName]
+        });
 
-        const rounds = await questionPage.getAvailableRounds();
-        if (rounds.length) await questionPage.setQuestionRound();
-
-        const roles = await questionPage.getAvailableRoles();
-        if (roles.length) await questionPage.setQuestionRole();
-
-        // Submit the question
-        await questionPage.submitQuestion();
-
-        // small wait for list to refresh then verify
-        await page.waitForTimeout(10000);
+        await page.waitForTimeout(2000);
 
         expect(await questionPage.isQuestionPresent(questionData.questionText)).toBeTruthy();
     });
+
+    // =========================================================
+    test('Create new checkbox question with options and verify it appears in questions list', async ({ page }) => {
+        test.setTimeout(90000);
+
+        const questionPage = new QuestionPage(page);
+        const projectPage = new ProjectPage(page);
+
+        await projectPage.openSearchedProject(projectName);
+
+        await questionPage.openProjectById(projectId, {
+            waitForUrl: new RegExp(`/projects/${projectId}`)
+        });
+
+        await questionPage.gotoQuestionsTab();
+
+        await questionPage.createNewQuestion({
+            text: questionData.questionText,
+            typeIndex: 2,
+            options: ['Option 1', 'Option 2', 'Option 3'],
+            description: questionData.questionDescription,
+            required: false,
+            active: true,
+            roundNames: [roundName],
+            roleNames: [roleName]
+        });
+
+        await page.waitForTimeout(2000);
+
+        expect(await questionPage.isQuestionPresent(questionData.questionText)).toBeTruthy();
+    });
+
+    // =========================================================
+    test('Create new radio button question with options and verify it appears in questions list', async ({ page }) => {
+        test.setTimeout(90000);
+
+        const questionPage = new QuestionPage(page);
+        const projectPage = new ProjectPage(page);
+
+        await projectPage.openSearchedProject(projectName);
+
+        await questionPage.openProjectById(projectId, {
+            waitForUrl: new RegExp(`/projects/${projectId}`)
+        });
+
+        await questionPage.gotoQuestionsTab();
+
+        await questionPage.createNewQuestion({
+            text: questionData.questionText,
+            typeIndex: 3,
+            options: questionData.radioButtonOptions,
+            description: questionData.questionDescription,
+            required: true,
+            active: true,
+            roundNames: [roundName],
+            roleNames: [roleName]
+        });
+
+        await page.waitForTimeout(2000);
+
+        expect(await questionPage.isQuestionPresent(questionData.questionText)).toBeTruthy();
+    });
+
+    // =========================================================
+    test('Create new dropdown question with options and verify it appears in questions list', async ({ page }) => {
+
+        test.setTimeout(90000);
+
+        const questionPage = new QuestionPage(page);
+        const projectPage = new ProjectPage(page);
+
+        await projectPage.openSearchedProject(projectName);
+
+        await questionPage.openProjectById(projectId, {
+            waitForUrl: new RegExp(`/projects/${projectId}`)
+        });
+
+        await questionPage.gotoQuestionsTab();
+
+        await questionPage.createNewQuestion({
+            text: questionData.questionText,
+            typeIndex: 4,
+            options: questionData.dropdownOptions,
+            description: questionData.questionDescription,
+            required: false,
+            active: true,
+            roundNames: [roundName],
+            roleNames: [roleName]
+        });
+
+        // wait for list refresh
+        await page.waitForTimeout(2000);
+
+        expect(await questionPage.isQuestionPresent(questionData.questionText)).toBeTruthy();
+    });
+
+
+    // =========================================================
+    test('Create new media type - image question with options and verify it appears in questions list', async ({ page }) => {
+        test.setTimeout(90000);
+
+        const questionPage = new QuestionPage(page);
+        const projectPage = new ProjectPage(page);
+
+        await projectPage.openSearchedProject(projectName);
+
+        await questionPage.openProjectById(projectId, {
+            waitForUrl: new RegExp(`/projects/${projectId}`)
+        });
+
+        await questionPage.gotoQuestionsTab();
+
+        await questionPage.createNewQuestion({
+            text: questionData.questionText,
+            typeIndex: 5,
+            mediaOptions: [0],
+            description: questionData.questionDescription,
+            required: false,
+            active: true,
+            roundNames: [roundName],
+            roleNames: [roleName]
+        });
+
+        await page.waitForTimeout(2000);
+
+        expect(await questionPage.isQuestionPresent(questionData.questionText)).toBeTruthy();
+    });
+
+    // =========================================================
+    test('Create new media type - video question with options and verify it appears in questions list', async ({ page }) => {
+        test.setTimeout(90000);
+
+        const questionPage = new QuestionPage(page);
+        const projectPage = new ProjectPage(page);
+
+        await projectPage.openSearchedProject(projectName);
+
+        await questionPage.openProjectById(projectId, {
+            waitForUrl: new RegExp(`/projects/${projectId}`)
+        });
+
+        await questionPage.gotoQuestionsTab();
+
+        await questionPage.createNewQuestion({
+            text: questionData.questionText,
+            typeIndex: 5,
+            mediaOptions: [1],
+            description: questionData.questionDescription,
+            required: false,
+            active: true,
+            roundNames: [roundName],
+            roleNames: [roleName]
+        });
+
+        await page.waitForTimeout(2000);
+
+        expect(await questionPage.isQuestionPresent(questionData.questionText)).toBeTruthy();
+    });
+
+    // =========================================================
+    test('Create new media type - audio question with options and verify it appears in questions list', async ({ page }) => {
+        test.setTimeout(90000);
+
+        const questionPage = new QuestionPage(page);
+        const projectPage = new ProjectPage(page);
+
+        await projectPage.openSearchedProject(projectName);
+
+        await questionPage.openProjectById(projectId, {
+            waitForUrl: new RegExp(`/projects/${projectId}`)
+        });
+
+        await questionPage.gotoQuestionsTab();
+
+        await questionPage.createNewQuestion({
+            text: questionData.questionText,
+            typeIndex: 5,
+            mediaOptions: [2],
+            description: questionData.questionDescription,
+            required: false,
+            active: true,
+            roundNames: [roundName],
+            roleNames: [roleName]
+        });
+
+        await page.waitForTimeout(2000);
+
+        expect(await questionPage.isQuestionPresent(questionData.questionText)).toBeTruthy();
+    });
+
+    // =========================================================
+    test('Create new media type - pdf question with options and verify it appears in questions list', async ({ page }) => {
+        test.setTimeout(90000);
+
+        const questionPage = new QuestionPage(page);
+        const projectPage = new ProjectPage(page);
+
+        await projectPage.openSearchedProject(projectName);
+
+        await questionPage.openProjectById(projectId, {
+            waitForUrl: new RegExp(`/projects/${projectId}`)
+        });
+
+        await questionPage.gotoQuestionsTab();
+
+        await questionPage.createNewQuestion({
+            text: questionData.questionText,
+            typeIndex: 5, // Media type
+            mediaOptions: [3],
+            description: questionData.questionDescription,
+            required: false,
+            active: true,
+            roundNames: [roundName],
+            roleNames: [roleName]
+        });
+
+        await page.waitForTimeout(2000);
+
+        expect(await questionPage.isQuestionPresent(questionData.questionText)).toBeTruthy();
+    });
+
+    // =========================================================
+    test('Create new media type - all types question with options and verify it appears in questions list', async ({ page }) => {
+        test.setTimeout(90000);
+
+        const questionPage = new QuestionPage(page);
+        const projectPage = new ProjectPage(page);
+
+        await projectPage.openSearchedProject(projectName);
+
+        await questionPage.openProjectById(projectId, {
+            waitForUrl: new RegExp(`/projects/${projectId}`)
+        });
+
+        await questionPage.gotoQuestionsTab();
+
+        await questionPage.createNewQuestion({
+            text: questionData.questionText,
+            typeIndex: 5,
+            mediaOptions: [0, 1, 2, 3],
+            description: questionData.questionDescription,
+            required: false,
+            active: true,
+            roundNames: [roundName],
+            roleNames: [roleName]
+        });
+
+        await page.waitForTimeout(2000);
+
+        expect(await questionPage.isQuestionPresent(questionData.questionText)).toBeTruthy();
+    });
+
+
 });

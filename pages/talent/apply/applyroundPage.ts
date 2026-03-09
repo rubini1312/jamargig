@@ -1,5 +1,6 @@
 import { Page } from "playwright";
 import { talentApplyPageLocators } from "./applyRoundPageLocators";
+import path = require("path");
 
 
 export class TalentApplyPage {
@@ -9,7 +10,7 @@ export class TalentApplyPage {
         await this.page.locator(talentApplyPageLocators.applyBtn_onlineRound).click();
     }
 
-    async enterSubmission(submission : string ) {
+    async enterSubmission(submission: string) {
         await this.page.locator(talentApplyPageLocators.questionSubmissionInput).fill(submission);
     }
 
@@ -37,5 +38,80 @@ export class TalentApplyPage {
         return await this.page
             .locator(talentApplyPageLocators.submitedRole)
             .textContent();
+    }
+
+    async selectSkills(skills: string[]) {
+        for (const skill of skills) {
+            await this.page
+                .locator(".n-checkbox")
+                .filter({ hasText: skill })
+                .click();
+        }
+    }
+
+    async selectRadioOption(option: string) {
+        await this.page
+            .locator(".n-radio")
+            .filter({ hasText: option })
+            .click();
+    }
+
+    async selectCountry(country: string) {
+        await this.page.locator(".n-base-selection-label").first().click();
+
+        await this.page
+            .locator(".n-base-select-option")
+            .filter({ hasText: country })
+            .click();
+    }
+
+    async selectAvailability(period: string, option: string) {
+        await this.page
+            .locator(".n-form-item")
+            .filter({ hasText: period })
+            .locator("label.n-radio-button", { hasText: option })
+            .click();
+    }
+    async clickUploadButton(mediaName: string) {
+
+        const section = this.page
+            .locator('.n-form-item')
+            .filter({ hasText: mediaName })
+            .first();
+
+        await section.locator('button.browse').click();
+
+    }
+    async openMediaLibrary() {
+        await this.page.locator(talentApplyPageLocators.addMediaButton).click();
+    }
+
+    async addMediaFromDevice(fileName: string) {
+
+        const filePath = path.join(process.cwd(), "test-files", fileName);
+
+        const fileInput = this.page.locator("input.n-upload-file-input");
+
+        await fileInput.setInputFiles(filePath);
+
+        await this.page.getByRole("button", { name: "Add Media to Application" }).click();
+    }
+
+    async addMediaToLibrary() {
+        await this.page.locator(talentApplyPageLocators.addToLibraryBtn).click();
+    }
+
+    async addMediaToApplication() {
+        await this.page.locator(talentApplyPageLocators.addMediaToApplication).click();
+    }
+
+    async selectMedia(mediaName: string) {
+
+        await this.page
+            .locator("div")
+            .filter({ hasText: mediaName })
+            .locator(".n-checkbox-box__border")
+            .click();
+
     }
 }
