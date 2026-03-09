@@ -239,43 +239,16 @@ export async function createAvailabilityQuestion(
   return await res.json();
 }
 
-export async function activateQuestion(
+export async function updateQuestionAsInactive(
   request: APIRequestContext,
   token: string,
   projectId: number,
-  question: any,
-  roleId: number,
-  roundId: number,
-  fieldType: number
-): Promise<any> {
-
-  const payload: any = {
-    question_id: question.data.question_id,
-    question: question.data.question,
-    description: question.data.description ?? "",
-    mandatory: 0,
-    client_access: 0,
-    active_status: 1,
-    is_checkin_question: false,
-    field_type_id: fieldType,
-    roles: [roleId],
-    rounds: [roundId]
-  };
-
-  if (question.data.options?.length) {
-    payload.options = question.data.options.map((o: any) =>
-      typeof o === "string" ? { value: o } : o
-    );
-  }
-
-  if (question.data.media_type?.length) {
-    payload.media_type = question.data.media_type;
-  }
-
-  console.log("Activate payload:", payload);
+  questionId: number,
+  payload: any
+) {
 
   const res = await request.patch(
-    `${urls.casting_base}projects/${projectId}/questions/${question.data.question_id}`,
+    urls.casting_base + `projects/${projectId}/questions/${questionId}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -284,9 +257,6 @@ export async function activateQuestion(
       data: payload
     }
   );
-
-  console.log("Activate Question Status:", res.status());
-  console.log(await res.text());
 
   expect([200, 201]).toContain(res.status());
 
@@ -497,7 +467,6 @@ export async function makeMediaQuestionAsMandotory(
   return await res.json();
 }
 
-
 export async function makeAvailabilityQuestionAsMandotory(
   request: APIRequestContext,
   token: string,
@@ -540,6 +509,84 @@ export async function makeAvailabilityQuestionAsMandotory(
   return await res.json();
 }
 
+export async function makeTextQuestionAsInactive(
+  request: APIRequestContext,
+  token: string,
+  projectId: number,
+  roundId: number,
+  roleId: number,
+  question: string,
+  questionId: number
+) {
+
+  const res = await request.patch(
+    urls.casting_base + `projects/${projectId}/questions/${questionId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      data: {
+        question,
+        description: "",
+        field_type_id: 1,
+        options: [],
+        media_type: [],
+        active_status: 0,
+        mandatory: 1,
+        rounds: [roundId],
+        roles: [roleId]
+      }
+    }
+  );
+
+  console.log("Text Question Status:", res.status());
+  expect([200, 201]).toContain(res.status());
+
+  return await res.json();
+}
+
+export async function makeCheckboxQuestionAsInactive(
+  request: APIRequestContext,
+  token: string,
+  projectId: number,
+  roundId: number,
+  roleId: number,
+  question: string,
+  options: string[],
+  questionId: number
+) {
+
+  const formattedOptions = options.map(o => ({ name: o }));
+
+  const res = await request.patch(
+    urls.casting_base + `projects/${projectId}/questions/${questionId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      data: {
+        question,
+        description: "",
+        field_type_id: 2,
+        options: formattedOptions,
+        media_type: [],
+        active_status: 0,
+        mandatory: 1,
+        rounds: [roundId],
+        roles: [roleId]
+      }
+    }
+  );
+
+  console.log("Checkbox Question Status:", res.status());
+  console.log(await res.text());
+
+  expect([200, 201]).toContain(res.status());
+
+  return await res.json();
+}
 export async function deleteQuestion(
   request: APIRequestContext,
   token: string,
