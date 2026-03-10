@@ -84,6 +84,10 @@ export class TalentRegisterPage {
     await this.page.locator(talentRegisterLocators.descriptionInput).fill(description);
   }
 
+  async enterMobile(number: string) {
+    await this.page.locator(talentRegisterLocators.mobileInput).fill(number);
+  }
+
   async selectProductType(index: number) {
     await this.page.locator(talentRegisterLocators.productionTypeSelector).click();
     const options = this.page.locator(talentRegisterLocators.dropDownOptions);

@@ -123,6 +123,10 @@ export async function applyRegistrationConfig(
       const patchRes = await request.patch(
         urls.casting_base + `registration-pages/${pageNumber}/fields/${fieldName}`,
         {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
           data: payload
         }
       );

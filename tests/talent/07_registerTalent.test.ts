@@ -292,6 +292,10 @@ test.describe('Talent registration scenarioes', () => {
             await talentRegisterPage.openDOBAndSelectDate("20 Apr 1990");
             break;
 
+          case "phone1":
+            await talentRegisterPage.enterMobile("6152369");
+            break;
+
           case "description":
             await talentRegisterPage.enterDescription("Automation Description");
             break;
