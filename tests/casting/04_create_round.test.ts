@@ -4,12 +4,17 @@ import RoundPage from "../../pages/casting/owner/round/roundPage";
 import { roundLocators } from "../../pages/casting/owner/round/roundPageLocators";
 import { validLogin } from "@/test-data/loginData";
 import { urls } from "@/utils/urls";
-import { getAccessTokenSmart } from "@/helpers/api/authApi";
-import { createProject, deleteProject } from "@/helpers/api/projectApi";
-import { createRole, deleteAllRoles, deleteRole } from "@/helpers/api/roleApi";
-import { deleteAllRounds } from "@/helpers/api/roundApi";
+import { createProject, deleteProject } from "@/helpers/api/casting/projectApi";
+import { createRole, deleteAllRoles, deleteRole, getProjectRoles } from "@/helpers/api/casting/roleApi";
+import { createOnlineRound, deleteAllRounds, getProjectRounds, updateRoundSubmissionStatus } from "@/helpers/api/casting/roundApi";
 import ProjectPage from "@/pages/casting/owner/project/projectPage";
 import { onlineRoundData, inPersonRoundData } from "@/test-data/roundData";
+import { getTalentAccessToken } from "@/helpers/api/talent/authApi";
+import { generateEmail } from "@/test-data/random-data";
+import { registerTalent } from "@/helpers/api/talent/talentApi";
+import { getAccessTokenSmartFromCasting } from "@/helpers/api/casting/authApi";
+import { applyRegistrationConfig, deleteTalent, getFieldsByPageId, getTalentUuidByName } from "@/helpers/api/casting/talentApi";
+import { apiConfig } from "@/test-data/dataModelConfig";
 
 test.describe('Casting owner create round scenarios', () => {
     let token: string;
@@ -18,7 +23,7 @@ test.describe('Casting owner create round scenarios', () => {
     let uniqueName: string;
 
     test.beforeAll(async ({ request }) => {
-        token = await getAccessTokenSmart(request, validLogin.email);
+        token = await getAccessTokenSmartFromCasting(request, validLogin.email);
 
         const { response } = await createProject(request, token);
         projectId = response.data.id;
@@ -79,7 +84,6 @@ test.describe('Casting owner create round scenarios', () => {
         const roundPage = new RoundPage(page);
         const projectPage = new ProjectPage(page);
         projectPage.openSearchedProject(projectName);
-        await roundPage.openProjectById(projectId, { waitForUrl: new RegExp(`/projects/${projectId}`) });
         await roundPage.gotoRoundsTab();
 
         const roundName = `Automation Online-Round ${Date.now()}`;
@@ -102,7 +106,6 @@ test.describe('Casting owner create round scenarios', () => {
         const roundPage = new RoundPage(page);
         const projectPage = new ProjectPage(page);
         projectPage.openSearchedProject(projectName);
-        await roundPage.openProjectById(projectId, { waitForUrl: new RegExp(`/projects/${projectId}`) });
         await roundPage.gotoRoundsTab();
 
         const roundName = `Automation Online-Round ${Date.now()}`;
@@ -125,7 +128,6 @@ test.describe('Casting owner create round scenarios', () => {
         const roundPage = new RoundPage(page);
         const projectPage = new ProjectPage(page);
         projectPage.openSearchedProject(projectName);
-        await roundPage.openProjectById(projectId, { waitForUrl: new RegExp(`/projects/${projectId}`) });
         await roundPage.gotoRoundsTab();
 
         const roundName = `Automation Online-Round ${Date.now()}`;
@@ -148,7 +150,6 @@ test.describe('Casting owner create round scenarios', () => {
         const roundPage = new RoundPage(page);
         const projectPage = new ProjectPage(page);
         projectPage.openSearchedProject(projectName);
-        await roundPage.openProjectById(projectId, { waitForUrl: new RegExp(`/projects/${projectId}`) });
         await roundPage.gotoRoundsTab();
 
         const roundName = `Automation InPerson-Round ${Date.now()}`;
@@ -171,7 +172,6 @@ test.describe('Casting owner create round scenarios', () => {
         const roundPage = new RoundPage(page);
         const projectPage = new ProjectPage(page);
         projectPage.openSearchedProject(projectName);
-        await roundPage.openProjectById(projectId, { waitForUrl: new RegExp(`/projects/${projectId}`) });
         await roundPage.gotoRoundsTab();
 
         const roundName = `Automation InPerson-Round ${Date.now()}`;
@@ -209,4 +209,8 @@ test.describe('Casting owner create round scenarios', () => {
             status: "Upcoming"
         });
     });
+
 });
+
+
+

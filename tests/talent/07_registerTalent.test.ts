@@ -3,16 +3,16 @@ import { urls } from "@/utils/urls";
 import { getOtpFromMailtrap, enterOtpForTalent } from "@/utils/mailtrapOtp";
 import { test, expect } from './_setup/talentTest';
 import { TalentRegisterPage } from "@/pages/talent/register/registerPage";
-import { getAccessTokenSmart } from "@/helpers/api/authApi";
-import { createProject, deleteProject, getPublishedProjects, publishProject } from "@/helpers/api/projectApi";
+import { createProject, deleteProject, getPublishedProjects, publishProject } from "@/helpers/api/casting/projectApi";
 import { talentAuditionPageLocators } from "@/pages/talent/audition/auditionPageLocators";
 import { validLogin } from "@/test-data/loginData";
-import { applyRegistrationConfig, deleteTalent, getAllPages, getFieldsByPageId, getTalentUuidByName } from "@/helpers/api/talentApi";
+import { applyRegistrationConfig, deleteTalent, getAllPages, getFieldsByPageId, getTalentUuidByName } from "@/helpers/api/casting/talentApi";
 import { defaultConfig, fullConfig } from "@/test-data/dataModelConfig";
 import { APIRequestContext } from "@playwright/test";
 import { ClientRequest, IncomingMessage, request, RequestOptions } from "http";
 import { URL } from "url";
 import { generateEmail } from "@/test-data/random-data";
+import { getAccessTokenSmartFromCasting } from "@/helpers/api/casting/authApi";
 
 test.describe('Talent registration scenarioes', () => {
   let token: string;
@@ -24,7 +24,7 @@ test.describe('Talent registration scenarioes', () => {
   test.beforeAll(async ({ request }) => {
 
     // get token inside async scope
-    token = await getAccessTokenSmart(request, validLogin.email);
+    token = await getAccessTokenSmartFromCasting(request, validLogin.email);
     talentRegistrationEmail = generateEmail();
 
     const { response } = await createProject(request, token);
@@ -349,7 +349,7 @@ test.describe('Talent registration scenarioes', () => {
 
   test("verify listed projects to a newly registered talent", async ({ page, request }) => {
 
-    const token = await getAccessTokenSmart(request, validLogin.email);
+    const token = await getAccessTokenSmartFromCasting(request, validLogin.email);
     const result = await getPublishedProjects(request, token);
 
     const login = new LoginPage(page);

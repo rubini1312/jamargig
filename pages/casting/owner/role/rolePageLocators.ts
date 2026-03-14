@@ -49,5 +49,23 @@ export const roleLocators = {
 
   // actions
   roleNewSubmitButton: '[data-testid="role-new-submit-button"]',
-  roleNewCloseButton: '[data-testid="role-new-close-button"]'
+  roleNewCloseButton: '[data-testid="role-new-close-button"]',
+
+  searchRound: "//div[@class='n-input-wrapper']",
+  searchInput: "//input[@placeholder='Search...']",
+
+  //delete round 
+  deleteConfirmationBtn: '[data-testid="role-list-delete-accept"]',
+  deleteConfirmationModel_close: "//button[@aria-label='close']"
+  , emptyRoundMessage: "//div[@class='empty']",
+
+  //edit
+  editRole_name: '[data-testid="role-name-content"]',
+  editRoleName_editable : "//div[@class='n-form-item n-form-item--medium-size n-form-item--top-labelled editing']//div[@class='editable-field-content-inner']",
+  editRole_description: 'data-testid="role-description-content"',
+  editRoleDescription_editable : "//div[@aria-label='Editor editing area: main']",
+  emptyRoleName_error :"//div[@class='n-form-item-feedback__line']",
+  roleNameInput_editable : 'input[data-testid="role-name"]',
+  editRole_saveBtn : "//span[normalize-space()='Save']"
+
 };

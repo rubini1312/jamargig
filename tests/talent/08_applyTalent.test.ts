@@ -1,8 +1,7 @@
-import { getAccessTokenSmart } from "@/helpers/api/authApi";
-import { createProject, deleteProject, publishProject } from "@/helpers/api/projectApi";
-import { createRole, deleteRole, getProjectRoles } from "@/helpers/api/roleApi";
-import { createInPersonRound, createOnlineRound, deleteRound, getProjectRounds, updateRoundSubmissionStatus } from "@/helpers/api/roundApi";
-import { applyRegistrationConfig, deleteTalent, getAllPages, getFieldsByPageId, getProjectTalentNames, getTalentUuidByName, updateTalentRegistration } from "@/helpers/api/talentApi";
+import { createProject, deleteProject, publishProject } from "@/helpers/api/casting/projectApi";
+import { createRole, deleteRole, getProjectRoles } from "@/helpers/api/casting/roleApi";
+import { createInPersonRound, createOnlineRound, deleteRound, getProjectRounds, updateRoundSubmissionStatus } from "@/helpers/api/casting/roundApi";
+import { applyRegistrationConfig, deleteTalent, getAllPages, getFieldsByPageId, getProjectTalentNames, getTalentUuidByName, updateTalentRegistration } from "@/helpers/api/casting/talentApi";
 import { fullConfig } from "@/test-data/dataModelConfig";
 import { validLogin } from "@/test-data/loginData";
 import { urls } from "@/utils/urls";
@@ -13,15 +12,16 @@ import { enterOtpForTalent, getOtpFromMailtrap } from "@/utils/mailtrapOtp";
 import { TalentRegisterPage } from "@/pages/talent/register/registerPage";
 import { TalentHomePage } from "@/pages/talent/home/homePage";
 import { generateEmail } from "@/test-data/random-data";
-import { createAvailabilityQuestion, createCheckboxQuestion, createDropdownQuestion, createMediaQuestion, createRadioQuestion, createTextQuestion, getSubmittedForm, makeAvailabilityQuestionAsMandotory, makeCheckboxQuestionAsInactive, makeCheckboxQuestionAsMandotory, makeDropdownQuestionAsMandotory, makeMediaQuestionAsMandotory, makeRadioQuestionAsMandotory, makeTextQuestionAsInactive, makeTextQuestionAsMandory, updateQuestionAsInactive } from "@/helpers/api/questionApi";
+import { createAvailabilityQuestion, createCheckboxQuestion, createDropdownQuestion, createMediaQuestion, createRadioQuestion, createTextQuestion, getSubmittedForm, makeAvailabilityQuestionAsMandotory, makeCheckboxQuestionAsInactive, makeCheckboxQuestionAsMandotory, makeDropdownQuestionAsMandotory, makeMediaQuestionAsMandotory, makeRadioQuestionAsMandotory, makeTextQuestionAsInactive, makeTextQuestionAsMandory, updateQuestionAsInactive } from "@/helpers/api/casting/questionApi";
 import { TalentApplyPage } from "@/pages/talent/apply/applyRoundPage";
+import { getAccessTokenSmartFromCasting } from "@/helpers/api/casting/authApi";
 
 test.describe('Apply talent scenarioes', () => {
 
     let token: string;
 
     test.beforeAll(async ({ request }) => {
-        token = await getAccessTokenSmart(request, validLogin.email);
+        token = await getAccessTokenSmartFromCasting(request, validLogin.email);
     });
 
     test("Register new talent and apply for the online-open round: without questions (including failure cases)", async ({ page, request }) => {
@@ -155,6 +155,10 @@ test.describe('Apply talent scenarioes', () => {
                         await talentRegisterPage.openDOBAndSelectDate("20 Apr 1990");
                         break;
 
+                    case "phone1":
+                        await talentRegisterPage.enterMobile("6152369");
+                        break;
+
                     case "description":
                         await talentRegisterPage.enterDescription("Automation Description");
                         break;
@@ -228,7 +232,7 @@ test.describe('Apply talent scenarioes', () => {
     test("Register new talent and apply for the in-Person open round: without questions (including failure cases)", async ({ page, request }) => {
 
         //create project, role, round 
-        const token = await getAccessTokenSmart(request, validLogin.email);
+        const token = await getAccessTokenSmartFromCasting(request, validLogin.email);
         const talentEmail = generateEmail();
         const uniqueName = `Autom-Talent ${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
@@ -358,6 +362,10 @@ test.describe('Apply talent scenarioes', () => {
                         await talentRegisterPage.openDOBAndSelectDate("20 Apr 1990");
                         break;
 
+                    case "phone1":
+                        await talentRegisterPage.enterMobile("6152369");
+                        break;
+
                     case "description":
                         await talentRegisterPage.enterDescription("Automation Description");
                         break;
@@ -432,7 +440,7 @@ test.describe('Apply talent scenarioes', () => {
     test("Register new talent and apply for the online-open round: verify all questions appear", async ({ page, request }) => {
 
         const talentEmail = generateEmail();
-        const token = await getAccessTokenSmart(request, validLogin.email);
+        const token = await getAccessTokenSmartFromCasting(request, validLogin.email);
 
         // Create project
         const { response } = await createProject(request, token);
@@ -584,6 +592,10 @@ test.describe('Apply talent scenarioes', () => {
 
                     case "birth":
                         await talentRegisterPage.openDOBAndSelectDate("20 Apr 1990");
+                        break;
+
+                    case "phone1":
+                        await talentRegisterPage.enterMobile("6152369");
                         break;
 
                     case "description":
@@ -662,7 +674,7 @@ test.describe('Apply talent scenarioes', () => {
     test("Register new talent and apply for the online-open round: verify all mandatory questions show validation", async ({ page, request }) => {
 
         const talentEmail = generateEmail();
-        const token = await getAccessTokenSmart(request, validLogin.email);
+        const token = await getAccessTokenSmartFromCasting(request, validLogin.email);
 
         // Create project
         const { response } = await createProject(request, token);
@@ -873,6 +885,10 @@ test.describe('Apply talent scenarioes', () => {
                         await talentRegisterPage.openDOBAndSelectDate("20 Apr 1990");
                         break;
 
+                    case "phone1":
+                        await talentRegisterPage.enterMobile("6152369");
+                        break;
+
                     case "description":
                         await talentRegisterPage.enterDescription("Automation Description");
                         break;
@@ -940,7 +956,7 @@ test.describe('Apply talent scenarioes', () => {
     test("Register new talent and apply for the in-Person round: verify all questions appear", async ({ page, request }) => {
 
         const talentEmail = generateEmail();
-        const token = await getAccessTokenSmart(request, validLogin.email);
+        const token = await getAccessTokenSmartFromCasting(request, validLogin.email);
 
         // Create project
         const { response } = await createProject(request, token);
@@ -1094,6 +1110,10 @@ test.describe('Apply talent scenarioes', () => {
                         await talentRegisterPage.openDOBAndSelectDate("20 Apr 1990");
                         break;
 
+                    case "phone1":
+                        await talentRegisterPage.enterMobile("6152369");
+                        break;
+
                     case "description":
                         await talentRegisterPage.enterDescription("Automation Description");
                         break;
@@ -1170,7 +1190,7 @@ test.describe('Apply talent scenarioes', () => {
     test("Register new talent and apply for the in-Person round: verify all mandatory questions show validation", async ({ page, request }) => {
 
         const talentEmail = generateEmail();
-        const token = await getAccessTokenSmart(request, validLogin.email);
+        const token = await getAccessTokenSmartFromCasting(request, validLogin.email);
 
         // Create project
         const { response } = await createProject(request, token);
@@ -1381,6 +1401,10 @@ test.describe('Apply talent scenarioes', () => {
                         await talentRegisterPage.openDOBAndSelectDate("20 Apr 1990");
                         break;
 
+                    case "phone1":
+                        await talentRegisterPage.enterMobile("6152369");
+                        break;
+
                     case "description":
                         await talentRegisterPage.enterDescription("Automation Description");
                         break;
@@ -1449,7 +1473,7 @@ test.describe('Apply talent scenarioes', () => {
 
         //create project, role, round 
         const talentEmail = generateEmail();
-        const token = await getAccessTokenSmart(request, validLogin.email);
+        const token = await getAccessTokenSmartFromCasting(request, validLogin.email);
 
         const { response } = await createProject(request, token);
         const projectId = response.data.id;
@@ -1651,6 +1675,10 @@ test.describe('Apply talent scenarioes', () => {
                         await talentRegisterPage.openDOBAndSelectDate("20 Apr 1990");
                         break;
 
+                    case "phone1":
+                        await talentRegisterPage.enterMobile("6152369");
+                        break;
+
                     case "description":
                         await talentRegisterPage.enterDescription("Automation Description");
                         break;
@@ -1784,7 +1812,7 @@ test.describe('Apply talent scenarioes', () => {
     test("Register new talent and apply for the round: verify all relavent questions appear to the role", async ({ page, request }) => {
 
         const talentEmail = generateEmail();
-        const token = await getAccessTokenSmart(request, validLogin.email);
+        const token = await getAccessTokenSmartFromCasting(request, validLogin.email);
 
         // Create project
         const { response } = await createProject(request, token);
@@ -1961,6 +1989,10 @@ test.describe('Apply talent scenarioes', () => {
                         await talentRegisterPage.openDOBAndSelectDate("20 Apr 1990");
                         break;
 
+                    case "phone1":
+                        await talentRegisterPage.enterMobile("6152369");
+                        break;
+
                     case "description":
                         await talentRegisterPage.enterDescription("Automation Description");
                         break;
@@ -2034,7 +2066,7 @@ test.describe('Apply talent scenarioes', () => {
     test("Register new talent and apply for the round: verify inactive questions are not appear to the role", async ({ page, request }) => {
 
         const talentEmail = generateEmail();
-        const token = await getAccessTokenSmart(request, validLogin.email);
+        const token = await getAccessTokenSmartFromCasting(request, validLogin.email);
 
         // Create project
         const { response } = await createProject(request, token);
@@ -2187,6 +2219,10 @@ test.describe('Apply talent scenarioes', () => {
                         await talentRegisterPage.openDOBAndSelectDate("20 Apr 1990");
                         break;
 
+                    case "phone1":
+                        await talentRegisterPage.enterMobile("6152369");
+                        break;
+
                     case "description":
                         await talentRegisterPage.enterDescription("Automation Description");
                         break;
@@ -2292,8 +2328,8 @@ test.describe('Apply talent scenarioes', () => {
 
         // Cleanup
         const uuid = await getTalentUuidByName(request, token, uniqueName);
-        // await deleteProject(request, token, projectId);
-        // await deleteTalent(request, token, uuid);
+        await deleteProject(request, token, projectId);
+        await deleteTalent(request, token, uuid);
 
     });
 

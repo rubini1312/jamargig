@@ -1,8 +1,8 @@
 import { Page, APIRequestContext, expect } from "@playwright/test";
 import { loginLocators } from "./loginPageLocators";
 import { urls } from "@/utils/urls";
-import { isTwoFactorEnabled } from "../../../../helpers/api/settingsApi";
-import { enterOtpForCasting, getOtpFromMailtrap } from "../../../../utils/mailtrapOtp";
+import { enterOtpForCasting, getOtpFromMailtrap } from "@/utils/mailtrapOtp";
+import { isTwoFactorEnabled } from "@/helpers/api/casting/settingsApi";
 
 export default class loginPage {
   constructor(public page: Page) { }

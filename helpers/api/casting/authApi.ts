@@ -1,9 +1,9 @@
 import { urls } from "@/utils/urls";
 import { APIRequestContext, expect } from "@playwright/test";
 import { validLogin } from "@/test-data/loginData";
-import { getOtpFromMailtrap } from "../../utils/mailtrapOtp";
+import { getOtpFromMailtrap } from "@/utils/mailtrapOtp";
 
-export async function getAccessTokenSmart(
+export async function getAccessTokenSmartFromCasting(
   request: APIRequestContext,
   email: string = validLogin.email
 ): Promise<string> {

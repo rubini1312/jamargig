@@ -548,6 +548,93 @@ export default class QuestionPage {
 
     }
 
+    async editAddedQuestion(payload: {
+        text: string;
+        typeIndex: number;
+        options?: string[];
+        mediaOptions?: number[];   // indexes of media checkboxes
+        description?: string;
+        required?: boolean;
+        active?: boolean;
+        roundNames?: string[];
+        roleNames?: string[];
+    }) {
+
+
+        await this.openCreateQuestion();
+
+        // question text
+        await this.fillQuestionText(payload.text);
+
+        // select question type
+        await this.selectQuestionType(payload.typeIndex);
+
+
+        // MEDIA QUESTION TYPE (typeIndex = 5)
+        if (payload.typeIndex === 5 && payload.mediaOptions?.length) {
+
+            const mediaCheckboxes = this.page.locator('.n-checkbox-group .n-checkbox');
+
+            for (const index of payload.mediaOptions) {
+                await mediaCheckboxes.nth(index).click();
+            }
+        }
+
+
+        // OPTIONS for checkbox / radio / dropdown / availability
+        else if (payload.options?.length) {
+
+            for (let i = 0; i < payload.options.length; i++) {
+
+                if (i > 0) {
+                    await this.addCheckboxOption();
+                }
+
+                await this.fillCheckboxOption(i, payload.options[i]);
+            }
+        }
+
+
+        // description
+        if (payload.description) {
+            await this.fillQuestionDescription(payload.description);
+        }
+
+
+        // required checkbox
+        if (payload.required !== undefined) {
+            await this.toggleRequiredCheckbox(payload.required);
+        }
+
+
+        // status toggle
+        if (payload.active !== undefined) {
+            await this.toggleStatusToggle(payload.active);
+        }
+
+
+        // select rounds
+        if (payload.roundNames?.length) {
+            for (const roundName of payload.roundNames) {
+                await this.setQuestionRound(roundName);
+            }
+        }
+
+
+        // select roles
+        if (payload.roleNames?.length) {
+            for (const roleName of payload.roleNames) {
+                await this.setQuestionRole(roleName);
+            }
+        }
+
+
+        // save
+        await this.submitQuestion();
+
+
+    }
+
 
     async isQuestionPresent(text: string) {
         const loc = this.page.locator(`text=${text}`);
@@ -644,5 +731,49 @@ export default class QuestionPage {
     async openProjectInNewTab(projectId: string | number, waitForUrl?: string | RegExp, timeout?: number) {
         const page = await this.openProjectById(projectId, { expectNewTab: true, waitForUrl, timeout });
         return page as import('@playwright/test').Page;
+    }
+
+    async clickDeleteButton() {
+        await this.page.locator(questionLocators.deleteBtn).click();
+        await expect(this.page.locator(questionLocators.deleteConfirmationBtn)).toBeVisible();
+    }
+
+    async clickDeleteConfirmationButton() {
+        const confirmBtn = this.page.locator(questionLocators.deleteConfirmationBtn);
+        await confirmBtn.click();
+    }
+
+    async closeDeleteConfirmationModel() {
+        const close = this.page.locator(questionLocators.deleteQuestion_closemodel);
+        await close.click();
+    }
+
+    async openSearchedQuestion(name: string): Promise<void> {
+        await this.page.locator(questionLocators.searchQuestion).hover();
+        await this.page.locator(questionLocators.searchInput).fill(name);
+
+        const question = this.page.getByText(name, { exact: true });
+
+        await question.click();
+    }
+
+    async clickEditQuestionViewCloseButton() {
+        const closeBtn = this.page.locator(questionLocators.editQuestion_closeBtn);
+        await closeBtn.click();
+    }
+
+    async clickUpdateQuestionButton() {
+        const updateBtn = this.page.locator(questionLocators.editQuestion_updateBtn);
+        await updateBtn.click();
+    }
+
+    async clickRemoveCheckboxOption() {
+        const removeBtn = this.page.locator(questionLocators.questionOptions_removeBtn);
+        await removeBtn.click();
+    }
+
+    async clickMediaCheckboxes(index: number) {
+        const mediaCheckboxes = this.page.locator('.n-checkbox-group .n-checkbox');
+        await mediaCheckboxes.nth(index).click();
     }
 }

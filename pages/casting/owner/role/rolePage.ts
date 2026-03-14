@@ -509,4 +509,54 @@ export default class RolePage {
         const page = await this.openProjectById(projectId, { expectNewTab: true, waitForUrl, timeout });
         return page as import('@playwright/test').Page;
     }
+
+    async searchRole(name: string): Promise<void> {
+        await this.page.locator(roleLocators.searchRound).hover();
+        await this.page.locator(roleLocators.searchInput).fill(name);
+    }
+
+    async clickDeleteRole(roleName: string) {
+
+        const row = this.page.locator('tbody tr', { hasText: roleName });
+        await expect(row).toBeVisible();
+        await row.scrollIntoViewIfNeeded();
+
+        await row.locator('button').nth(1).click();
+        await expect(this.page.locator(roleLocators.deleteConfirmationBtn)).toBeVisible();
+    }
+
+    async clickDeleteConfirmationButton() {
+        const confirmBtn = this.page.locator(roleLocators.deleteConfirmationBtn);
+        await confirmBtn.click();
+    }
+
+    async clickCloseDeleteConfirmation() {
+        const close = this.page.locator(roleLocators.deleteConfirmationModel_close);
+        await close.click();
+    }
+
+    async clickEditRole(roleName: string) {
+        await this.page
+            .locator(`//tr[td[normalize-space()='${roleName}']]//a`)
+            .click();
+    }
+
+    async editRole() {
+        await this.page.locator(roleLocators.editRole_name).click();
+        await this.page.locator(roleLocators.editRoleName_editable).press('Control+A');
+        await this.page.locator(roleLocators.editRoleName_editable).press('Delete');
+        await this.page.locator(roleLocators.roleNameInput_editable).fill('Edited Project Role');
+    }
+
+    async saveEditedRoleData() {
+        await this.page.locator(roleLocators.editRole_saveBtn).click();
+    }
+
+    async verifyRoleEdited(editedRoleName: string) {
+        await expect(
+            this.page.locator('[data-testid="role-name-content"]')
+        ).toHaveText(editedRoleName);
+    }
+
+
 }

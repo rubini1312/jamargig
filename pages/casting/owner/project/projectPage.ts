@@ -191,10 +191,28 @@ export default class ProjectPage {
 
     // pick the visible search input only
     const searchInput = this.page.locator('input[placeholder*="Search"]:visible');
-
-    await expect(searchInput).toBeVisible({ timeout: 10000 });
-
     await searchInput.fill(name);
+  }
+
+  async clickDeleteProject(projectName: string, projectId: number) {
+
+    const projectCard = this.page
+      .locator('[data-testid="project-list-content"]')
+      .filter({ hasText: projectName });
+
+    await expect(projectCard).toBeVisible({ timeout: 10000 });
+
+    const dropdown = this.page.getByTestId(
+      `project-list-dropdown-action-${projectId}-trigger`
+    );
+
+    await expect(dropdown).toBeVisible();
+
+    await dropdown.click();
+  }
+  async clickDeleteConfirmationBtn() {
+    await this.page.locator(projectLocators.deleteConfirmationBtn).click();
+
   }
 
 }

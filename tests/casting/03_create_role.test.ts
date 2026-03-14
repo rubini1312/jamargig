@@ -5,10 +5,10 @@ import { roleLocators } from "../../pages/casting/owner/role/rolePageLocators";
 import { validLogin } from "@/test-data/loginData";
 import { roleData } from "@/test-data/roleData";
 import { urls } from "@/utils/urls";
-import { getAccessTokenSmart } from "@/helpers/api/authApi";
-import { createProject, deleteProject } from "@/helpers/api/projectApi";
-import { deleteAllRoles } from "@/helpers/api/roleApi";
+import { createProject, deleteProject } from "@/helpers/api/casting/projectApi";
+import { deleteAllRoles } from "@/helpers/api/casting/roleApi";
 import ProjectPage from "@/pages/casting/owner/project/projectPage";
+import { getAccessTokenSmartFromCasting } from "@/helpers/api/casting/authApi";
 
 test.describe('Casting owner create role scenarios', () => {
     let token: string;
@@ -16,7 +16,7 @@ test.describe('Casting owner create role scenarios', () => {
     let projectName: string;
 
     test.beforeAll(async ({request }) => {
-        token = await getAccessTokenSmart(request, validLogin.email);
+        token = await getAccessTokenSmartFromCasting(request, validLogin.email);
         const { response } = await createProject(request, token);
         projectId = response.data.id;
         projectName = response.data.title;
@@ -58,7 +58,7 @@ test.describe('Casting owner create role scenarios', () => {
 
         const rolePage = new RolePage(page);
         const projectPage = new ProjectPage(page);
-        projectPage.openSearchedProject(projectName);
+        await projectPage.openSearchedProject(projectName);
         await rolePage.gotoRolesTab();
         await rolePage.openCreateRole();
 

@@ -1,5 +1,5 @@
 import { talentProfileData } from "@/test-data/talentProfileData";
-import { updateTalentRegistration } from "../api/talentApi";
+import { updateTalentRegistration } from "../api/casting/talentApi";
 import { APIRequestContext } from "playwright";
 
 export async function completeTalentRegistration(

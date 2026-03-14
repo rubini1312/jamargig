@@ -61,7 +61,9 @@ export const apiConfig = {
     gender: { status: true },
     birth: { status: true, required: true },
     weight: { status: false },
-    languages: { status: false }
+    languages: { status: false },
+        phone1: { status: true, required: true }
+
   },
   2: {
     avatar: { status: false }

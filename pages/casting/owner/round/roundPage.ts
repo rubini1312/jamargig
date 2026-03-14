@@ -1,5 +1,6 @@
 import { expect, Page } from "@playwright/test";
 import { roundLocators } from "./roundPageLocators";
+import { roleLocators } from "../role/rolePageLocators";
 
 export default class RoundPage {
     constructor(public page: Page) { }
@@ -546,4 +547,83 @@ export default class RoundPage {
         const page = await this.openProjectById(projectId, { expectNewTab: true, waitForUrl, timeout });
         return page as import('@playwright/test').Page;
     }
+
+    async searchRound(name: string): Promise<void> {
+        await this.page.locator(roundLocators.searchRound).hover();
+        await this.page.locator(roundLocators.searchInput).fill(name);
+    }
+
+    async clickDeleteRound() {
+        await this.page.locator(roundLocators.deleteBtn).click();
+        await expect(this.page.locator(roundLocators.deleteConfirmationBtn)).toBeVisible();
+    }
+
+    async clickDeleteConfirmationButton() {
+        const confirmBtn = this.page.locator(roundLocators.deleteConfirmationBtn);
+        await confirmBtn.click();
+    }
+
+    async openSearchedRound(name: string): Promise<void> {
+        await this.page.locator(roundLocators.searchRound).hover();
+        await this.page.locator(roundLocators.searchInput).fill(name);
+        const roundRow = this.page.locator('tbody tr', { hasText: name });
+        await expect(roundRow).toBeVisible();
+        await roundRow.click();
+    }
+
+    async clickInviteTalent() {
+        await this.page.locator(roundLocators.inviteTalentBtn).click();
+        await this.page.locator('.talent-card-holder').first().waitFor();
+    }
+
+    async searchedTalentToInvite(name: string): Promise<void> {
+        await this.page.locator(roundLocators.searchTalent).first().hover({ force: true });
+        await this.page.locator(roundLocators.searchInput).fill(name);
+        await this.page.locator('.talent-card-holder').first().waitFor();
+    }
+
+    async selectSearchedTalent(name: string): Promise<void> {
+        const modal = this.page.getByRole('dialog');
+        await modal.locator('.talent-card-holder .n-checkbox-icon').first().click();
+    }
+
+    async clickAddToRound() {
+        await this.page.locator(roundLocators.addToRoundBtn).click();
+        await expect(this.page.getByText('Send a Message to Invited Talent')).toBeVisible();
+    }
+
+    async clickSend() {
+        await this.page.locator(roundLocators.sendBtn).click();
+    }
+
+    async clearDeafultMsg() {
+        await this.page.locator(roundLocators.talentInviteMsg_textArea).clear();
+    }
+
+    async enterTalentMessage(talentMessage: string) {
+        await this.page.locator(roundLocators.talentInviteMsg_textArea).fill(talentMessage);
+    }
+    async setTalentRole(roleName: string) {
+
+        const modal = this.page.getByRole('dialog');
+        const select = modal.locator('.n-base-selection').first();
+        await select.click();
+
+        const option = this.page.locator('.n-base-select-option', { hasText: roleName });
+        await option.first().click();
+    }
+
+    async clickEditRound(roundName: string) {
+            await this.page
+                .locator(`//tr[td[normalize-space()='${roundName}']]//a`)
+                .click();
+        }
+    
+        async editRound() {
+            await this.page.locator(roundLocators.editRound_name).click();
+            await this.page.locator(roundLocators.editRoundName_editable).press('Control+A');
+            await this.page.locator(roundLocators.editRoundName_editable).press('Delete');
+            await this.page.locator(roundLocators.roundNameInput_editable).fill('Edited Project Role');
+        }
+    
 }

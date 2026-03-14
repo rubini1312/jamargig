@@ -70,5 +70,9 @@ export const projectLocators = {
 
     //project search
     projectSearchIcon: '[data-testid="project-list-filters-header"] .filters-header-search',
-    projectSearchInput: 'input[placeholder*="Search"]'
+    projectSearchInput: 'input[placeholder*="Search"]',
+
+    deleteOption : "//div[contains(text(),'Delete')]",
+    deleteConfirmationBtn : "//span[normalize-space()='Confirm']",
+    emptyProjectsMessage : "//div[@class='empty']"
 };

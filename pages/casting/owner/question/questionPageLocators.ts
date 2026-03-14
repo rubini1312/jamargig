@@ -58,6 +58,25 @@ export const questionLocators = {
     pdfCheckbox: '.n-checkbox-group .n-checkbox >> nth=3',
 
 
+    //delete
+    deleteBtn : '[data-testid="questions-list-actions-delete-button"]',
+    deleteConfirmationBtn : "//span[normalize-space()='Confirm']",
+    deleteConfirmationPopup : "//div[@class='ck-body-wrapper']",
+    emptyQuestionTable : "//div[@class='empty']",
+
+    //search question 
+	searchQuestion: '[data-testid="questions-list-search-search-icon"]',
+	searchInput : "//input[@placeholder='Search...']",
+
+    //edit question
+    valueRequiredError : "//div[@class='n-form-item-feedback__line']",
+    valueRequiredAlert : "//div[@class='n-alert-body__content']",
+    editQuestion_closeBtn : '[data-testid="questions-form-close-button"]',
+    editQuestion_updateBtn : '[data-testid="questions-form-save-button"]',
+    questionOptions_removeBtn : '[data-testid="question-options-remove-option"]',
+    deleteQuestion_closemodel : "//button[@aria-label='close']//i[@class='n-base-icon']//*[name()='svg']"
+    
 };
+
 
 

@@ -1,5 +1,4 @@
 import { APIRequestContext, expect, request } from "@playwright/test";
-import { getAccessTokenSmart } from "@/helpers/api/authApi";
 import { urls } from "@/utils/urls";
 
 
