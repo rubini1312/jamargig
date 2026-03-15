@@ -426,7 +426,7 @@ test.describe('Casting owner create question scenarios', () => {
             roleId,
             question.data.question_id
         );
-        await page.waitForTimeout(3000);
+        await page.waitForTimeout(10000);
 
         const questionPage = new QuestionPage(page);
         const projectPage = new ProjectPage(page);
@@ -444,9 +444,6 @@ test.describe('Casting owner create question scenarios', () => {
         if (projectId) {
             await deleteProject(request, token, projectId);
         }
-
-        const uuid = await getTalentUuidByName(request, token, talentName);
-        await deleteTalent(request, token, uuid);
 
     });
 
