@@ -85,7 +85,7 @@ export const roundLocators = {
 	editRound_name: '[data-testid="round-name-content"]',
 	editRoundName_editable: "//div[@class='n-input n-input--resizable n-input--stateful']",
 	emptyRoundName_error: "//div[@class='n-form-item-feedback__line']",
-	roundNameInput_editable: 'input[data-testid="round-name"]',
+	roundNameInput_editable: "//input[@placeholder='Please Input']",
 	editRound_saveBtn: "//span[normalize-space()='Save']"
 
 

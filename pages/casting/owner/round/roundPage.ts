@@ -614,16 +614,33 @@ export default class RoundPage {
     }
 
     async clickEditRound(roundName: string) {
-            await this.page
-                .locator(`//tr[td[normalize-space()='${roundName}']]//a`)
-                .click();
-        }
-    
-        async editRound() {
-            await this.page.locator(roundLocators.editRound_name).click();
-            await this.page.locator(roundLocators.editRoundName_editable).press('Control+A');
-            await this.page.locator(roundLocators.editRoundName_editable).press('Delete');
-            await this.page.locator(roundLocators.roundNameInput_editable).fill('Edited Project Role');
-        }
-    
+        await this.page
+            .locator(`//tr[td[normalize-space()='${roundName}']]//a`)
+            .click();
+    }
+
+    async editRound() {
+       await this.page.locator(roundLocators.editRound_name).click();
+        await this.page.locator(roundLocators.roundNameInput_editable).press('Control+A');
+        await this.page.locator(roundLocators.roundNameInput_editable).press('Delete');
+        await this.page.locator(roundLocators.roundNameInput_editable).fill('Edited Automated Round');
+    }
+
+    async gotoRoundDetailsTab() {
+        const tab = this.page.getByTitle("Round details");
+        await tab.waitFor({ state: "visible", timeout: 30000 });
+        await tab.click();
+        await this.page.getByText("About the round").waitFor({ timeout: 30000 });
+    }
+
+        async saveEditedRoleData() {
+        await this.page.locator(roundLocators.editRound_saveBtn).click();
+    }
+
+    async verifyRoundEdited(editedRoleName: string) {
+        await expect(
+            this.page.locator('[data-testid="round-name-content"]')
+        ).toHaveText(editedRoleName);
+    }
+
 }

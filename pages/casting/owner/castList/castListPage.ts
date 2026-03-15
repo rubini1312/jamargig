@@ -4,7 +4,7 @@ import { castListLocators } from "./castListLocators";
 export default class CastListPage {
     constructor(public page: Page) { }
 
-     async openFirstProjectIfNeeded() {
+    async openFirstProjectIfNeeded() {
         const url = this.page.url();
 
         if (/\/projects\/\d+/.test(url)) return;
@@ -38,8 +38,6 @@ export default class CastListPage {
         await this.page.getByText("New Working Cast List").waitFor({ timeout: 30000 });
     }
 
-
-
     async clickDeleteButton() {
         await this.page.locator(castListLocators.deleteCast_btn).click();
         await expect(this.page.locator(castListLocators.deleteConfirmationBtn)).toBeVisible();
@@ -53,6 +51,66 @@ export default class CastListPage {
     async closeDeleteConfirmationModel() {
         const close = this.page.locator(castListLocators.deleteconfirmation_closeIcon);
         await close.click();
+    }
+
+    async clickCreateWcl() {
+        const create = this.page.locator(castListLocators.addwcl_createBtn);
+        await create.click();
+    }
+
+    async enterWclName(wclName: string) {
+        const name = this.page.locator(castListLocators.addwcl_nameInput);
+        await name.fill(wclName);
+    }
+
+    async selectRole(wclRoleName: string) {
+        await this.page.locator(castListLocators.addwcl_roleDropdown).click();
+        await this.page.locator(castListLocators.addwcl_roleDropdownInput).fill(wclRoleName);
+        await this.page.getByText(wclRoleName).click();
+    }
+
+    async clickAdd() {
+        await this.page.locator(castListLocators.addwcl_addBtn).click();
+    }
+
+    async clickSubmitBtn() {
+        await this.page.locator(castListLocators.addwcl_submitBtn).click();
+        await expect(this.page.locator(castListLocators.addwcl_submitBtn)).toBeHidden();
+
+    }
+
+    async verifyWclRow(data: {
+        name: string;
+        role?: string;
+        status?: string;
+    }) {
+        const row = this.page.locator('tbody tr.n-data-table-tr').first();
+
+        row.filter({
+            has: this.page.locator(`[data-col-key="name"]`, { hasText: data.name })
+        });
+
+        await expect(row).toBeVisible();
+
+        if (data.role) {
+            await expect(row.locator('[data-col-key="roles"]'))
+                .toHaveText(data.role);
+        }
+
+        if (data.status) {
+            await expect(row.locator('[data-col-key="status"]'))
+                .toHaveText(data.status);
+        }
+    }
+
+    async clickEditBtn() {
+        await this.page.locator(castListLocators.editCast_btn).click();
+    }
+
+    async clickUpdateBtn() {
+        await this.page.locator(castListLocators.editCast_updateBtn).click();
+        await expect(this.page.locator(castListLocators.editCast_updateBtn)).toBeHidden();
+
     }
 
 }
