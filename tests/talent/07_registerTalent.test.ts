@@ -362,15 +362,22 @@ test.describe('Talent registration scenarioes', () => {
 
     const login = new LoginPage(page);
     await login.validTalentLogin(talentRegistrationEmail);
-    await page.waitForTimeout(30000);
 
     const otp = await getOtpFromMailtrap(request, talentRegistrationEmail, 240000);
     await enterOtpForTalent(page, otp);
+
     await page.waitForURL(urls.talent, { timeout: 60000 });
 
     await page.locator(talentAuditionPageLocators.auditionCards).first().waitFor();
-    const uiTitles = await page.locator(talentAuditionPageLocators.auditionCardTitles).allTextContents();
-    expect(uiTitles).toEqual(expect.arrayContaining(result.names));
+
+    const uiTitles = (await page
+      .locator(talentAuditionPageLocators.auditionCardTitles)
+      .allTextContents())
+      .map(t => t.trim());
+
+    for (const expectedName of result.names) {
+      expect(uiTitles).toContain(expectedName.trim());
+    }
 
   });
 
