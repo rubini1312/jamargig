@@ -70,6 +70,8 @@ test.describe('Casting owner delete role scenarios', () => {
 
         await projectPage.openSearchedProject(projectName);
         await rolePage.gotoRolesTab();
+        await page.reload();
+        await page.waitForLoadState('networkidle');
 
         await rolePage.searchRole(roleName);
         await rolePage.clickDeleteRole(roleName);
@@ -121,6 +123,9 @@ test.describe('Casting owner delete role scenarios', () => {
         await projectPage.openSearchedProject(projectName);
         await rolePage.gotoRolesTab();
 
+        await page.reload();
+        await page.waitForLoadState('networkidle');
+
         await rolePage.searchRole(roleName);
         await rolePage.clickDeleteRole(roleName);
         await rolePage.clickDeleteConfirmationButton();
@@ -167,6 +172,9 @@ test.describe('Casting owner delete role scenarios', () => {
 
         await projectPage.openSearchedProject(projectName);
         await rolePage.gotoRolesTab();
+
+        await page.reload();
+        await page.waitForLoadState('networkidle');
 
         await rolePage.searchRole(roleName);
         await rolePage.clickDeleteRole(roleName);
@@ -236,6 +244,9 @@ test.describe('Casting owner delete role scenarios', () => {
         await projectPage.openSearchedProject(projectName);
         await rolePage.gotoRolesTab();
 
+        await page.reload();
+        await page.waitForLoadState('networkidle');
+
         await rolePage.searchRole(roleName);
         await rolePage.clickDeleteRole(roleName);
         await rolePage.clickDeleteConfirmationButton();
@@ -280,6 +291,9 @@ test.describe('Casting owner delete role scenarios', () => {
 
         await projectPage.openSearchedProject(projectName);
         await rolePage.gotoRolesTab();
+
+        await page.reload();
+        await page.waitForLoadState('networkidle');
 
         await rolePage.searchRole(roleName);
         await rolePage.clickDeleteRole(roleName);

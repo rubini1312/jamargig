@@ -53,8 +53,11 @@ test.describe('Casting owner delete round scenarios', () => {
         projectId = response.data.id;
         projectName = response.data.title;
         console.log(projectId);
+        await page.waitForTimeout(7000);
 
         await createRole(request, token, projectId);
+        await page.waitForTimeout(7000);
+
         const roles = await getProjectRoles(request, token, projectId);
         const role = roles.data[0];
         expect(role).toBeDefined();
@@ -67,11 +70,15 @@ test.describe('Casting owner delete round scenarios', () => {
         expect(round).toBeDefined();
         roundId = round.id;
         roundName = round.round_name;
+        await page.waitForTimeout(10000);
 
         const roundPage = new RoundPage(page);
         const projectPage = new ProjectPage(page);
         await projectPage.openSearchedProject(projectName);
         await roundPage.gotoRoundsTab();
+
+        await page.reload();
+        await page.waitForLoadState('networkidle');
 
         await roundPage.searchRound(roundName);
         await roundPage.clickDeleteRound();
@@ -114,8 +121,11 @@ test.describe('Casting owner delete round scenarios', () => {
         projectName = response.data.title;
         console.log(projectId);
         await publishProject(request, token, projectId);
+        await page.waitForTimeout(7000);
 
         await createRole(request, token, projectId);
+        await page.waitForTimeout(7000);
+
         const roles = await getProjectRoles(request, token, projectId);
         const role = roles.data[0];
         expect(role).toBeDefined();
@@ -130,11 +140,15 @@ test.describe('Casting owner delete round scenarios', () => {
         roundId = round.id;
         roundName = round.round_name;
         console.log(roundId);
+        await page.waitForTimeout(10000);
 
         const roundPage = new RoundPage(page);
         const projectPage = new ProjectPage(page);
         await projectPage.openSearchedProject(projectName);
         await roundPage.gotoRoundsTab();
+
+        await page.reload();
+        await page.waitForLoadState('networkidle');
 
         await roundPage.searchRound(roundName);
         await roundPage.clickDeleteRound();
@@ -174,6 +188,8 @@ test.describe('Casting owner delete round scenarios', () => {
         projectId = response.data.id;
         projectName = response.data.title;
         console.log(projectId);
+        await page.waitForTimeout(7000);
+
         await publishProject(request, token, projectId);
 
         await createRole(request, token, projectId);
@@ -182,6 +198,7 @@ test.describe('Casting owner delete round scenarios', () => {
         expect(role).toBeDefined();
         roleId = role.id;
         roleName = role.role_name;
+        await page.waitForTimeout(7000);
 
 
         await createOnlineRound(request, token, projectId, roleId);
@@ -190,12 +207,17 @@ test.describe('Casting owner delete round scenarios', () => {
         expect(round).toBeDefined();
         roundId = round.id;
         roundName = round.round_name;
+        await page.waitForTimeout(10000);
+
         await updateRoundSubmissionStatus(request, token, projectId, roundId, 1);
 
         const roundPage = new RoundPage(page);
         const projectPage = new ProjectPage(page);
         await projectPage.openSearchedProject(projectName);
         await roundPage.gotoRoundsTab();
+
+        await page.reload();
+        await page.waitForLoadState('networkidle');
 
         await roundPage.searchRound(roundName);
         await roundPage.clickDeleteRound();
@@ -236,6 +258,7 @@ test.describe('Casting owner delete round scenarios', () => {
         projectName = response.data.title;
         console.log(projectId);
         await publishProject(request, token, projectId);
+        await page.waitForTimeout(7000);
 
         await createRole(request, token, projectId);
         const roles = await getProjectRoles(request, token, projectId);
@@ -243,7 +266,7 @@ test.describe('Casting owner delete round scenarios', () => {
         expect(role).toBeDefined();
         roleId = role.id;
         roleName = role.role_name;
-
+        await page.waitForTimeout(7000);
 
         await createOnlineRound(request, token, projectId, roleId);
         const rounds = await getProjectRounds(request, token, projectId);
@@ -251,6 +274,8 @@ test.describe('Casting owner delete round scenarios', () => {
         expect(round).toBeDefined();
         roundId = round.id;
         roundName = round.round_name;
+        await page.waitForTimeout(15000);
+
         await updateRoundSubmissionStatus(request, token, projectId, roundId, 1);
 
         const talentEmail = generateEmail();
@@ -267,11 +292,14 @@ test.describe('Casting owner delete round scenarios', () => {
             "Tell us about yourself"
         );
 
-        await page.waitForTimeout(3000);
+        await page.waitForTimeout(5000);
         const roundPage = new RoundPage(page);
         const projectPage = new ProjectPage(page);
         await projectPage.openSearchedProject(projectName);
         await roundPage.gotoRoundsTab();
+
+        await page.reload();
+        await page.waitForLoadState('networkidle');
 
         await roundPage.searchRound(roundName);
         await roundPage.clickDeleteRound();
@@ -290,6 +318,7 @@ test.describe('Casting owner delete round scenarios', () => {
         projectName = response.data.title;
         console.log(projectId);
         await publishProject(request, token, projectId);
+        await page.waitForTimeout(7000);
 
         await createRole(request, token, projectId);
         const roles = await getProjectRoles(request, token, projectId);
@@ -297,6 +326,7 @@ test.describe('Casting owner delete round scenarios', () => {
         expect(role).toBeDefined();
         roleId = role.id;
         roleName = role.role_name;
+        await page.waitForTimeout(7000);
 
 
         await createOnlineRound(request, token, projectId, roleId);
@@ -306,6 +336,8 @@ test.describe('Casting owner delete round scenarios', () => {
         roundId = round.id;
         roundName = round.round_name;
         console.log(roundId);
+        await page.waitForTimeout(15000);
+
         await updateRoundSubmissionStatus(request, token, projectId, roundId, 1);
 
         const talentEmail = generateEmail();
@@ -331,11 +363,14 @@ test.describe('Casting owner delete round scenarios', () => {
             roleId,
             question.data.question_id
         );
-        await page.waitForTimeout(3000);
+        await page.waitForTimeout(5000);
         const roundPage = new RoundPage(page);
         const projectPage = new ProjectPage(page);
         await projectPage.openSearchedProject(projectName);
         await roundPage.gotoRoundsTab();
+
+        await page.reload();
+        await page.waitForLoadState('networkidle');
 
         await roundPage.searchRound(roundName);
         await roundPage.clickDeleteRound();
