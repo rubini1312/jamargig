@@ -42,7 +42,10 @@ export async function fetchAllProjectCount(request: APIRequestContext, token: st
 }
 
 
-export async function getPublishedProjects(request: APIRequestContext, token: string): Promise<{ count: number; names: string[] }> {
+export async function getPublishedProjects(
+  request: APIRequestContext,
+  token: string
+): Promise<{ count: number; names: string[] }> {
 
   let page = 1;
   let all: any[] = [];
@@ -50,9 +53,13 @@ export async function getPublishedProjects(request: APIRequestContext, token: st
 
   while (all.length < total) {
     const res = await request.post(
-      urls.casting_base + `projects/search?page=${page}`,
+      `https://api.t.jamargig.com/api/63e31adc898a4/talent/casting/auditions/search?page=${page}`,
       {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        data: {} 
       }
     );
 
@@ -69,13 +76,11 @@ export async function getPublishedProjects(request: APIRequestContext, token: st
     page++;
   }
 
-  const published = all.filter(p => p.is_published === true);
+  const names = all.map(p => p.title.trim());
+  const count = names.length;
 
-  const names = published.map(p => p.title);
-  const count = published.length;
-
-  console.log("Published count:", count);
-  console.log("Published names:", names);
+  console.log("API count:", count);
+  console.log("API names:", names);
 
   return { count, names };
 }

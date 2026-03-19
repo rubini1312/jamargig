@@ -26,8 +26,8 @@ export async function getTalentAccessToken(
   console.log("OTP Status:", otpStatus);
   console.log("OTP Response:", otpBody);
 
-  if (otpStatus !== 201) {
-    throw new Error("Failed to request OTP");
+  if (![200, 201].includes(otpStatus)) {
+    throw new Error(`Failed to request OTP - Status: ${otpStatus}`);
   }
 
   // 🔴 IMPORTANT — get verify URL from response
