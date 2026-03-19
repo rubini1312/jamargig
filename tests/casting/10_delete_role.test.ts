@@ -59,6 +59,8 @@ test.describe('Casting owner delete role scenarios', () => {
         await page.waitForTimeout(10000);
 
         const roles = await getProjectRoles(request, token, projectId);
+        await page.waitForTimeout(10000);
+
         const role = roles.data[0];
         expect(role).toBeDefined();
         roleId = role.id;
@@ -101,6 +103,8 @@ test.describe('Casting owner delete role scenarios', () => {
         await page.waitForTimeout(10000);
 
         const roles = await getProjectRoles(request, token, projectId);
+        await page.waitForTimeout(10000);
+
         const role = roles.data[0];
         expect(role).toBeDefined();
         roleId = role.id;
@@ -151,6 +155,8 @@ test.describe('Casting owner delete role scenarios', () => {
         await page.waitForTimeout(10000);
 
         const roles = await getProjectRoles(request, token, projectId);
+        await page.waitForTimeout(10000);
+
         const role = roles.data[0];
         expect(role).toBeDefined();
         roleId = role.id;
