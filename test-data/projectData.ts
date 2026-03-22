@@ -1,7 +1,7 @@
 import { generateEmail, generatePhone } from "./random-data";
 
 export const projectData = {
-  title: "Automation Static Project",
+  title: "Automation Project",
   productionCompany: "Launchpad6",
   location: "Remote",
   url: "https://example.com",

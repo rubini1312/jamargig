@@ -13,13 +13,17 @@ test.describe("Casting owner login", () => {
     await page.goto(urls.casting);
 
     await login.enterEmail(emptyLogin.email);
+
     const loginBtn = page.locator(loginLocators.logInButton);
-    await loginBtn.waitFor({ state: "visible", timeout: 15000 });
+    await expect(loginBtn).toBeVisible();
     await expect(loginBtn).toBeEnabled();
+
     await loginBtn.click();
 
-    await page.waitForTimeout(2000);
-    const errorText = await login.getInvalidInputError();
+    const errorLocator = page.locator(loginLocators.valueRequiredError);
+    await expect(errorLocator).toBeVisible({ timeout: 5000 });
+
+    const errorText = await errorLocator.textContent();
     expect(errorText).toContain("Value is required");
   });
 
@@ -42,7 +46,6 @@ test.describe("Casting owner login", () => {
     await expect(loginBtn).toBeEnabled();
     await loginBtn.click();
 
-    await page.waitForTimeout(2000);
     const errorText = await login.getUnauthorizedLoginError();
     expect(errorText).toContain("Access unauthorized");
   });
@@ -67,7 +70,6 @@ test.describe("Casting owner login", () => {
     await expect(loginBtn).toBeEnabled({ timeout: 15000 });
     await loginBtn.click();
 
-    await page.waitForTimeout(2000);
     const errorText = await login.getUnauthorizedLoginError();
     expect(errorText).toContain("Access unauthorized");
   });

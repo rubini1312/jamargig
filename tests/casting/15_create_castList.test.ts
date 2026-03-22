@@ -1,9 +1,6 @@
 import { APIRequestContext, expect, test } from "@playwright/test";
 import LoginPage from "../../pages/casting/owner/login/loginPage";
-import RolePage from "../../pages/casting/owner/role/rolePage";
-import { roleLocators } from "../../pages/casting/owner/role/rolePageLocators";
 import { validLogin } from "@/test-data/loginData";
-import { roleData } from "@/test-data/roleData";
 import { urls } from "@/utils/urls";
 import { createProject, deleteProject, publishProject } from "@/helpers/api/casting/projectApi";
 import { createRole, deleteAllRoles, getProjectRoles } from "@/helpers/api/casting/roleApi";
@@ -51,30 +48,47 @@ test.describe('Casting owner create wcl scenarios', () => {
 
         const projectPage = new ProjectPage(page);
         const castListPage = new CastListPage(page);
-        projectPage.openSearchedProject(projectName);
-        await page.waitForTimeout(7000);
 
+        // Open project
+        await projectPage.openSearchedProject(projectName);
+
+        // Create role
         await createRole(request, token, projectId);
+
         const roles = await getProjectRoles(request, token, projectId);
-        const role = roles.data[0];
+        const role = roles.data[roles.data.length - 1];
         expect(role).toBeDefined();
-        roleId = role.id;
-        roleName = role.role_name;
+
+        const roleName = role.role_name;
 
         await castListPage.gotoCastListTab();
-        await castListPage.clickCreateWcl();
 
-        await castListPage.enterWclName("automated wcl");
+        await expect(async () => {
+            await castListPage.clickCreateWcl();
+
+            const option = page.locator('text=' + roleName);
+
+            if (!(await option.first().isVisible().catch(() => false))) {
+                await page.reload();
+                await page.waitForLoadState('networkidle');
+                await castListPage.gotoCastListTab();
+                await castListPage.clickCreateWcl();
+            }
+
+        }).toPass({ timeout: 15000 });
+
+        const wclName = `automated-wcl-${Date.now()}`;
+
+        await castListPage.enterWclName(wclName);
         await castListPage.selectRole(roleName);
         await castListPage.clickAdd();
         await castListPage.clickSubmitBtn();
 
         await castListPage.verifyWclRow({
-            name: "automated wcl",
+            name: wclName,
             role: roleName,
             status: "Open"
         });
-
     });
 
     test('Create new wcl and verify it appears in wcl list when project is active', async ({ page, request }) => {
@@ -82,31 +96,48 @@ test.describe('Casting owner create wcl scenarios', () => {
 
         const projectPage = new ProjectPage(page);
         const castListPage = new CastListPage(page);
+
         await publishProject(request, token, projectId);
-        projectPage.openSearchedProject(projectName);
-        await page.waitForTimeout(7000);
+
+        await projectPage.openSearchedProject(projectName);
 
         await createRole(request, token, projectId);
+
         const roles = await getProjectRoles(request, token, projectId);
-        const role = roles.data[0];
+        const role = roles.data[roles.data.length - 1];
         expect(role).toBeDefined();
-        roleId = role.id;
-        roleName = role.role_name;
+
+        const roleName = role.role_name;
 
         await castListPage.gotoCastListTab();
-        await castListPage.clickCreateWcl();
 
-        await castListPage.enterWclName("automated wcl");
+        await expect(async () => {
+            await castListPage.clickCreateWcl();
+
+            const option = page.locator('text=' + roleName);
+
+            if (!(await option.first().isVisible().catch(() => false))) {
+                await page.reload();
+                await page.waitForLoadState('networkidle');
+                await castListPage.gotoCastListTab();
+                await castListPage.clickCreateWcl();
+            }
+
+
+        }).toPass({ timeout: 15000 });
+
+        const wclName = `automated-wcl-${Date.now()}`;
+
+        await castListPage.enterWclName(wclName);
         await castListPage.selectRole(roleName);
         await castListPage.clickAdd();
         await castListPage.clickSubmitBtn();
 
         await castListPage.verifyWclRow({
-            name: "automated wcl",
+            name: wclName,
             role: roleName,
             status: "Open"
         });
-
     });
 
 });

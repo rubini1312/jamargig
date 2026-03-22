@@ -67,7 +67,8 @@ test.describe('Casting owner create question scenarios', () => {
 
         const questionPage = new QuestionPage(page);
         const projectPage = new ProjectPage(page);
-        projectPage.openSearchedProject(projectName);
+        await projectPage.openSearchedProject(projectName);
+
         await questionPage.gotoQuestionsTab();
         await questionPage.openCreateQuestion();
 
@@ -101,7 +102,6 @@ test.describe('Casting owner create question scenarios', () => {
         const projectPage = new ProjectPage(page);
 
         await projectPage.openSearchedProject(projectName);
-
         await questionPage.gotoQuestionsTab();
 
         await questionPage.createNewQuestion({
@@ -114,8 +114,7 @@ test.describe('Casting owner create question scenarios', () => {
             roleNames: [roleName]
         });
 
-        await page.waitForTimeout(2000);
-
+        await expect(page.locator(`text=${questionData.questionText}`)).toBeVisible({ timeout: 10000 });
         expect(await questionPage.isQuestionPresent(questionData.questionText)).toBeTruthy();
     });
 
@@ -145,8 +144,7 @@ test.describe('Casting owner create question scenarios', () => {
             roleNames: [roleName]
         });
 
-        await page.waitForTimeout(2000);
-
+        await expect(page.locator(`text=${questionData.questionText}`)).toBeVisible({ timeout: 10000 });
         expect(await questionPage.isQuestionPresent(questionData.questionText)).toBeTruthy();
     });
 
@@ -156,7 +154,6 @@ test.describe('Casting owner create question scenarios', () => {
 
         const questionPage = new QuestionPage(page);
         const projectPage = new ProjectPage(page);
-
         await projectPage.openSearchedProject(projectName);
 
         await questionPage.openProjectById(projectId, {
@@ -176,8 +173,7 @@ test.describe('Casting owner create question scenarios', () => {
             roleNames: [roleName]
         });
 
-        await page.waitForTimeout(2000);
-
+        await expect(page.locator(`text=${questionData.questionText}`)).toBeVisible({ timeout: 10000 });
         expect(await questionPage.isQuestionPresent(questionData.questionText)).toBeTruthy();
     });
 
@@ -209,8 +205,7 @@ test.describe('Casting owner create question scenarios', () => {
         });
 
         // wait for list refresh
-        await page.waitForTimeout(2000);
-
+        await expect(page.locator(`text=${questionData.questionText}`)).toBeVisible({ timeout: 10000 });
         expect(await questionPage.isQuestionPresent(questionData.questionText)).toBeTruthy();
     });
 
@@ -241,8 +236,7 @@ test.describe('Casting owner create question scenarios', () => {
             roleNames: [roleName]
         });
 
-        await page.waitForTimeout(2000);
-
+        await expect(page.locator(`text=${questionData.questionText}`)).toBeVisible({ timeout: 10000 });
         expect(await questionPage.isQuestionPresent(questionData.questionText)).toBeTruthy();
     });
 
@@ -272,8 +266,7 @@ test.describe('Casting owner create question scenarios', () => {
             roleNames: [roleName]
         });
 
-        await page.waitForTimeout(2000);
-
+        await expect(page.locator(`text=${questionData.questionText}`)).toBeVisible({ timeout: 10000 });
         expect(await questionPage.isQuestionPresent(questionData.questionText)).toBeTruthy();
     });
 
@@ -303,8 +296,7 @@ test.describe('Casting owner create question scenarios', () => {
             roleNames: [roleName]
         });
 
-        await page.waitForTimeout(2000);
-
+        await expect(page.locator(`text=${questionData.questionText}`)).toBeVisible({ timeout: 10000 });
         expect(await questionPage.isQuestionPresent(questionData.questionText)).toBeTruthy();
     });
 
@@ -334,8 +326,7 @@ test.describe('Casting owner create question scenarios', () => {
             roleNames: [roleName]
         });
 
-        await page.waitForTimeout(2000);
-
+        await expect(page.locator(`text=${questionData.questionText}`)).toBeVisible({ timeout: 10000 });
         expect(await questionPage.isQuestionPresent(questionData.questionText)).toBeTruthy();
     });
 
@@ -365,8 +356,7 @@ test.describe('Casting owner create question scenarios', () => {
             roleNames: [roleName]
         });
 
-        await page.waitForTimeout(2000);
-
+        await expect(page.locator(`text=${questionData.questionText}`)).toBeVisible({ timeout: 10000 });
         expect(await questionPage.isQuestionPresent(questionData.questionText)).toBeTruthy();
     });
 

@@ -183,15 +183,36 @@ export default class ProjectPage {
   }
 
   async openSearchedProject(name: string): Promise<void> {
-    const searchIcon = this.page.locator(projectLocators.projectSearchIcon);
+    await expect(async () => {
 
-    // hover icon to expand search
-    await expect(searchIcon).toBeVisible();
-    await searchIcon.hover();
+      // 🔄 refresh to get latest data (important for API-created projects)
+      await this.page.reload();
+      await this.page.waitForLoadState('networkidle');
 
-    // pick the visible search input only
-    const searchInput = this.page.locator('input[placeholder*="Search"]:visible');
-    await searchInput.fill(name);
+      const searchIcon = this.page.locator(projectLocators.projectSearchIcon);
+      await expect(searchIcon).toBeVisible();
+      await searchIcon.hover();
+
+      const searchInput = this.page.locator('input[placeholder*="Search"]:visible');
+      await expect(searchInput).toBeVisible();
+
+      await searchInput.fill(name);
+
+      // ✅ wait for result
+      const projectResult = this.page.locator('[data-testid^="project-list-card-"]', {
+        hasText: name,
+      });
+
+      await expect(projectResult).toBeVisible();
+
+      // ✅ click project
+      await projectResult.first().click();
+
+    }).toPass({ timeout: 20000 });
+
+    // ✅ ensure navigation happened
+    await expect(this.page).toHaveURL(/\/projects\/\d+/);
+    
   }
 
   async clickDeleteProject(projectName: string, projectId: number) {

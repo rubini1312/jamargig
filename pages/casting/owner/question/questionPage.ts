@@ -734,6 +734,8 @@ export default class QuestionPage {
     }
 
     async clickDeleteButton() {
+        await expect(this.page.locator(questionLocators.deleteBtn)).toBeVisible();
+
         await this.page.locator(questionLocators.deleteBtn).click();
         await expect(this.page.locator(questionLocators.deleteConfirmationBtn)).toBeVisible();
     }

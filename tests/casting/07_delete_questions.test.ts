@@ -13,8 +13,7 @@ import { questionLocators } from "@/pages/casting/owner/question/questionPageLoc
 import { applyForRound, registerTalent } from "@/helpers/api/talent/talentApi";
 import { generateEmail } from "@/test-data/random-data";
 import { getTalentAccessToken } from "@/helpers/api/talent/authApi";
-import { deleteTalent, getTalentUuidByName } from "@/helpers/api/casting/talentApi";
-import { questionData } from "@/test-data/questionData";
+
 
 test.describe('Casting owner create question scenarios', () => {
     let token: string;
@@ -87,8 +86,17 @@ test.describe('Casting owner create question scenarios', () => {
             ["Acting", "Singing", "Dancing"]
         );
 
-        await page.reload();
-        await page.waitForLoadState('networkidle');
+        await expect(async () => {
+            const deleteBtn = page.locator(questionLocators.deleteBtn);
+
+            if (!(await deleteBtn.first().isVisible().catch(() => false))) {
+                await page.reload();
+                await page.waitForLoadState('networkidle');
+            }
+
+            await expect(deleteBtn).toBeVisible();
+
+        }).toPass({ timeout: 15000 });
 
         await questionPage.clickDeleteButton();
         await questionPage.clickDeleteConfirmationButton();
@@ -103,8 +111,17 @@ test.describe('Casting owner create question scenarios', () => {
             ["Yes", "No"]
         );
 
-        await page.reload();
-        await page.waitForLoadState('networkidle');
+        await expect(async () => {
+            const deleteBtn = page.locator(questionLocators.deleteBtn);
+
+            if (!(await deleteBtn.first().isVisible().catch(() => false))) {
+                await page.reload();
+                await page.waitForLoadState('networkidle');
+            }
+
+            await expect(deleteBtn).toBeVisible();
+
+        }).toPass({ timeout: 15000 });
 
         await questionPage.clickDeleteButton();
         await questionPage.clickDeleteConfirmationButton();
@@ -118,8 +135,17 @@ test.describe('Casting owner create question scenarios', () => {
             ["USA", "UK", "Canada"]
         );
 
-        await page.reload();
-        await page.waitForLoadState('networkidle');
+        await expect(async () => {
+            const deleteBtn = page.locator(questionLocators.deleteBtn);
+
+            if (!(await deleteBtn.first().isVisible().catch(() => false))) {
+                await page.reload();
+                await page.waitForLoadState('networkidle');
+            }
+
+            await expect(deleteBtn).toBeVisible();
+
+        }).toPass({ timeout: 15000 });
 
         await questionPage.clickDeleteButton();
         await questionPage.clickDeleteConfirmationButton();
@@ -136,8 +162,17 @@ test.describe('Casting owner create question scenarios', () => {
             [1]
         );
 
-        await page.reload();
-        await page.waitForLoadState('networkidle');
+        await expect(async () => {
+            const deleteBtn = page.locator(questionLocators.deleteBtn);
+
+            if (!(await deleteBtn.first().isVisible().catch(() => false))) {
+                await page.reload();
+                await page.waitForLoadState('networkidle');
+            }
+
+            await expect(deleteBtn).toBeVisible();
+
+        }).toPass({ timeout: 15000 });
 
         await questionPage.clickDeleteButton();
         await questionPage.clickDeleteConfirmationButton();
@@ -155,8 +190,17 @@ test.describe('Casting owner create question scenarios', () => {
             [2]
         );
 
-        await page.reload();
-        await page.waitForLoadState('networkidle');
+        await expect(async () => {
+            const deleteBtn = page.locator(questionLocators.deleteBtn);
+
+            if (!(await deleteBtn.first().isVisible().catch(() => false))) {
+                await page.reload();
+                await page.waitForLoadState('networkidle');
+            }
+
+            await expect(deleteBtn).toBeVisible();
+
+        }).toPass({ timeout: 15000 });
 
         await questionPage.clickDeleteButton();
         await questionPage.clickDeleteConfirmationButton();
@@ -174,8 +218,17 @@ test.describe('Casting owner create question scenarios', () => {
             [4]
         );
 
-        await page.reload();
-        await page.waitForLoadState('networkidle');
+        await expect(async () => {
+            const deleteBtn = page.locator(questionLocators.deleteBtn);
+
+            if (!(await deleteBtn.first().isVisible().catch(() => false))) {
+                await page.reload();
+                await page.waitForLoadState('networkidle');
+            }
+
+            await expect(deleteBtn).toBeVisible();
+
+        }).toPass({ timeout: 15000 });
 
         await questionPage.clickDeleteButton();
         await questionPage.clickDeleteConfirmationButton();
@@ -193,8 +246,17 @@ test.describe('Casting owner create question scenarios', () => {
             ["Morning", "Afternoon", "Evening"]
         );
 
-        await page.reload();
-        await page.waitForLoadState('networkidle');
+        await expect(async () => {
+            const deleteBtn = page.locator(questionLocators.deleteBtn);
+
+            if (!(await deleteBtn.first().isVisible().catch(() => false))) {
+                await page.reload();
+                await page.waitForLoadState('networkidle');
+            }
+
+            await expect(deleteBtn).toBeVisible();
+
+        }).toPass({ timeout: 15000 });
 
         await page.waitForSelector(questionLocators.deleteBtn);
         await questionPage.clickDeleteButton();
@@ -255,8 +317,17 @@ test.describe('Casting owner create question scenarios', () => {
             ["Acting", "Singing", "Dancing"]
         );
 
-        await page.reload();
-        await page.waitForLoadState('networkidle');
+        await expect(async () => {
+            const deleteBtn = page.locator(questionLocators.deleteBtn);
+
+            if (!(await deleteBtn.first().isVisible().catch(() => false))) {
+                await page.reload();
+                await page.waitForLoadState('networkidle');
+            }
+
+            await expect(deleteBtn).toBeVisible();
+
+        }).toPass({ timeout: 15000 });
 
         await questionPage.clickDeleteButton();
         await questionPage.clickDeleteConfirmationButton();
@@ -271,8 +342,17 @@ test.describe('Casting owner create question scenarios', () => {
             ["Yes", "No"]
         );
 
-        await page.reload();
-        await page.waitForLoadState('networkidle');
+        await expect(async () => {
+            const deleteBtn = page.locator(questionLocators.deleteBtn);
+
+            if (!(await deleteBtn.first().isVisible().catch(() => false))) {
+                await page.reload();
+                await page.waitForLoadState('networkidle');
+            }
+
+            await expect(deleteBtn).toBeVisible();
+
+        }).toPass({ timeout: 15000 });
 
         await questionPage.clickDeleteButton();
         await questionPage.clickDeleteConfirmationButton();
@@ -286,8 +366,17 @@ test.describe('Casting owner create question scenarios', () => {
             ["USA", "UK", "Canada"]
         );
 
-        await page.reload();
-        await page.waitForLoadState('networkidle');
+        await expect(async () => {
+            const deleteBtn = page.locator(questionLocators.deleteBtn);
+
+            if (!(await deleteBtn.first().isVisible().catch(() => false))) {
+                await page.reload();
+                await page.waitForLoadState('networkidle');
+            }
+
+            await expect(deleteBtn).toBeVisible();
+
+        }).toPass({ timeout: 15000 });
 
         await questionPage.clickDeleteButton();
         await questionPage.clickDeleteConfirmationButton();
@@ -304,8 +393,17 @@ test.describe('Casting owner create question scenarios', () => {
             [1]
         );
 
-        await page.reload();
-        await page.waitForLoadState('networkidle');
+        await expect(async () => {
+            const deleteBtn = page.locator(questionLocators.deleteBtn);
+
+            if (!(await deleteBtn.first().isVisible().catch(() => false))) {
+                await page.reload();
+                await page.waitForLoadState('networkidle');
+            }
+
+            await expect(deleteBtn).toBeVisible();
+
+        }).toPass({ timeout: 15000 });
 
         await questionPage.clickDeleteButton();
         await questionPage.clickDeleteConfirmationButton();
@@ -323,8 +421,17 @@ test.describe('Casting owner create question scenarios', () => {
             [2]
         );
 
-        await page.reload();
-        await page.waitForLoadState('networkidle');
+        await expect(async () => {
+            const deleteBtn = page.locator(questionLocators.deleteBtn);
+
+            if (!(await deleteBtn.first().isVisible().catch(() => false))) {
+                await page.reload();
+                await page.waitForLoadState('networkidle');
+            }
+
+            await expect(deleteBtn).toBeVisible();
+
+        }).toPass({ timeout: 15000 });
 
         await questionPage.clickDeleteButton();
         await questionPage.clickDeleteConfirmationButton();
@@ -342,8 +449,17 @@ test.describe('Casting owner create question scenarios', () => {
             [4]
         );
 
-        await page.reload();
-        await page.waitForLoadState('networkidle');
+        await expect(async () => {
+            const deleteBtn = page.locator(questionLocators.deleteBtn);
+
+            if (!(await deleteBtn.first().isVisible().catch(() => false))) {
+                await page.reload();
+                await page.waitForLoadState('networkidle');
+            }
+
+            await expect(deleteBtn).toBeVisible();
+
+        }).toPass({ timeout: 15000 });
 
         await questionPage.clickDeleteButton();
         await questionPage.clickDeleteConfirmationButton();
@@ -361,8 +477,17 @@ test.describe('Casting owner create question scenarios', () => {
             ["Morning", "Afternoon", "Evening"]
         );
 
-        await page.reload();
-        await page.waitForLoadState('networkidle');
+        await expect(async () => {
+            const deleteBtn = page.locator(questionLocators.deleteBtn);
+
+            if (!(await deleteBtn.first().isVisible().catch(() => false))) {
+                await page.reload();
+                await page.waitForLoadState('networkidle');
+            }
+
+            await expect(deleteBtn).toBeVisible();
+
+        }).toPass({ timeout: 15000 });
 
         await page.waitForSelector(questionLocators.deleteBtn);
         await questionPage.clickDeleteButton();
@@ -426,7 +551,7 @@ test.describe('Casting owner create question scenarios', () => {
             roleId,
             question.data.question_id
         );
-        await page.waitForTimeout(10000);
+      
 
         const questionPage = new QuestionPage(page);
         const projectPage = new ProjectPage(page);
@@ -437,7 +562,10 @@ test.describe('Casting owner create question scenarios', () => {
         await questionPage.clickDeleteButton();
         await questionPage.clickDeleteConfirmationButton();
 
-        await page.waitForTimeout(5000);
+        await expect.poll(async () => {
+            return await questionPage.isQuestionPresent(question.data.question);
+        }).toBeTruthy();
+
         await questionPage.closeDeleteConfirmationModel();
         expect(await questionPage.isQuestionPresent(question.data.question)).toBeTruthy();
 

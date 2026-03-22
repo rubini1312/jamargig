@@ -48,40 +48,58 @@ test.describe('Casting owner delete round scenarios', () => {
     });
 
     // =========================================================
-    test('Delete cast and verify it disappears in list list when project is not active', async ({ page, request }) => {
+    test('Delete cast and verify it disappears in list when project is not active', async ({ page, request }) => {
         test.setTimeout(90000);
 
+        // Create project
         const { response } = await createProject(request, token);
-        projectId = response.data.id;
-        projectName = response.data.title;
-        console.log(projectId);
+        const projectId = response.data.id;
+        const projectName = response.data.title;
 
+        // Create role
         await createRole(request, token, projectId);
-        const roles = await getProjectRoles(request, token, projectId);
-        const role = roles.data[0];
-        expect(role).toBeDefined();
-        roleId = role.id;
-        roleName = role.role_name;
 
-        await createWorkingCastList(request, token, projectId, roleId, "Automated Cast")
-        await page.waitForTimeout(7000);
+        const roles = await getProjectRoles(request, token, projectId);
+        const role = roles.data[roles.data.length - 1];
+        expect(role).toBeDefined();
+
+        const roleId = role.id;
+
+        // Create cast list
+        await createWorkingCastList(request, token, projectId, roleId, "Automated Cast");
 
         const projectPage = new ProjectPage(page);
-        const castListPage  = new CastListPage(page);
+        const castListPage = new CastListPage(page);
+
         await projectPage.openSearchedProject(projectName);
         await castListPage.gotoCastListTab();
 
+        await expect(async () => {
+            const row = page.locator('[data-col-key="name"]', {
+                hasText: "Automated Cast"
+            });
+
+            if (!(await row.first().isVisible().catch(() => false))) {
+                await page.reload();
+                await page.waitForLoadState('networkidle');
+            }
+
+            await expect(row).toBeVisible();
+        }).toPass({ timeout: 15000 });
+
+        // Delete cast list
         await castListPage.clickDeleteButton();
         await castListPage.clickDeleteConfirmationButton();
-        
 
-        await expect(page.locator(roundLocators.deleteConfirmationBtn)).toBeHidden();
-        await expect(page.locator(roundLocators.emptyRoundMessage)).toContainText('No data');
+        // Verify deletion success
+        const deletedRow = page.locator('[data-col-key="name"]', {
+            hasText: "Automated Cast"
+        });
 
-        if (projectId) {
-            await deleteProject(request, token, projectId);
-        }
+        await expect(deletedRow).toHaveCount(0);
 
+        // Cleanup
+        await deleteProject(request, token, projectId);
     });
 
 });

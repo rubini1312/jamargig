@@ -56,7 +56,9 @@ test.describe('Casting owner create round scenarios', () => {
 
         const roundPage = new RoundPage(page);
         const projectPage = new ProjectPage(page);
-        projectPage.openSearchedProject(projectName);
+
+        await projectPage.openSearchedProject(projectName);
+
         await roundPage.gotoRoundsTab();
         await roundPage.openCreateRound();
 
@@ -83,14 +85,18 @@ test.describe('Casting owner create round scenarios', () => {
 
         const roundPage = new RoundPage(page);
         const projectPage = new ProjectPage(page);
-        projectPage.openSearchedProject(projectName);
+        await projectPage.openSearchedProject(projectName);
+
         await roundPage.gotoRoundsTab();
 
         const roundName = `Automation Online-Round ${Date.now()}`;
         const roundData = onlineRoundData(1, roundName);
 
         await roundPage.createNewRound(roundData);
-        await page.waitForTimeout(2000);
+        await expect(
+            page.locator(`text=${roundName}`)
+        ).toBeVisible({ timeout: 10000 });
+
         await roundPage.verifyRoundRow({
             name: roundName,
             submissionType: "Any one can submit",
@@ -105,14 +111,18 @@ test.describe('Casting owner create round scenarios', () => {
 
         const roundPage = new RoundPage(page);
         const projectPage = new ProjectPage(page);
-        projectPage.openSearchedProject(projectName);
+        await projectPage.openSearchedProject(projectName);
+
         await roundPage.gotoRoundsTab();
 
         const roundName = `Automation Online-Round ${Date.now()}`;
         const roundData = onlineRoundData(2, roundName);
 
         await roundPage.createNewRound(roundData);
-        await page.waitForTimeout(2000);
+        await expect(
+            page.locator(`text=${roundName}`)
+        ).toBeVisible({ timeout: 10000 });
+
         await roundPage.verifyRoundRow({
             name: roundName,
             submissionType: "Invite only submission",
@@ -127,14 +137,18 @@ test.describe('Casting owner create round scenarios', () => {
 
         const roundPage = new RoundPage(page);
         const projectPage = new ProjectPage(page);
-        projectPage.openSearchedProject(projectName);
+        await projectPage.openSearchedProject(projectName);
+
         await roundPage.gotoRoundsTab();
 
         const roundName = `Automation Online-Round ${Date.now()}`;
         const roundData = onlineRoundData(3, roundName);
 
         await roundPage.createNewRound(roundData);
-        await page.waitForTimeout(2000);
+        await expect(
+            page.locator(`text=${roundName}`)
+        ).toBeVisible({ timeout: 10000 });
+
         await roundPage.verifyRoundRow({
             name: roundName,
             submissionType: "Internal submission",
@@ -149,14 +163,18 @@ test.describe('Casting owner create round scenarios', () => {
 
         const roundPage = new RoundPage(page);
         const projectPage = new ProjectPage(page);
-        projectPage.openSearchedProject(projectName);
+        await projectPage.openSearchedProject(projectName);
+
         await roundPage.gotoRoundsTab();
 
         const roundName = `Automation InPerson-Round ${Date.now()}`;
         const roundData = onlineRoundData(1, roundName);
 
         await roundPage.createNewRound(roundData);
-        await page.waitForTimeout(2000);
+        await expect(
+            page.locator(`text=${roundName}`)
+        ).toBeVisible({ timeout: 10000 });
+
         await roundPage.verifyRoundRow({
             name: roundName,
             submissionType: "Any one can submit",
@@ -171,14 +189,18 @@ test.describe('Casting owner create round scenarios', () => {
 
         const roundPage = new RoundPage(page);
         const projectPage = new ProjectPage(page);
-        projectPage.openSearchedProject(projectName);
+        await projectPage.openSearchedProject(projectName);
+
         await roundPage.gotoRoundsTab();
 
         const roundName = `Automation InPerson-Round ${Date.now()}`;
         const roundData = onlineRoundData(2, roundName);
 
         await roundPage.createNewRound(roundData);
-        await page.waitForTimeout(2000);
+        await expect(
+            page.locator(`text=${roundName}`)
+        ).toBeVisible({ timeout: 10000 });
+
         await roundPage.verifyRoundRow({
             name: roundName,
             submissionType: "Invite only submission",
@@ -193,15 +215,18 @@ test.describe('Casting owner create round scenarios', () => {
 
         const roundPage = new RoundPage(page);
         const projectPage = new ProjectPage(page);
-        projectPage.openSearchedProject(projectName);
-        await roundPage.openProjectById(projectId, { waitForUrl: new RegExp(`/projects/${projectId}`) });
+        await projectPage.openSearchedProject(projectName);
+
         await roundPage.gotoRoundsTab();
 
         const roundName = `Automation InPerson-Round ${Date.now()}`;
         const roundData = onlineRoundData(3, roundName);
 
         await roundPage.createNewRound(roundData);
-        await page.waitForTimeout(2000);
+        await expect(
+            page.locator(`text=${roundName}`)
+        ).toBeVisible({ timeout: 10000 });
+
         await roundPage.verifyRoundRow({
             name: roundName,
             submissionType: "Internal submission",

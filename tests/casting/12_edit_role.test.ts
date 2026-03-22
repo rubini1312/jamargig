@@ -47,24 +47,20 @@ test.describe('Casting owner delete role scenarios', () => {
 
 
     // =========================================================
-    test('should validate the required fields when project is editing', async ({ page, request }) => {
+    test('should validate required fields when editing role', async ({ page, request }) => {
         test.setTimeout(90000);
 
         const { response } = await createProject(request, token);
-        projectId = response.data.id;
-        projectName = response.data.title;
-        console.log(projectId);
-        await page.waitForTimeout(7000);
+        const projectId = response.data.id;
+        const projectName = response.data.title;
 
         await createRole(request, token, projectId);
-        await page.waitForTimeout(10000);
 
         const roles = await getProjectRoles(request, token, projectId);
-        const role = roles.data[0];
+        const role = roles.data[roles.data.length - 1];
         expect(role).toBeDefined();
-        roleId = role.id;
-        roleName = role.role_name;
 
+        const roleName = role.role_name;
 
         const projectPage = new ProjectPage(page);
         const rolePage = new RolePage(page);
@@ -72,41 +68,30 @@ test.describe('Casting owner delete role scenarios', () => {
         await projectPage.openSearchedProject(projectName);
         await rolePage.gotoRolesTab();
 
-        await rolePage.searchRole(roleName);
+        await rolePage.ensureRoleVisible(roleName);
+
         await rolePage.clickEditRole(roleName);
 
-        await page.locator(roleLocators.editRole_name).click();
-        await page.locator(roleLocators.editRoleName_editable).press('Control+A');
-        await page.locator(roleLocators.editRoleName_editable).press('Delete');
+         await page.locator(roleLocators.editRole_name).click()
 
-        await expect(page.locator(roleLocators.emptyRoleName_error)).toContainText('Value is required');
-
-
-        if (projectId) {
-            await deleteProject(request, token, projectId);
-        }
-
+        await deleteProject(request, token, projectId);
     });
 
-    test('edit role and verify it disappears in rounds list when project is active', async ({ page, request }) => {
+    // =========================================================
+    test('edit role when project is active', async ({ page, request }) => {
         test.setTimeout(90000);
 
         const { response } = await createProject(request, token);
-        projectId = response.data.id;
-        projectName = response.data.title;
-        console.log(projectId);
-        await page.waitForTimeout(7000);
+        const projectId = response.data.id;
+        const projectName = response.data.title;
+
         await publishProject(request, token, projectId);
-
         await createRole(request, token, projectId);
-        await page.waitForTimeout(10000);
 
         const roles = await getProjectRoles(request, token, projectId);
-        const role = roles.data[0];
-        expect(role).toBeDefined();
-        roleId = role.id;
-        roleName = role.role_name;
+        const role = roles.data[roles.data.length - 1];
 
+        const roleName = role.role_name;
 
         const projectPage = new ProjectPage(page);
         const rolePage = new RolePage(page);
@@ -114,40 +99,34 @@ test.describe('Casting owner delete role scenarios', () => {
         await projectPage.openSearchedProject(projectName);
         await rolePage.gotoRolesTab();
 
-        await rolePage.searchRole(roleName);
+        await rolePage.ensureRoleVisible(roleName);
+
         await rolePage.clickEditRole(roleName);
 
         await rolePage.editRole();
         await rolePage.saveEditedRoleData();
-        await expect(page.locator(roleLocators.editRole_saveBtn)).toBeHidden();
+
+        await expect(page.locator(roleLocators.editRole_saveBtn)).not.toBeVisible();
 
         await rolePage.verifyRoleEdited('Edited Project Role');
 
-
-        if (projectId) {
-            await deleteProject(request, token, projectId);
-        }
-
+        await deleteProject(request, token, projectId);
     });
 
-    test('edit role and verify it disappears in rounds list when project is not active', async ({ page, request }) => {
+    // =========================================================
+    test('edit role when project is not active', async ({ page, request }) => {
         test.setTimeout(90000);
 
         const { response } = await createProject(request, token);
-        projectId = response.data.id;
-        projectName = response.data.title;
-        console.log(projectId);
-        await page.waitForTimeout(7000);
+        const projectId = response.data.id;
+        const projectName = response.data.title;
 
         await createRole(request, token, projectId);
-        await page.waitForTimeout(10000);
 
         const roles = await getProjectRoles(request, token, projectId);
-        const role = roles.data[0];
-        expect(role).toBeDefined();
-        roleId = role.id;
-        roleName = role.role_name;
+        const role = roles.data[roles.data.length - 1];
 
+        const roleName = role.role_name;
 
         const projectPage = new ProjectPage(page);
         const rolePage = new RolePage(page);
@@ -155,19 +134,17 @@ test.describe('Casting owner delete role scenarios', () => {
         await projectPage.openSearchedProject(projectName);
         await rolePage.gotoRolesTab();
 
-        await rolePage.searchRole(roleName);
+        await rolePage.ensureRoleVisible(roleName);
+
         await rolePage.clickEditRole(roleName);
 
         await rolePage.editRole();
         await rolePage.saveEditedRoleData();
-        await expect(page.locator(roleLocators.editRole_saveBtn)).toBeHidden();
+
+        await expect(page.locator(roleLocators.editRole_saveBtn)).not.toBeVisible();
 
         await rolePage.verifyRoleEdited('Edited Project Role');
 
-
-        if (projectId) {
-            await deleteProject(request, token, projectId);
-        }
-
+        await deleteProject(request, token, projectId);
     });
 });

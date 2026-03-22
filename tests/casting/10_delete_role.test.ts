@@ -19,6 +19,7 @@ import { createTextQuestion } from "@/helpers/api/casting/questionApi";
 import rolePage from "@/pages/casting/owner/role/rolePage";
 import RolePage from "@/pages/casting/owner/role/rolePage";
 import { createWorkingCastList } from "@/helpers/api/casting/castListApi";
+import { roleLocators } from "@/pages/casting/owner/role/rolePageLocators";
 
 test.describe('Casting owner delete role scenarios', () => {
     let token: string;
@@ -46,80 +47,74 @@ test.describe('Casting owner delete role scenarios', () => {
 
 
     // =========================================================
-    test('Delete role and verify it disappears in rounds list when project is not active', async ({ page, request }) => {
+    test('Delete role and verify it disappears in roles list when project is not active', async ({ page, request }) => {
         test.setTimeout(90000);
 
+        // Create project
         const { response } = await createProject(request, token);
         projectId = response.data.id;
         projectName = response.data.title;
-        console.log(projectId);
-        await page.waitForTimeout(7000);
 
+        // Create role
         await createRole(request, token, projectId);
-        await page.waitForTimeout(10000);
 
         const roles = await getProjectRoles(request, token, projectId);
-        await page.waitForTimeout(10000);
-
-        const role = roles.data[0];
+        const role = roles.data[roles.data.length - 1];
         expect(role).toBeDefined();
+
         roleId = role.id;
         roleName = role.role_name;
-
 
         const projectPage = new ProjectPage(page);
         const rolePage = new RolePage(page);
 
         await projectPage.openSearchedProject(projectName);
         await rolePage.gotoRolesTab();
-        await page.reload();
-        await page.waitForLoadState('networkidle');
 
-        await rolePage.searchRole(roleName);
+        await rolePage.ensureRoleVisible(roleName);
+
+        // Delete role
         await rolePage.clickDeleteRole(roleName);
         await rolePage.clickDeleteConfirmationButton();
 
-        await expect(page.locator(roundLocators.deleteConfirmationBtn)).toBeHidden();
-        await expect(page.locator(roundLocators.emptyRoundMessage)).toContainText('No data');
+        await expect(page.locator(roleLocators.deleteConfirmationBtn)).not.toBeVisible();
+        await expect(page.locator(roleLocators.emptyRoundMessage))
+            .toContainText(/no data/i);
 
+        const deletedRow = page.locator('[data-col-key="role_name"]', {
+            hasText: roleName
+        });
+
+        await expect(deletedRow).toHaveCount(0);
+
+        // Cleanup
         if (projectId) {
             await deleteProject(request, token, projectId);
         }
-
     });
 
     // =========================================================
-    test('Delete rounds and verify it disappears in rounds list when project active and rounds is not active', async ({ page, request }) => {
+    test('Should not delete role when project is active', async ({ page, request }) => {
         test.setTimeout(90000);
 
+        // Create project
         const { response } = await createProject(request, token);
-        projectId = response.data.id;
-        projectName = response.data.title;
-        console.log(projectId);
-        await page.waitForTimeout(7000);
+        const projectId = response.data.id;
+        const projectName = response.data.title;
+
         await publishProject(request, token, projectId);
 
+        // Create role
         await createRole(request, token, projectId);
-        await page.waitForTimeout(10000);
 
         const roles = await getProjectRoles(request, token, projectId);
-        await page.waitForTimeout(10000);
-
-        const role = roles.data[0];
+        const role = roles.data[roles.data.length - 1];
         expect(role).toBeDefined();
-        roleId = role.id;
-        roleName = role.role_name;
 
+        const roleName = role.role_name;
+        const roleId = role.id;
 
         await createOnlineRound(request, token, projectId, roleId);
-        const rounds = await getProjectRounds(request, token, projectId);
-        await page.waitForTimeout(7000);
-
-        const round = rounds.data[0];
-        expect(round).toBeDefined();
-        roundId = round.id;
-        roundName = round.round_name;
-        console.log(roundId);
 
         const projectPage = new ProjectPage(page);
         const rolePage = new RolePage(page);
@@ -127,50 +122,53 @@ test.describe('Casting owner delete role scenarios', () => {
         await projectPage.openSearchedProject(projectName);
         await rolePage.gotoRolesTab();
 
-        await page.reload();
-        await page.waitForLoadState('networkidle');
+        await rolePage.ensureRoleVisible(roleName);
 
-        await rolePage.searchRole(roleName);
         await rolePage.clickDeleteRole(roleName);
         await rolePage.clickDeleteConfirmationButton();
 
-        await page.waitForTimeout(5000);
+        await expect(page.locator(roleLocators.deleteConfirmationBtn)).toBeVisible();
+
         await rolePage.clickCloseDeleteConfirmation();
-        await rolePage.verifyRoleCreated(roleName);
 
+        const roleRow = page.locator('[data-col-key="role_name"]', {
+            hasText: roleName
+        });
 
+        await expect(roleRow).toBeVisible();
+
+        // Cleanup
+        await deleteProject(request, token, projectId);
     });
 
-    test('Delete rounds and verify it disappears in rounds list when project and rounds is active', async ({ page, request }) => {
+    test('Should not delete role when project and rounds are active', async ({ page, request }) => {
         test.setTimeout(90000);
 
+        // Create project
         const { response } = await createProject(request, token);
-        projectId = response.data.id;
-        projectName = response.data.title;
-        console.log(projectId);
-        await page.waitForTimeout(7000);
+        const projectId = response.data.id;
+        const projectName = response.data.title;
+
         await publishProject(request, token, projectId);
 
+        // Create role
         await createRole(request, token, projectId);
-        await page.waitForTimeout(10000);
 
         const roles = await getProjectRoles(request, token, projectId);
-        await page.waitForTimeout(10000);
-
-        const role = roles.data[0];
+        const role = roles.data[roles.data.length - 1];
         expect(role).toBeDefined();
-        roleId = role.id;
-        roleName = role.role_name;
 
+        const roleId = role.id;
+        const roleName = role.role_name;
 
         await createOnlineRound(request, token, projectId, roleId);
-        const rounds = await getProjectRounds(request, token, projectId);
-        await page.waitForTimeout(7000);
 
-        const round = rounds.data[0];
+        const rounds = await getProjectRounds(request, token, projectId);
+        const round = rounds.data[rounds.data.length - 1];
         expect(round).toBeDefined();
-        roundId = round.id;
-        roundName = round.round_name;
+
+        const roundId = round.id;
+
         await updateRoundSubmissionStatus(request, token, projectId, roundId, 1);
 
         const projectPage = new ProjectPage(page);
@@ -179,142 +177,153 @@ test.describe('Casting owner delete role scenarios', () => {
         await projectPage.openSearchedProject(projectName);
         await rolePage.gotoRolesTab();
 
-        await page.reload();
-        await page.waitForLoadState('networkidle');
+        await rolePage.ensureRoleVisible(roleName);
 
-        await rolePage.searchRole(roleName);
         await rolePage.clickDeleteRole(roleName);
         await rolePage.clickDeleteConfirmationButton();
 
+        await expect(page.locator(roleLocators.deleteConfirmationBtn)).toBeVisible();
 
-        await page.waitForTimeout(5000);
         await rolePage.clickCloseDeleteConfirmation();
-        await rolePage.verifyRoleCreated(roleName);
 
-        if (projectId) {
-            await deleteProject(request, token, projectId);
-        }
+        const roleRow = page.locator('[data-col-key="role_name"]', {
+            hasText: roleName
+        });
 
+        await expect(roleRow).toBeVisible();
+
+        // Cleanup
+        await deleteProject(request, token, projectId);
     });
 
-    test('should delete role from the list when question is created and submitted', async ({ page, request }) => {
+    test('Should not delete role when question is created and submitted', async ({ page, request }) => {
         test.setTimeout(90000);
 
+        // Create project
         const { response } = await createProject(request, token);
-        await page.waitForTimeout(7000);
+        const projectId = response.data.id;
+        const projectName = response.data.title;
 
-        projectId = response.data.id;
-        projectName = response.data.title;
-        console.log(projectId);
         await publishProject(request, token, projectId);
 
+        // Create role
         await createRole(request, token, projectId);
-        await page.waitForTimeout(10000);
 
         const roles = await getProjectRoles(request, token, projectId);
-        await page.waitForTimeout(7000);
-
-        const role = roles.data[0];
+        const role = roles.data[roles.data.length - 1];
         expect(role).toBeDefined();
-        roleId = role.id;
-        roleName = role.role_name;
 
+        const roleId = role.id;
+        const roleName = role.role_name;
 
+        // Create round
         await createOnlineRound(request, token, projectId, roleId);
+
         const rounds = await getProjectRounds(request, token, projectId);
-        const round = rounds.data[0];
+        const round = rounds.data[rounds.data.length - 1];
         expect(round).toBeDefined();
-        roundId = round.id;
-        roundName = round.round_name;
+
+        const roundId = round.id;
+
         await updateRoundSubmissionStatus(request, token, projectId, roundId, 1);
-        await page.waitForTimeout(7000);
 
         const talentEmail = generateEmail();
         const talentToken = await getTalentAccessToken(request, talentEmail);
 
         const talentName = "AutoTalent_" + Date.now();
-
         const result = await registerTalent(request, talentToken, talentName);
         expect(result).toBeTruthy();
 
-        // text Questions
+        // Create question
         const question = await createTextQuestion(
-            request, token, projectId, roundId, roleId,
+            request,
+            token,
+            projectId,
+            roundId,
+            roleId,
             "Tell us about yourself"
         );
 
-        await page.waitForTimeout(7000);
+        await applyForRound(
+            request,
+            talentToken,
+            validLogin.tenant_id,
+            projectId,
+            roundId,
+            roleId,
+            question.data.question_id
+        );
+
         const projectPage = new ProjectPage(page);
         const rolePage = new RolePage(page);
 
         await projectPage.openSearchedProject(projectName);
         await rolePage.gotoRolesTab();
 
-        await page.reload();
-        await page.waitForLoadState('networkidle');
+        await rolePage.ensureRoleVisible(roleName);
 
-        await rolePage.searchRole(roleName);
         await rolePage.clickDeleteRole(roleName);
         await rolePage.clickDeleteConfirmationButton();
 
-        await page.waitForTimeout(5000);
+        await expect(page.locator(roleLocators.deleteConfirmationBtn)).toBeVisible();
+
         await rolePage.clickCloseDeleteConfirmation();
-        await rolePage.verifyRoleCreated(roleName);
 
-        if (projectId) {
-            await deleteProject(request, token, projectId);
-        }
+        const roleRow = page.locator('[data-col-key="role_name"]', {
+            hasText: roleName
+        });
 
+        await expect(roleRow).toBeVisible();
+
+        await deleteProject(request, token, projectId);
     });
 
-    test('should delete role from the list when role is assigned to cast list', async ({ page, request }) => {
+    test('Should not delete role when assigned to cast list', async ({ page, request }) => {
         test.setTimeout(90000);
 
+        // Create project
         const { response } = await createProject(request, token);
-        await page.waitForTimeout(7000);
+        const projectId = response.data.id;
+        const projectName = response.data.title;
 
-        projectId = response.data.id;
-        projectName = response.data.title;
-        console.log(projectId);
         await publishProject(request, token, projectId);
 
+        // Create role
         await createRole(request, token, projectId);
-        await page.waitForTimeout(10000);
 
         const roles = await getProjectRoles(request, token, projectId);
-        await page.waitForTimeout(15000);
-
-        const role = roles.data[0];
+        const role = roles.data[roles.data.length - 1]; 
         expect(role).toBeDefined();
-        roleId = role.id;
-        roleName = role.role_name;
-        console.log("ROLE ID" + roleId);
 
-        await createWorkingCastList(request, token, projectId, roleId, "Automated Cast")
-        await page.waitForTimeout(7000);
+        const roleId = role.id;
+        const roleName = role.role_name;
+
+        await createWorkingCastList(request, token, projectId, roleId, "Automated Cast");
+
         const projectPage = new ProjectPage(page);
         const rolePage = new RolePage(page);
 
         await projectPage.openSearchedProject(projectName);
         await rolePage.gotoRolesTab();
 
-        await page.reload();
-        await page.waitForLoadState('networkidle');
+        await rolePage.ensureRoleVisible(roleName);
 
-        await rolePage.searchRole(roleName);
         await rolePage.clickDeleteRole(roleName);
         await rolePage.clickDeleteConfirmationButton();
 
-        await expect(page.locator(roundLocators.deleteConfirmationBtn)).toBeHidden();
-        await expect(page.locator(roundLocators.emptyRoundMessage)).toContainText('No data');
+        await expect(page.locator(roleLocators.deleteConfirmationBtn)).toBeVisible();
 
+        await rolePage.clickCloseDeleteConfirmation();
 
-        if (projectId) {
-            await deleteProject(request, token, projectId);
-        }
+        const roleRow = page.locator('[data-col-key="role_name"]', {
+            hasText: roleName
+        });
 
+        await expect(roleRow).toBeVisible();
+
+        // Cleanup
+        await deleteProject(request, token, projectId);
     });
-
 
 
 });

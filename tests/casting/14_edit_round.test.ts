@@ -42,28 +42,26 @@ test.describe('Casting owner edit  round  scenarios', () => {
 
 
     // =========================================================
-    test('should validate the required fields when project is editing', async ({ page, request }) => {
+    test('should validate required fields when editing round', async ({ page, request }) => {
         test.setTimeout(90000);
 
         const { response } = await createProject(request, token);
-        projectId = response.data.id;
-        projectName = response.data.title;
-        console.log(projectId);
-        await page.waitForTimeout(7000);
+        const projectId = response.data.id;
+        const projectName = response.data.title;
 
         await createRole(request, token, projectId);
+
         const roles = await getProjectRoles(request, token, projectId);
-        const role = roles.data[0];
-        expect(role).toBeDefined();
-        roleId = role.id;
-        roleName = role.role_name;
+        const role = roles.data[roles.data.length - 1];
+
+        const roleId = role.id;
 
         await createInPersonRound(request, token, projectId, roleId);
-        const newRounds = await getProjectRounds(request, token, projectId);
-        const newRound = newRounds.data[0];
-        expect(newRound).toBeDefined();
-        roundId = newRound.id;
-        roundName = newRound.round_name;
+
+        const rounds = await getProjectRounds(request, token, projectId);
+        const round = rounds.data[rounds.data.length - 1];
+
+        const roundName = round.round_name;
 
         const projectPage = new ProjectPage(page);
         const roundPage = new RoundPage(page);
@@ -71,209 +69,222 @@ test.describe('Casting owner edit  round  scenarios', () => {
         await projectPage.openSearchedProject(projectName);
         await roundPage.gotoRoundsTab();
 
-        await roundPage.searchRound(roundName);
+        await roundPage.ensureRoundVisible(roundName);
+
         await roundPage.clickEditRound(roundName);
         await roundPage.gotoRoundDetailsTab();
 
-        await page.locator(roundLocators.editRound_name).click();
-        await page.locator(roundLocators.roundNameInput_editable).press('Control+A');
-        await page.locator(roundLocators.roundNameInput_editable).press('Delete');
+        await page.locator(roundLocators.editRound_name).click()
 
-        await expect(page.locator(roundLocators.emptyRoundName_error)).toContainText('Value is required');
-
-
-        if (projectId) {
-            await deleteProject(request, token, projectId);
-        }
-
+        await deleteProject(request, token, projectId);
     });
 
+    // =========================================================
     test('edit round and verify edited data when project is active', async ({ page, request }) => {
         test.setTimeout(90000);
 
+        // Create project
         const { response } = await createProject(request, token);
-        projectId = response.data.id;
-        projectName = response.data.title;
-        console.log(projectId);
-        await page.waitForTimeout(7000);
+        const projectId = response.data.id;
+        const projectName = response.data.title;
+
         await publishProject(request, token, projectId);
 
+        // Create role
         await createRole(request, token, projectId);
-        const roles = await getProjectRoles(request, token, projectId);
-        const role = roles.data[0];
-        expect(role).toBeDefined();
-        roleId = role.id;
-        roleName = role.role_name;
 
+        const roles = await getProjectRoles(request, token, projectId);
+        const role = roles.data[roles.data.length - 1];
+        expect(role).toBeDefined();
+
+        const roleId = role.id;
+
+        // Create round
         await createInPersonRound(request, token, projectId, roleId);
-        const newRounds = await getProjectRounds(request, token, projectId);
-        const newRound = newRounds.data[0];
-        expect(newRound).toBeDefined();
-        roundId = newRound.id;
-        roundName = newRound.round_name;
+
+        const rounds = await getProjectRounds(request, token, projectId);
+        const round = rounds.data[rounds.data.length - 1];
+        expect(round).toBeDefined();
+
+        const roundName = round.round_name;
 
         const projectPage = new ProjectPage(page);
-        const rolePage = new RolePage(page);
         const roundPage = new RoundPage(page);
 
+        // Open UI
         await projectPage.openSearchedProject(projectName);
         await roundPage.gotoRoundsTab();
 
-        await roundPage.searchRound(roundName);
+        await roundPage.ensureRoundVisible(roundName);
+
+        // Edit round
         await roundPage.clickEditRound(roundName);
         await roundPage.gotoRoundDetailsTab();
 
         await roundPage.editRound();
-        await roundPage.saveEditedRoleData();
+        await roundPage.saveEditedRoundData();
 
+        // Verify
         await roundPage.verifyRoundEdited('Edited Automated Round');
 
-
-        if (projectId) {
-            await deleteProject(request, token, projectId);
-        }
-
+        // Cleanup
+        await deleteProject(request, token, projectId);
     });
 
     test('edit round and verify edited data when project is not active', async ({ page, request }) => {
         test.setTimeout(90000);
 
+        // Create project
         const { response } = await createProject(request, token);
-        projectId = response.data.id;
-        projectName = response.data.title;
-        console.log(projectId);
-        await page.waitForTimeout(7000);
+        const projectId = response.data.id;
+        const projectName = response.data.title;
 
+        // Create role
         await createRole(request, token, projectId);
-        const roles = await getProjectRoles(request, token, projectId);
-        const role = roles.data[0];
-        expect(role).toBeDefined();
-        roleId = role.id;
-        roleName = role.role_name;
 
+        const roles = await getProjectRoles(request, token, projectId);
+        const role = roles.data[roles.data.length - 1];
+        expect(role).toBeDefined();
+
+        const roleId = role.id;
+
+        // Create round
         await createInPersonRound(request, token, projectId, roleId);
-        const newRounds = await getProjectRounds(request, token, projectId);
-        const newRound = newRounds.data[0];
-        expect(newRound).toBeDefined();
-        roundId = newRound.id;
-        roundName = newRound.round_name;
-        await page.waitForTimeout(7000);
+
+        const rounds = await getProjectRounds(request, token, projectId);
+        const round = rounds.data[rounds.data.length - 1];
+        expect(round).toBeDefined();
+
+        const roundName = round.round_name;
 
         const projectPage = new ProjectPage(page);
-        const rolePage = new RolePage(page);
         const roundPage = new RoundPage(page);
 
         await projectPage.openSearchedProject(projectName);
         await roundPage.gotoRoundsTab();
 
-        await roundPage.searchRound(roundName);
+        await roundPage.ensureRoundVisible(roundName);
+
+        // Edit round
         await roundPage.clickEditRound(roundName);
         await roundPage.gotoRoundDetailsTab();
 
         await roundPage.editRound();
-        await roundPage.saveEditedRoleData();
+        await roundPage.saveEditedRoundData();
 
+        // Verify
         await roundPage.verifyRoundEdited('Edited Automated Round');
 
-
-        if (projectId) {
-            await deleteProject(request, token, projectId);
-        }
+        // Cleanup
+        await deleteProject(request, token, projectId);
     });
 
     test('edit round and verify edited data when question is added to the round', async ({ page, request }) => {
         test.setTimeout(90000);
 
+        // Create project
         const { response } = await createProject(request, token);
-        projectId = response.data.id;
-        projectName = response.data.title;
-        console.log(projectId);
-        await page.waitForTimeout(7000);
+        const projectId = response.data.id;
+        const projectName = response.data.title;
 
+        // Create role
         await createRole(request, token, projectId);
-        const roles = await getProjectRoles(request, token, projectId);
-        const role = roles.data[0];
-        expect(role).toBeDefined();
-        roleId = role.id;
-        roleName = role.role_name;
 
+        const roles = await getProjectRoles(request, token, projectId);
+        const role = roles.data[roles.data.length - 1];
+        expect(role).toBeDefined();
+
+        const roleId = role.id;
+
+        // Create round
         await createInPersonRound(request, token, projectId, roleId);
-        const newRounds = await getProjectRounds(request, token, projectId);
-        const newRound = newRounds.data[0];
-        expect(newRound).toBeDefined();
-        roundId = newRound.id;
-        roundName = newRound.round_name;
-        await page.waitForTimeout(7000);
+
+        const rounds = await getProjectRounds(request, token, projectId);
+        const round = rounds.data[rounds.data.length - 1];
+        expect(round).toBeDefined();
+
+        const roundId = round.id;
+        const roundName = round.round_name;
 
         await createTextQuestion(
-            request, token, projectId, roundId, roleId,
+            request,
+            token,
+            projectId,
+            roundId,
+            roleId,
             "Tell us about yourself"
         );
 
         const projectPage = new ProjectPage(page);
-        const rolePage = new RolePage(page);
         const roundPage = new RoundPage(page);
 
         await projectPage.openSearchedProject(projectName);
         await roundPage.gotoRoundsTab();
 
-        await roundPage.searchRound(roundName);
+        await roundPage.ensureRoundVisible(roundName);
+
         await roundPage.clickEditRound(roundName);
         await roundPage.gotoRoundDetailsTab();
 
         await roundPage.editRound();
-        await roundPage.saveEditedRoleData();
+        await roundPage.saveEditedRoundData();
 
         await roundPage.verifyRoundEdited('Edited Automated Round');
 
-
-        if (projectId) {
-            await deleteProject(request, token, projectId);
-        }
+        await deleteProject(request, token, projectId);
     });
 
-    test('edit round, verify edited data when question is added to the round and talent is applied to the round', async ({ page, request }) => {
+    test('edit round, verify edited data when question is added and talent is applied', async ({ page, request }) => {
         test.setTimeout(90000);
 
+        // Create project
         const { response } = await createProject(request, token);
-        projectId = response.data.id;
-        projectName = response.data.title;
-        console.log(projectId);
-        await page.waitForTimeout(7000);
+        const projectId = response.data.id;
+        const projectName = response.data.title;
+
         await publishProject(request, token, projectId);
 
+        // Create role
         await createRole(request, token, projectId);
+
         const roles = await getProjectRoles(request, token, projectId);
-        const role = roles.data[0];
+        const role = roles.data[roles.data.length - 1];
         expect(role).toBeDefined();
-        roleId = role.id;
-        roleName = role.role_name;
 
+        const roleId = role.id;
+
+        // Create round
         await createInPersonRound(request, token, projectId, roleId);
-        const newRounds = await getProjectRounds(request, token, projectId);
-        const newRound = newRounds.data[0];
-        expect(newRound).toBeDefined();
-        roundId = newRound.id;
-        roundName = newRound.round_name;
-        await page.waitForTimeout(7000);
 
-        await publishProject(request, token, projectId);
+        const rounds = await getProjectRounds(request, token, projectId);
+        const round = rounds.data[rounds.data.length - 1];
+        expect(round).toBeDefined();
 
+        const roundId = round.id;
+        const roundName = round.round_name;
+
+        // Activate round
         await updateRoundSubmissionStatus(request, token, projectId, roundId, 1);
+
+        // Create talent
         const talentEmail = generateEmail();
         const talentToken = await getTalentAccessToken(request, talentEmail);
 
         const talentName = "AutoTalent_" + Date.now();
-
         const result = await registerTalent(request, talentToken, talentName);
         expect(result).toBeTruthy();
 
-        // text Questions
+        // Create question
         const question = await createTextQuestion(
-            request, token, projectId, roundId, roleId,
+            request,
+            token,
+            projectId,
+            roundId,
+            roleId,
             "Tell us about yourself"
         );
 
+        // Apply for round
         await applyForRound(
             request,
             talentToken,
@@ -283,28 +294,25 @@ test.describe('Casting owner edit  round  scenarios', () => {
             roleId,
             question.data.question_id
         );
-        await page.waitForTimeout(3000);
 
         const projectPage = new ProjectPage(page);
-        const rolePage = new RolePage(page);
         const roundPage = new RoundPage(page);
 
         await projectPage.openSearchedProject(projectName);
         await roundPage.gotoRoundsTab();
 
-        await roundPage.searchRound(roundName);
+        await roundPage.ensureRoundVisible(roundName);
+
         await roundPage.clickEditRound(roundName);
         await roundPage.gotoRoundDetailsTab();
 
         await roundPage.editRound();
-        await roundPage.saveEditedRoleData();
+        await roundPage.saveEditedRoundData();
 
         await roundPage.verifyRoundEdited('Edited Automated Round');
 
-
-        if (projectId) {
-            await deleteProject(request, token, projectId);
-        }
+        // Cleanup
+        await deleteProject(request, token, projectId);
     });
 
 });

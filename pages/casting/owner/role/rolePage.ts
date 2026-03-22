@@ -559,4 +559,24 @@ export default class RolePage {
     }
 
 
+    async ensureRoleVisible(roleName: string): Promise<void> {
+        await expect(async () => {
+            await this.searchRole(roleName);
+
+            const row = this.page.locator('[data-col-key="role_name"]', {
+                hasText: roleName
+            });
+
+            // reload only if not visible
+            if (!(await row.first().isVisible().catch(() => false))) {
+                await this.page.reload();
+                await this.page.waitForLoadState('networkidle');
+                await this.searchRole(roleName);
+            }
+
+            await expect(row).toBeVisible();
+
+        }).toPass({ timeout: 15000 });
+    }
+
 }

@@ -15,7 +15,7 @@ test.describe('Casting owner create role scenarios', () => {
     let projectId: number;
     let projectName: string;
 
-    test.beforeAll(async ({request }) => {
+    test.beforeAll(async ({ request }) => {
         token = await getAccessTokenSmartFromCasting(request, validLogin.email);
         const { response } = await createProject(request, token);
         projectId = response.data.id;
@@ -40,16 +40,18 @@ test.describe('Casting owner create role scenarios', () => {
     });
 
     // =========================================================
-    test('Create new role and verify it appears in roles list', async ({ page, request }) => {
+    test('Create new role and verify it appears in roles list', async ({ page }) => {
         test.setTimeout(60000);
 
         const rolePage = new RolePage(page);
         const projectPage = new ProjectPage(page);
-        projectPage.openSearchedProject(projectName);
+
+        await projectPage.openSearchedProject(projectName);
+
+
         await rolePage.gotoRolesTab();
         await rolePage.createNewRole(roleData);
 
-        // small wait for list to refresh then verify
         await rolePage.verifyRoleCreated(roleData.name);
     });
 
@@ -58,7 +60,9 @@ test.describe('Casting owner create role scenarios', () => {
 
         const rolePage = new RolePage(page);
         const projectPage = new ProjectPage(page);
+
         await projectPage.openSearchedProject(projectName);
+
         await rolePage.gotoRolesTab();
         await rolePage.openCreateRole();
 

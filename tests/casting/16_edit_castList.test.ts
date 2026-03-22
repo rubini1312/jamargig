@@ -24,11 +24,7 @@ test.describe('Casting owner edit wcl scenarios', () => {
 
     test.beforeAll(async ({ request }) => {
         token = await getAccessTokenSmartFromCasting(request, validLogin.email);
-        const { response } = await createProject(request, token);
-        projectId = response.data.id;
-        projectName = response.data.title;
-        console.log(projectName);
-        console.log(projectId);
+
     });
 
     test.beforeEach(async ({ page, request }) => {
@@ -39,79 +35,129 @@ test.describe('Casting owner edit wcl scenarios', () => {
         await page.goto(urls.casting + "/projects"); await expect(page).toHaveURL(/projects/);
     });
 
-    test.afterAll(async ({ request }) => {
-        if (projectId) {
-            await deleteAllRoles(request, token, projectId);
-            await deleteProject(request, token, projectId);
-        }
-    });
 
     // =========================================================
-    test('Edit  wcl and verify data when project is not active', async ({ page, request }) => {
+    test('Edit wcl and verify data when project is not active', async ({ page, request }) => {
         test.setTimeout(60000);
+
+        const { response } = await createProject(request, token);
+        projectId = response.data.id;
+        projectName = response.data.title;
+        console.log(projectName);
+        console.log(projectId);
 
         const projectPage = new ProjectPage(page);
         const castListPage = new CastListPage(page);
-        projectPage.openSearchedProject(projectName);
-        await page.waitForTimeout(7000);
 
+        await projectPage.openSearchedProject(projectName);
+
+        // Create role
         await createRole(request, token, projectId);
-        const roles = await getProjectRoles(request, token, projectId);
-        const role = roles.data[0];
-        expect(role).toBeDefined();
-        roleId = role.id;
-        roleName = role.role_name;
 
-        await createWorkingCastList(request, token, projectId, roleId, "Automated Cast")
-        await page.waitForTimeout(7000);
+        const roles = await getProjectRoles(request, token, projectId);
+        const role = roles.data[roles.data.length - 1];
+        expect(role).toBeDefined();
+
+        const roleId = role.id;
+        const roleName = role.role_name;
+
+        const wclName = `Automated Cast-${Date.now()}`;
+        const editedName = `edited-wcl-${Date.now()}`;
+
+        await createWorkingCastList(request, token, projectId, roleId, wclName);
 
         await castListPage.gotoCastListTab();
-        await castListPage.clickEditBtn();
 
-        await castListPage.enterWclName("edited automated wcl");
+        await expect(async () => {
+            const row = page.locator('[data-col-key="name"]', {
+                hasText: wclName
+            });
+
+            if (!(await row.first().isVisible().catch(() => false))) {
+                await page.reload();
+                await page.waitForLoadState('networkidle');
+                await castListPage.gotoCastListTab();
+            }
+
+            await expect(row).toBeVisible();
+        }).toPass({ timeout: 15000 });
+
+        await castListPage.clickEditBtn();
+        await castListPage.enterWclName(editedName);
         await castListPage.clickUpdateBtn();
 
-
         await castListPage.verifyWclRow({
-            name: "edited automated wcl",
+            name: editedName,
             role: roleName,
             status: "Open"
         });
+
+        if (projectId) {
+            await deleteProject(request, token, projectId);
+        }
 
     });
 
-    test('Create new wcl and verify it appears in wcl list when project is active', async ({ page, request }) => {
+    test('Edit wcl and verify it appears in wcl list when project is active', async ({ page, request }) => {
         test.setTimeout(60000);
+
+        const { response } = await createProject(request, token);
+        projectId = response.data.id;
+        projectName = response.data.title;
+        console.log(projectName);
+        console.log(projectId);
 
         const projectPage = new ProjectPage(page);
         const castListPage = new CastListPage(page);
+
         await publishProject(request, token, projectId);
-        projectPage.openSearchedProject(projectName);
-        await page.waitForTimeout(7000);
+
+        await projectPage.openSearchedProject(projectName);
 
         await createRole(request, token, projectId);
+
         const roles = await getProjectRoles(request, token, projectId);
-        const role = roles.data[0];
+        const role = roles.data[roles.data.length - 1]
         expect(role).toBeDefined();
-        roleId = role.id;
-        roleName = role.role_name;
 
+        const roleId = role.id;
+        const roleName = role.role_name;
 
-        await createWorkingCastList(request, token, projectId, roleId, "Automated Cast")
-        await page.waitForTimeout(7000);
+        const wclName = `Automated-Cast-${Date.now()}`;
+        const editedName = `edited-wcl-${Date.now()}`;
+
+        await createWorkingCastList(request, token, projectId, roleId, wclName);
 
         await castListPage.gotoCastListTab();
-        await castListPage.clickEditBtn();
 
-        await castListPage.enterWclName("edited automated wcl");
+        await expect(async () => {
+            const row = page.locator('[data-col-key="name"]', {
+                hasText: wclName
+            });
+
+            if (!(await row.first().isVisible().catch(() => false))) {
+                await page.reload();
+                await page.waitForLoadState('networkidle');
+                await castListPage.gotoCastListTab();
+            }
+
+            await expect(row).toBeVisible();
+
+        }).toPass({ timeout: 15000 });
+
+        await castListPage.clickEditBtn();
+        await castListPage.enterWclName(editedName);
         await castListPage.clickUpdateBtn();
 
-
         await castListPage.verifyWclRow({
-            name: "edited automated wcl",
+            name: editedName,
             role: roleName,
             status: "Open"
         });
+
+        if (projectId) {
+            await deleteProject(request, token, projectId);
+        }
 
     });
 

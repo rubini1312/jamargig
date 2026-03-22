@@ -29,7 +29,6 @@ test.describe('Casting owner invite talent scenarios', () => {
         projectName = response.data.title;
         console.log(projectId);
         await createRole(request, token, projectId);
-
         uniqueName = `Automation Talent-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     });
 
@@ -117,6 +116,7 @@ test.describe('Casting owner invite talent scenarios', () => {
 
         const uuid = await getTalentUuidByName(request, token, talentName)
         await deleteTalent(request, token, uuid);
+        await deleteAllRounds(request, token, projectId);
 
     });
 
