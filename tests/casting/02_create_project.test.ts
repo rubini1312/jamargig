@@ -92,17 +92,15 @@ test.describe("Casting owner create project flow", () => {
     await page.reload();
     await page.waitForLoadState('networkidle');
 
-    await expect(async () => {
-      await projectPage.openSearchedProject(projectName);
+    await projectPage.openSearchedProject(projectName);
 
-      const projectTitle = page.locator(
-        `[data-testid="project-list-card-${id}-title"]`
-      );
+    const projectTitle = page.locator(
+      `[data-testid="project-list-card-${id}-title"]`
+    );
 
-      await expect(projectTitle).toBeVisible();
-      await projectTitle.click();
+    await expect(page).toHaveURL(new RegExp(`/projects/${id}`));
 
-    }).toPass({ timeout: 15000 });
+    await expect(page.getByText(projectName)).toBeVisible();
 
     await expect(page).toHaveURL(new RegExp(`/projects/${id}`));
     await expect(page.locator(`text=${projectData.title}`)).toBeVisible();

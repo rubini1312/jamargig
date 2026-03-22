@@ -3,7 +3,7 @@ import LoginPage from "../../pages/casting/owner/login/loginPage";
 import QuestionPage from "../../pages/casting/owner/question/questionPage";
 import { questionLocators } from "../../pages/casting/owner/question/questionPageLocators";
 import { validLogin } from "@/test-data/loginData";
-import { questionData } from "@/test-data/questionData";
+import { getQuestionData, questionData } from "@/test-data/questionData";
 import { urls } from "@/utils/urls";
 import { createRole, deleteAllRoles, deleteRole, getProjectRoles } from "@/helpers/api/casting/roleApi";
 import { createProject, deleteProject } from "@/helpers/api/casting/projectApi";
@@ -133,6 +133,8 @@ test.describe('Casting owner create question scenarios', () => {
 
         await questionPage.gotoQuestionsTab();
 
+        const questionData = getQuestionData();
+
         await questionPage.createNewQuestion({
             text: questionData.questionText,
             typeIndex: 2,
@@ -161,6 +163,7 @@ test.describe('Casting owner create question scenarios', () => {
         });
 
         await questionPage.gotoQuestionsTab();
+        const questionData = getQuestionData();
 
         await questionPage.createNewQuestion({
             text: questionData.questionText,
@@ -192,6 +195,7 @@ test.describe('Casting owner create question scenarios', () => {
         });
 
         await questionPage.gotoQuestionsTab();
+        const questionData = getQuestionData();
 
         await questionPage.createNewQuestion({
             text: questionData.questionText,
@@ -224,6 +228,7 @@ test.describe('Casting owner create question scenarios', () => {
         });
 
         await questionPage.gotoQuestionsTab();
+        const questionData = getQuestionData();
 
         await questionPage.createNewQuestion({
             text: questionData.questionText,
@@ -254,6 +259,7 @@ test.describe('Casting owner create question scenarios', () => {
         });
 
         await questionPage.gotoQuestionsTab();
+        const questionData = getQuestionData();
 
         await questionPage.createNewQuestion({
             text: questionData.questionText,
@@ -284,6 +290,7 @@ test.describe('Casting owner create question scenarios', () => {
         });
 
         await questionPage.gotoQuestionsTab();
+        const questionData = getQuestionData();
 
         await questionPage.createNewQuestion({
             text: questionData.questionText,
@@ -314,6 +321,7 @@ test.describe('Casting owner create question scenarios', () => {
         });
 
         await questionPage.gotoQuestionsTab();
+        const questionData = getQuestionData();
 
         await questionPage.createNewQuestion({
             text: questionData.questionText,
@@ -344,6 +352,7 @@ test.describe('Casting owner create question scenarios', () => {
         });
 
         await questionPage.gotoQuestionsTab();
+        const questionData = getQuestionData();
 
         await questionPage.createNewQuestion({
             text: questionData.questionText,
