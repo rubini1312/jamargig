@@ -7,28 +7,28 @@ export async function completeTalentRegistration(
   token: string
 ) {
 
-  // 1️⃣ Basic profile
+  // Basic profile
   await updateTalentRegistration(
     request,
     token,
     talentProfileData.step1_basicProfile
   );
 
-  // 2️⃣ Avatar
+  // Avatar
   await updateTalentRegistration(
     request,
     token,
     talentProfileData.step2_avatar
   );
 
-  // 3️⃣ Profile info
+  // Profile info
   await updateTalentRegistration(
     request,
     token,
     talentProfileData.step3_profileInfo
   );
 
-  // 4️⃣ Production types
+  // Production types
   await updateTalentRegistration(
     request,
     token,

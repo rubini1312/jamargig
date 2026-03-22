@@ -8,12 +8,10 @@ import { talentAuditionPageLocators } from "@/pages/talent/audition/auditionPage
 import { validLogin } from "@/test-data/loginData";
 import { applyRegistrationConfig, deleteTalent, getAllPages, getFieldsByPageId, getTalentUuidByName } from "@/helpers/api/casting/talentApi";
 import { defaultConfig, fullConfig } from "@/test-data/dataModelConfig";
-import { APIRequestContext } from "@playwright/test";
-import { ClientRequest, get, IncomingMessage, request, RequestOptions } from "http";
-import { URL } from "url";
 import { generateEmail } from "@/test-data/random-data";
 import { getAccessTokenSmartFromCasting } from "@/helpers/api/casting/authApi";
 import { getTalentAccessToken } from "@/helpers/api/talent/authApi";
+import { talentRegisterLocators } from "@/pages/talent/register/registerPageLocators";
 
 test.describe('Talent registration scenarioes', () => {
   let token: string;
@@ -53,32 +51,35 @@ test.describe('Talent registration scenarioes', () => {
   });
 
 
-  test("validate talent registration fields per page agaist casting default data model config",
+  test("validate talent registration fields per page against casting default data model config",
     async ({ page, request }) => {
 
-      test.setTimeout(300000);
+      test.setTimeout(240000);
+
       await applyRegistrationConfig(request, token, defaultConfig);
+
       const uniqueName = `Autom-Talent ${Date.now()}-${Math.floor(Math.random() * 1000)}`;
       const talentEmail = generateEmail();
-      await page.waitForTimeout(15000);
 
       await expect.poll(async () => {
         const f = await getFieldsByPageId(request, 1, token);
         return f.length;
+      }, {
+        timeout: 60000,
+        intervals: [2000]
       }).toBeGreaterThan(0);
 
-      await page.waitForTimeout(15000);
-
-      // open UI
       await page.goto(urls.talent, { waitUntil: "domcontentloaded" });
-      await page.waitForTimeout(5000);
 
       const login = new LoginPage(page);
       await login.validTalentLogin(talentEmail);
+      await expect(page.locator('[data-testid="auth-form"]')).toBeVisible();
 
       const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
       await enterOtpForTalent(page, otp);
-      await page.waitForTimeout(25000);
+
+      await expect(page.locator(talentRegisterLocators.fullNameInput)).toBeVisible();
+      await page.waitForLoadState("networkidle");
 
       const pages = await getAllPages(request, token);
       const talentRegisterPage = new TalentRegisterPage(page);
@@ -90,26 +91,24 @@ test.describe('Talent registration scenarioes', () => {
 
         const apiFields = await getFieldsByPageId(request, p.id, token);
         const expectedLabels = apiFields.map(f => f.label.trim());
-        console.log("API Labels:", expectedLabels);
 
-        // read UI
-        let uiLabelsRaw = await page.locator("form label:visible").allTextContents();
+        let uiLabelsRaw = await page.locator("form label").allTextContents();
 
         if (uiLabelsRaw.length === 0) {
-          uiLabelsRaw = await page.locator(".font-bold:visible").allTextContents();
+          uiLabelsRaw = await page.locator(".font-bold").allTextContents();
         }
 
-        let cleanedUiLabels = uiLabelsRaw
+        const cleanedUiLabels = uiLabelsRaw
           .map(l => l.replace("*", "").trim())
-          .filter(l => expectedLabels.includes(l));
+          .filter(Boolean);
 
         console.log("UI Labels:", cleanedUiLabels);
 
+        // Validate labels
         for (const expected of expectedLabels) {
           expect(cleanedUiLabels).toContain(expected);
         }
 
-        // required stars
         for (const field of apiFields) {
           if (!field.required) continue;
 
@@ -117,18 +116,13 @@ test.describe('Talent registration scenarioes', () => {
             .locator(".n-form-item-label__text")
             .filter({ hasText: new RegExp(`^${field.label}\\b`) });
 
-          if (await label.count() === 0) {
-            console.log(`Skipping star check for ${field.label}`);
-            continue;
-          }
+          if (await label.count() === 0) continue;
 
-          await expect(label.first()).toContainText("*");
+          await expect(label.first()).toHaveText(/\*/);
         }
 
-        // fill required
-        const requiredFields = apiFields.filter(f => f.required);
+        for (const field of apiFields.filter(f => f.required)) {
 
-        for (const field of requiredFields) {
           switch (field.name) {
 
             case "name":
@@ -161,9 +155,7 @@ test.describe('Talent registration scenarioes', () => {
           }
         }
 
-        const isUploadPage = apiFields.some(f => f.name === "avatar");
-
-        if (isUploadPage) {
+        if (apiFields.some(f => f.name === "avatar")) {
           await talentRegisterPage.uploadProfilePicture();
           await talentRegisterPage.saveCroppedProfilePicture();
         }
@@ -176,28 +168,25 @@ test.describe('Talent registration scenarioes', () => {
 
         if (i < pages.length - 1) {
           const nextPage = pages[i + 1];
-
           const nextFields = await getFieldsByPageId(request, nextPage.id, token);
           const nextLabel = nextFields[0]?.label;
 
           if (nextLabel) {
-            await page.getByText(nextLabel, { exact: false }).waitFor();
+            await expect(page.locator("form")).toContainText(nextLabel);
           }
         }
       }
 
-      //make sure talent is not registered
-      await expect(
-        getTalentUuidByName(request, token, uniqueName)
-      ).rejects.toThrow();
+      await expect(getTalentUuidByName(request, token, uniqueName)).rejects.toThrow();
+
     });
+
 
 
   test("Full talent journey (register → login → verify projects)", async ({ page, request }) => {
 
     test.setTimeout(400000);
 
-    // CONFIG + REGISTRATION
     await applyRegistrationConfig(request, token, fullConfig);
 
     const uniqueName = `Autom-Talent ${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -207,14 +196,18 @@ test.describe('Talent registration scenarioes', () => {
 
     const login = new LoginPage(page);
     await login.validTalentLogin(talentEmail);
+    await expect(page.locator('[data-testid="auth-form"]')).toBeVisible();
 
     const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
     await enterOtpForTalent(page, otp);
 
+    await expect(page.locator(talentRegisterLocators.fullNameInput)).toBeVisible();
+    await page.waitForLoadState("networkidle");
+
     const pages = await getAllPages(request, token);
     const talentRegisterPage = new TalentRegisterPage(page);
 
-    // registration loop (same as your code)
+    // registration loop 
     for (let i = 0; i < pages.length; i++) {
       const p = pages[i];
       const apiFields = await getFieldsByPageId(request, p.id, token);
@@ -259,11 +252,9 @@ test.describe('Talent registration scenarioes', () => {
       await talentRegisterPage.clickContinueButton();
     }
 
-    // VERIFY REGISTRATION
     const uuid = await getTalentUuidByName(request, token, uniqueName);
     expect(uuid).toBeTruthy();
-    
-    // VERIFY PROJECTS
+
     const talentToken = await getTalentAccessToken(request, talentEmail)
     const result = await getPublishedProjects(request, talentToken);
     console.log("API Projects:", result.names);
@@ -277,17 +268,16 @@ test.describe('Talent registration scenarioes', () => {
 
     console.log("UI Titles:", uiTitles);
 
-    // UI should not be empty
     expect(uiTitles.length).toBeGreaterThan(0);
 
-    // Every UI project should exist
     for (const uiTitle of uiTitles) {
       expect(result.names).toContain(uiTitle);
     }
 
   });
 
-
 });
+
+
 
 

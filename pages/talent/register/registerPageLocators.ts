@@ -24,7 +24,8 @@ export const talentRegisterLocators = {
 
   productionTypeSelector: "[data-testid='auth-production_types-field']",
 
-  dropDownOptions: "[role='option']"
+  dropDownOptions: "[role='option']",
+  emptyInputError : "n-form-item-feedback__line"
 
 };
 

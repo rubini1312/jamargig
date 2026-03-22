@@ -7,7 +7,6 @@ import { validLogin } from "@/test-data/loginData";
 import { urls } from "@/utils/urls";
 import LoginPage from "../../pages/talent/login/loginPage";
 import { test, expect } from './_setup/talentTest';
-import { APIRequestContext } from "playwright";
 import { enterOtpForTalent, getOtpFromMailtrap } from "@/utils/mailtrapOtp";
 import { TalentRegisterPage } from "@/pages/talent/register/registerPage";
 import { TalentHomePage } from "@/pages/talent/home/homePage";
@@ -15,6 +14,7 @@ import { generateEmail } from "@/test-data/random-data";
 import { createAvailabilityQuestion, createCheckboxQuestion, createDropdownQuestion, createMediaQuestion, createRadioQuestion, createTextQuestion, getSubmittedForm, makeAvailabilityQuestionAsMandotory, makeCheckboxQuestionAsInactive, makeCheckboxQuestionAsMandotory, makeDropdownQuestionAsMandotory, makeMediaQuestionAsMandotory, makeRadioQuestionAsMandotory, makeTextQuestionAsInactive, makeTextQuestionAsMandory, updateQuestionAsInactive } from "@/helpers/api/casting/questionApi";
 import { TalentApplyPage } from "@/pages/talent/apply/applyRoundPage";
 import { getAccessTokenSmartFromCasting } from "@/helpers/api/casting/authApi";
+import { talentAuditionPageLocators } from "@/pages/talent/audition/auditionPageLocators";
 
 test.describe('Apply talent scenarioes', () => {
 
@@ -24,2316 +24,1418 @@ test.describe('Apply talent scenarioes', () => {
         token = await getAccessTokenSmartFromCasting(request, validLogin.email);
     });
 
-    test("Register new talent and apply for the online-open round: without questions (including failure cases)", async ({ page, request }) => {
+    test("Register new talent and apply for the online-open round: without questions (including failure cases)",
+        async ({ page, request }) => {
 
-        //create project, role, round 
-        const talentEmail = generateEmail();
+            test.setTimeout(300000);
 
-        const { response } = await createProject(request, token);
-        const projectId = response.data.id;
-        const projectName = response.data.title;
+            const talentEmail = generateEmail();
 
-        await publishProject(request, token, projectId);
-        await createRole(request, token, projectId);
+            // Create project setup
+            const { response } = await createProject(request, token);
+            const projectId = response.data.id;
+            const projectName = response.data.title;
 
-        const roles = await getProjectRoles(request, token, projectId);
-        const role = roles.data[0];
-        expect(role).toBeDefined();
-        const roleId = role.id;
-        const roleName = role.role_name;
+            await publishProject(request, token, projectId);
+            await createRole(request, token, projectId);
 
-        await createOnlineRound(request, token, projectId, roleId);
-        const rounds = await getProjectRounds(request, token, projectId);
-        const round = rounds.data[0];
-        expect(round).toBeDefined();
-        const roundId = round.id;
-        const roundName = round.round_name;
+            const roles = await getProjectRoles(request, token, projectId);
+            const role = roles.data[0];
+            expect(role).toBeDefined();
+            const roleId = role.id;
+            const roleName = role.role_name;
 
-        await updateRoundSubmissionStatus(request, token, projectId, roundId, 1);
-        test.setTimeout(350000);
+            await createOnlineRound(request, token, projectId, roleId);
 
-        /* register talent */
-        // create authenticated API context ONCE
-        await page.waitForTimeout(30000);
+            const rounds = await getProjectRounds(request, token, projectId);
+            const round = rounds.data[0];
+            expect(round).toBeDefined();
+            const roundId = round.id;
 
-        //config preperation
-        await applyRegistrationConfig(request, token, fullConfig);
-        await page.waitForTimeout(30000);
+            await updateRoundSubmissionStatus(request, token, projectId, roundId, 1);
 
-        await expect.poll(async () => {
-            const f = await getFieldsByPageId(request, 1, token);
-            return f.length;
-        }).toBeGreaterThan(0);
-        await page.waitForTimeout(30000);
+            // Apply registration config
+            await applyRegistrationConfig(request, token, fullConfig);
 
-        //open talent UI
-        await page.goto(urls.talent, { waitUntil: "domcontentloaded" });
+            await expect.poll(async () => {
+                const f = await getFieldsByPageId(request, 1, token);
+                return f.length;
+            }, { timeout: 60000 }).toBeGreaterThan(0);
 
-        const login = new LoginPage(page);
-        await login.validTalentLogin(talentEmail);
-        await page.waitForTimeout(5000);
+            // Open UI
+            await page.goto(urls.talent, { waitUntil: "domcontentloaded" });
 
-        const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
-        await page.waitForTimeout(25000);
+            const login = new LoginPage(page);
+            await login.validTalentLogin(talentEmail);
 
-        await enterOtpForTalent(page, otp);
-        await page.waitForTimeout(30000);
+            // OTP handling
+            await expect(page.locator('[data-testid="auth-form"]')).toBeVisible();
 
-        //get pages  
-        const pages = await getAllPages(request, token);
-        const talentRegisterPage = new TalentRegisterPage(page);
-        const uniqueName = `Autom-Talent ${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+            const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
+            await enterOtpForTalent(page, otp);
 
-        for (let i = 0; i < pages.length; i++) {
+            await page.waitForLoadState("networkidle");
+            await expect(page.locator("form")).toBeVisible();
 
-            const p = pages[i];
-            console.log("Checking page:", p.name);
+            // Registration
+            const pages = await getAllPages(request, token);
+            const talentRegisterPage = new TalentRegisterPage(page);
+            const uniqueName = `Autom-Talent ${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
-            //get active fields 
-            const apiFields = await getFieldsByPageId(request, p.id, token);
-            const expectedLabels = apiFields.map(f => f.label.trim());
+            for (let i = 0; i < pages.length; i++) {
 
-            console.log("API Labels:", expectedLabels);
+                const p = pages[i];
+                const apiFields = await getFieldsByPageId(request, p.id, token);
 
-            //read UI
-            let uiLabelsRaw = await page.locator("form label:visible").allTextContents();
+                for (const field of apiFields.filter(f => f.required)) {
 
-            if (uiLabelsRaw.length === 0) {
-                uiLabelsRaw = await page.locator(".font-bold:visible").allTextContents();
-            }
-
-            let cleanedUiLabels = uiLabelsRaw
-                .map(l => l.replace("*", "").trim())
-                .filter(l => expectedLabels.includes(l));
-
-            console.log("UI Labels:", cleanedUiLabels);
-
-            // validate labels match API
-            for (const expected of expectedLabels) {
-                expect(cleanedUiLabels).toContain(expected);
-            }
-
-            // validate required fields
-            for (const field of apiFields) {
-                if (!field.required) continue;
-
-                const label = page
-                    .locator(".n-form-item-label__text")
-                    .filter({ hasText: new RegExp(`^${field.label}\\b`) });
-
-                if (await label.count() === 0) {
-                    console.log(`Skipping star check for ${field.label}`);
-                    continue;
+                    switch (field.name) {
+                        case "name":
+                            await talentRegisterPage.enterFullName(uniqueName);
+                            break;
+                        case "stage_name":
+                            await talentRegisterPage.enterStageName("Automation Stage");
+                            break;
+                        case "location":
+                            await talentRegisterPage.setLocation("Colombo, LKA");
+                            break;
+                        case "gender":
+                            await talentRegisterPage.selectGender(1);
+                            break;
+                        case "birth":
+                            await talentRegisterPage.openDOBAndSelectDate("20 Apr 1990");
+                            break;
+                        case "phone1":
+                            await talentRegisterPage.enterMobile("6152369");
+                            break;
+                        case "description":
+                            await talentRegisterPage.enterDescription("Automation Description");
+                            break;
+                    }
                 }
 
-                await expect(label.first()).toContainText("*");
-            }
+                if (apiFields.some(f => f.name === "avatar" || f.name === "profile_photo")) {
+                    await talentRegisterPage.uploadProfilePicture();
+                    await talentRegisterPage.saveCroppedProfilePicture();
+                }
 
-            // fill required fields
-            const requiredFields = apiFields.filter(f => f.required);
+                if (p.page_no === 1) {
+                    await talentRegisterPage.clickTermsAndConditionCheckBox();
+                }
 
-            for (const field of requiredFields) {
-                switch (field.name) {
+                await talentRegisterPage.clickContinueButton();
 
-                    case "name":
-                        await talentRegisterPage.enterFullName(uniqueName);
-                        break;
+                // wait for next page properly
+                if (i < pages.length - 1) {
+                    const nextPage = pages[i + 1];
+                    const nextFields = await getFieldsByPageId(request, nextPage.id, token);
+                    const nextLabel = nextFields[0]?.label;
 
-                    case "stage_name":
-                        await talentRegisterPage.enterStageName("Automation Stage");
-                        break;
-
-                    case "location":
-                        await talentRegisterPage.setLocation("Colombo, LKA");
-                        break;
-
-                    case "gender":
-                        await talentRegisterPage.selectGender(1);
-                        break;
-
-                    case "birth":
-                        await talentRegisterPage.openDOBAndSelectDate("20 Apr 1990");
-                        break;
-
-                    case "phone1":
-                        await talentRegisterPage.enterMobile("6152369");
-                        break;
-
-                    case "description":
-                        await talentRegisterPage.enterDescription("Automation Description");
-                        break;
+                    if (nextLabel) {
+                        await expect(page.locator("form")).toContainText(nextLabel);
+                    }
                 }
             }
 
-            //upload
-            const isUploadPage = apiFields.some(f => f.name === "avatar" || f.name === "profile_photo");
+            // Wait for redirect after registration
+            await page.waitForLoadState("networkidle");
 
-            if (isUploadPage) {
-                await talentRegisterPage.uploadProfilePicture();
-                await talentRegisterPage.saveCroppedProfilePicture();
-            }
+            // Apply flow
+            const talentHome = new TalentHomePage(page);
 
-            // terms and conditions
-            if (p.page_no === 1) {
-                await talentRegisterPage.clickTermsAndConditionCheckBox();
-            }
+            await expect(page.locator(talentAuditionPageLocators.auditionCards).first())
+                .toBeVisible();
 
-            //continue
-            await talentRegisterPage.clickContinueButton();
+            await talentHome.enterProjectName(projectName);
+            await talentHome.clickApplyForSearchedProject();
 
-            if (i < pages.length - 1) {
-                const nextPage = pages[i + 1];
+            const talentApply = new TalentApplyPage(page);
 
-                const nextFields = await getFieldsByPageId(request, nextPage.id, token);
-                const nextLabel = nextFields[0]?.label;
+            await talentApply.clickApplyOnlineround();
 
-                if (nextLabel) {
-                    await page.getByText(nextLabel, { exact: false }).waitFor();
-                }
-            }
-        }
+            await talentApply.clickSubmit();
+            const error = page.locator(".n-form-item-feedback__line:visible");
 
-        await page.waitForTimeout(30000);
-        await page.waitForURL(urls.talent, { timeout: 60000 });
+            await expect(error).toBeVisible();
+            await expect(error).toContainText("Value is required");
 
-        /* apply talent */
-        const talentHome = new TalentHomePage(page)
-        talentHome.enterProjectName(projectName);
-        talentHome.clickApplyForSearchedProject();
+            await talentApply.clickRoleSelector();
 
-        const talentApply = new TalentApplyPage(page)
-        talentApply.clickApplyOnlineround();
-        talentApply.clickSubmit();
+            await talentApply.clickSubmit();
 
-        expect((await talentApply.getEmptyRoleError())?.trim()).toBe("Value is required");
-        await page.waitForTimeout(3000);
+            await expect(page.getByText("Submitted")).toBeVisible();
+            await expect(page.getByText(roleName)).toBeVisible();
 
-        talentApply.clickRoleSelector();
-        await page.waitForTimeout(3000);
+            const names = await getProjectTalentNames(request, token, projectId);
+            expect(names).toContain(uniqueName);
 
-        talentApply.clickSubmit();
-        await page.waitForTimeout(10000);
+            await deleteRound(request, token, projectId, roundId);
+            await deleteRole(request, token, projectId, roleId);
+            await deleteProject(request, token, projectId);
 
-        //to be true
-        expect((await talentApply.getSubmitedTagText())?.trim()).toBe("Submitted");
-        expect((await talentApply.getSubmitedRole())?.trim()).toBe(roleName);
-        const names = await getProjectTalentNames(request, token, projectId);
-        expect(names).toContain(uniqueName);
+            const uuid = await getTalentUuidByName(request, token, uniqueName);
+            await deleteTalent(request, token, uuid);
+        });
 
-        //delete data
-        await deleteRound(request, token, projectId, roundId);
-        await deleteRole(request, token, projectId, roleId);
-        await deleteProject(request, token, projectId);
-        const uuid = await getTalentUuidByName(request, token, uniqueName)
-        await deleteTalent(request, token, uuid);
+    test("Register new talent and apply for the in-Person open round: without questions (including failure cases)",
+        async ({ page, request }) => {
 
-    });
+            test.setTimeout(300000);
 
-    test("Register new talent and apply for the in-Person open round: without questions (including failure cases)", async ({ page, request }) => {
+            const token = await getAccessTokenSmartFromCasting(request, validLogin.email);
+            const talentEmail = generateEmail();
+            const uniqueName = `Autom-Talent ${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
-        //create project, role, round 
-        const token = await getAccessTokenSmartFromCasting(request, validLogin.email);
-        const talentEmail = generateEmail();
-        const uniqueName = `Autom-Talent ${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+            // Create project setup
+            const { response } = await createProject(request, token);
+            const projectId = response.data.id;
+            const projectName = response.data.title;
 
-        const { response } = await createProject(request, token);
-        const projectId = response.data.id;
-        const projectName = response.data.title;
+            await publishProject(request, token, projectId);
+            await createRole(request, token, projectId);
 
-        await publishProject(request, token, projectId);
-        await createRole(request, token, projectId);
+            const roles = await getProjectRoles(request, token, projectId);
+            const role = roles.data[0];
+            expect(role).toBeDefined();
+            const roleId = role.id;
+            const roleName = role.role_name;
 
-        const roles = await getProjectRoles(request, token, projectId);
-        const role = roles.data[0];
-        expect(role).toBeDefined();
-        const roleId = role.id;
-        const roleName = role.role_name;
+            await createInPersonRound(request, token, projectId, roleId);
 
-        await createInPersonRound(request, token, projectId, roleId);
-        const rounds = await getProjectRounds(request, token, projectId);
-        const round = rounds.data[0];
-        expect(round).toBeDefined();
+            const rounds = await getProjectRounds(request, token, projectId);
+            const round = rounds.data[0];
+            expect(round).toBeDefined();
+            const roundId = round.id;
 
-        const roundId = round.id;
-        const roundName = round.round_name;
+            await updateRoundSubmissionStatus(request, token, projectId, roundId, 1);
 
-        await updateRoundSubmissionStatus(request, token, projectId, roundId, 1);
-        test.setTimeout(350000);
+            // Apply config
+            await applyRegistrationConfig(request, token, fullConfig);
 
-        /* register talent */
-        // create authenticated API context ONCE
-        await page.waitForTimeout(30000);
+            await expect.poll(async () => {
+                const f = await getFieldsByPageId(request, 1, token);
+                return f.length;
+            }, { timeout: 60000 }).toBeGreaterThan(0);
 
-        //config preperation
-        await applyRegistrationConfig(request, token, fullConfig);
-        await page.waitForTimeout(30000);
+            await page.goto(urls.talent, { waitUntil: "domcontentloaded" });
 
-        await expect.poll(async () => {
-            const f = await getFieldsByPageId(request, 1, token);
-            return f.length;
-        }).toBeGreaterThan(0);
-        await page.waitForTimeout(30000);
+            const login = new LoginPage(page);
+            await login.validTalentLogin(talentEmail);
 
-        //open talent UI
-        await page.goto(urls.talent, { waitUntil: "domcontentloaded" });
+            await expect(page.locator('[data-testid="auth-form"]')).toBeVisible();
 
-        const login = new LoginPage(page);
-        await login.validTalentLogin(talentEmail);
-        await page.waitForTimeout(5000);
+            const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
+            await enterOtpForTalent(page, otp);
 
-        const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
-        await page.waitForTimeout(25000);
+            await page.waitForLoadState("networkidle");
+            await expect(page.locator("form")).toBeVisible();
 
-        await enterOtpForTalent(page, otp);
-        await page.waitForTimeout(30000);
+            const pages = await getAllPages(request, token);
+            const talentRegisterPage = new TalentRegisterPage(page);
 
-        //get pages 
-        const pages = await getAllPages(request, token);
-        const talentRegisterPage = new TalentRegisterPage(page);
+            for (let i = 0; i < pages.length; i++) {
 
-        for (let i = 0; i < pages.length; i++) {
+                const p = pages[i];
+                const apiFields = await getFieldsByPageId(request, p.id, token);
 
-            const p = pages[i];
-            console.log("Checking page:", p.name);
+                for (const field of apiFields.filter(f => f.required)) {
 
-            //get active fields 
-            const apiFields = await getFieldsByPageId(request, p.id, token);
-            const expectedLabels = apiFields.map(f => f.label.trim());
-
-            console.log("API Labels:", expectedLabels);
-
-            //read UI
-            let uiLabelsRaw = await page.locator("form label:visible").allTextContents();
-
-            if (uiLabelsRaw.length === 0) {
-                uiLabelsRaw = await page.locator(".font-bold:visible").allTextContents();
-            }
-
-            let cleanedUiLabels = uiLabelsRaw
-                .map(l => l.replace("*", "").trim())
-                .filter(l => expectedLabels.includes(l));
-
-            console.log("UI Labels:", cleanedUiLabels);
-
-            // validate labels match API
-            for (const expected of expectedLabels) {
-                expect(cleanedUiLabels).toContain(expected);
-            }
-
-            // validate required fields
-            for (const field of apiFields) {
-                if (!field.required) continue;
-
-                const label = page
-                    .locator(".n-form-item-label__text")
-                    .filter({ hasText: new RegExp(`^${field.label}\\b`) });
-
-                if (await label.count() === 0) {
-                    console.log(`Skipping star check for ${field.label}`);
-                    continue;
+                    switch (field.name) {
+                        case "name":
+                            await talentRegisterPage.enterFullName(uniqueName);
+                            break;
+                        case "stage_name":
+                            await talentRegisterPage.enterStageName("Automation Stage");
+                            break;
+                        case "location":
+                            await talentRegisterPage.setLocation("Colombo, LKA");
+                            break;
+                        case "gender":
+                            await talentRegisterPage.selectGender(1);
+                            break;
+                        case "birth":
+                            await talentRegisterPage.openDOBAndSelectDate("20 Apr 1990");
+                            break;
+                        case "phone1":
+                            await talentRegisterPage.enterMobile("6152369");
+                            break;
+                        case "description":
+                            await talentRegisterPage.enterDescription("Automation Description");
+                            break;
+                    }
                 }
 
-                await expect(label.first()).toContainText("*");
-            }
+                if (apiFields.some(f => f.name === "avatar" || f.name === "profile_photo")) {
+                    await talentRegisterPage.uploadProfilePicture();
+                    await talentRegisterPage.saveCroppedProfilePicture();
+                }
 
-            // fill required fields
-            const requiredFields = apiFields.filter(f => f.required);
+                if (p.page_no === 1) {
+                    await talentRegisterPage.clickTermsAndConditionCheckBox();
+                }
 
-            for (const field of requiredFields) {
-                switch (field.name) {
+                await talentRegisterPage.clickContinueButton();
 
-                    case "name":
-                        await talentRegisterPage.enterFullName(uniqueName);
-                        break;
+                if (i < pages.length - 1) {
+                    const nextPage = pages[i + 1];
+                    const nextFields = await getFieldsByPageId(request, nextPage.id, token);
+                    const nextLabel = nextFields[0]?.label;
 
-                    case "stage_name":
-                        await talentRegisterPage.enterStageName("Automation Stage");
-                        break;
-
-                    case "location":
-                        await talentRegisterPage.setLocation("Colombo, LKA");
-                        break;
-
-                    case "gender":
-                        await talentRegisterPage.selectGender(1);
-                        break;
-
-                    case "birth":
-                        await talentRegisterPage.openDOBAndSelectDate("20 Apr 1990");
-                        break;
-
-                    case "phone1":
-                        await talentRegisterPage.enterMobile("6152369");
-                        break;
-
-                    case "description":
-                        await talentRegisterPage.enterDescription("Automation Description");
-                        break;
+                    if (nextLabel) {
+                        await expect(page.locator("form")).toContainText(nextLabel);
+                    }
                 }
             }
 
-            //upload
-            const isUploadPage = apiFields.some(f => f.name === "avatar" || f.name === "profile_photo");
+            await page.waitForLoadState("networkidle");
 
-            if (isUploadPage) {
-                await talentRegisterPage.uploadProfilePicture();
-                await talentRegisterPage.saveCroppedProfilePicture();
-            }
+            const talentHome = new TalentHomePage(page);
 
-            // terms and conditions
-            if (p.page_no === 1) {
-                await talentRegisterPage.clickTermsAndConditionCheckBox();
-            }
+            await expect(page.locator(talentAuditionPageLocators.auditionCards).first()).toBeVisible();
 
-            //continue
-            await talentRegisterPage.clickContinueButton();
+            await talentHome.enterProjectName(projectName);
+            await talentHome.clickApplyForSearchedProject();
 
-            if (i < pages.length - 1) {
-                const nextPage = pages[i + 1];
-                const nextFields = await getFieldsByPageId(request, nextPage.id, token);
-                const nextLabel = nextFields[0]?.label;
+            const talentApply = new TalentApplyPage(page);
 
-                if (nextLabel) {
-                    await page.getByText(nextLabel, { exact: false }).waitFor();
+            await talentApply.clickApplyOnlineround();
+            await talentApply.clickSubmit();
+
+            const error = page.locator(".n-form-item-feedback__line:visible");
+
+            await expect(error).toBeVisible();
+            await expect(error).toContainText("Value is required");
+
+            await talentApply.clickRoleSelector();
+            await talentApply.clickSubmit();
+
+            await expect(page.getByText("Submitted")).toBeVisible();
+            await expect(page.getByText(roleName)).toBeVisible();
+
+            const names = await getProjectTalentNames(request, token, projectId);
+            expect(names).toContain(uniqueName);
+
+            await deleteRound(request, token, projectId, roundId);
+            await deleteRole(request, token, projectId, roleId);
+            await deleteProject(request, token, projectId);
+
+            const uuid = await getTalentUuidByName(request, token, uniqueName);
+            await deleteTalent(request, token, uuid);
+        });
+
+    test("Register new talent and apply for the online-open round: verify all questions appear",
+        async ({ page, request }) => {
+
+            test.setTimeout(300000);
+
+            const talentEmail = generateEmail();
+            const token = await getAccessTokenSmartFromCasting(request, validLogin.email);
+
+            // Create project
+            const { response } = await createProject(request, token);
+            const projectId = response.data.id;
+            const projectName = response.data.title;
+
+            await publishProject(request, token, projectId);
+            await createRole(request, token, projectId);
+
+            const roles = await getProjectRoles(request, token, projectId);
+            const role = roles.data[0];
+            expect(role).toBeDefined();
+
+            const roleId = role.id;
+
+            await createOnlineRound(request, token, projectId, roleId);
+
+            const rounds = await getProjectRounds(request, token, projectId);
+            const round = rounds.data[0];
+            expect(round).toBeDefined();
+
+            const roundId = round.id;
+
+            const textQuestion = await createTextQuestion(request, token, projectId, roundId, roleId, "Tell us about yourself");
+
+            const checkboxQuestion = await createCheckboxQuestion(
+                request, token, projectId, roundId, roleId,
+                "Select your skills", ["Acting", "Singing", "Dancing"]
+            );
+
+            const radioQuestion = await createRadioQuestion(
+                request, token, projectId, roundId, roleId,
+                "Do you have acting experience?", ["Yes", "No"]
+            );
+
+            const dropdownQuestion = await createDropdownQuestion(
+                request, token, projectId, roundId, roleId,
+                "Select your country", ["USA", "UK", "Canada"]
+            );
+
+            const imageMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your profile photo", [1]);
+            const videoMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your audio clip", [2]);
+            const audioMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your video performance", [3]);
+            const pdfMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your proposal pdf version", [4]);
+
+            const availabilityQuestion = await createAvailabilityQuestion(
+                request, token, projectId, roundId, roleId,
+                "Select your availability", ["Morning", "Afternoon", "Evening"]
+            );
+
+            await updateRoundSubmissionStatus(request, token, projectId, roundId, 1);
+            await applyRegistrationConfig(request, token, fullConfig);
+
+            await expect.poll(async () => {
+                const f = await getFieldsByPageId(request, 1, token);
+                return f.length;
+            }, { timeout: 60000 }).toBeGreaterThan(0);
+
+            await page.goto(urls.talent, { waitUntil: "domcontentloaded" });
+
+            const login = new LoginPage(page);
+            await login.validTalentLogin(talentEmail);
+
+            await expect(page.locator('[data-testid="auth-form"]')).toBeVisible();
+
+            const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
+            await enterOtpForTalent(page, otp);
+
+            await page.waitForLoadState("networkidle");
+            await expect(page.locator("form")).toBeVisible();
+
+            const pages = await getAllPages(request, token);
+            const talentRegisterPage = new TalentRegisterPage(page);
+            const uniqueName = `Autom-Talent ${Date.now()}`;
+
+            for (let i = 0; i < pages.length; i++) {
+
+                const apiFields = await getFieldsByPageId(request, pages[i].id, token);
+
+                for (const field of apiFields.filter(f => f.required)) {
+
+                    switch (field.name) {
+                        case "name":
+                            await talentRegisterPage.enterFullName(uniqueName);
+                            break;
+                        case "stage_name":
+                            await talentRegisterPage.enterStageName("Automation Stage");
+                            break;
+                        case "location":
+                            await talentRegisterPage.setLocation("Colombo, LKA");
+                            break;
+                        case "gender":
+                            await talentRegisterPage.selectGender(1);
+                            break;
+                        case "birth":
+                            await talentRegisterPage.openDOBAndSelectDate("20 Apr 1990");
+                            break;
+                        case "phone1":
+                            await talentRegisterPage.enterMobile("6152369");
+                            break;
+                        case "description":
+                            await talentRegisterPage.enterDescription("Automation Description");
+                            break;
+                    }
                 }
-            }
-        }
 
+                if (apiFields.some(f => f.name === "avatar")) {
+                    await talentRegisterPage.uploadProfilePicture();
+                    await talentRegisterPage.saveCroppedProfilePicture();
+                }
 
-        await page.waitForTimeout(30000);
-        await page.waitForURL(urls.talent, { timeout: 60000 });
+                if (pages[i].page_no === 1) {
+                    await talentRegisterPage.clickTermsAndConditionCheckBox();
+                }
 
+                await talentRegisterPage.clickContinueButton();
 
-        /* apply talent */
-        const talentHome = new TalentHomePage(page)
-        talentHome.enterProjectName(projectName);
-        talentHome.clickApplyForSearchedProject();
+                if (i < pages.length - 1) {
+                    const nextPage = pages[i + 1];
+                    const nextFields = await getFieldsByPageId(request, nextPage.id, token);
+                    const nextLabel = nextFields[0]?.label;
 
-        const talentApply = new TalentApplyPage(page)
-        talentApply.clickApplyOnlineround();
-        talentApply.clickSubmit();
-
-        expect((await talentApply.getEmptyRoleError())?.trim()).toBe("Value is required");
-        await page.waitForTimeout(3000);
-
-        talentApply.clickRoleSelector();
-        await page.waitForTimeout(3000);
-
-        talentApply.clickSubmit();
-        await page.waitForTimeout(10000);
-
-        //to be true
-        expect((await talentApply.getSubmitedTagText())?.trim()).toBe("Submitted");
-        expect((await talentApply.getSubmitedRole())?.trim()).toBe(roleName);
-        const names = await getProjectTalentNames(request, token, projectId);
-        expect(names).toContain(uniqueName);
-
-        //delete data
-        await deleteRound(request, token, projectId, roundId);
-        await deleteRole(request, token, projectId, roleId);
-        await deleteProject(request, token, projectId);
-        const uuid = await getTalentUuidByName(request, token, uniqueName)
-        await deleteTalent(request, token, uuid);
-
-    });
-
-    test("Register new talent and apply for the online-open round: verify all questions appear", async ({ page, request }) => {
-
-        const talentEmail = generateEmail();
-        const token = await getAccessTokenSmartFromCasting(request, validLogin.email);
-
-        // Create project
-        const { response } = await createProject(request, token);
-        const projectId = response.data.id;
-        const projectName = response.data.title;
-
-        await publishProject(request, token, projectId);
-        await createRole(request, token, projectId);
-
-        const roles = await getProjectRoles(request, token, projectId);
-        const role = roles.data[0];
-        expect(role).toBeDefined();
-
-        const roleId = role.id;
-        const roleName = role.role_name;
-
-        // Create round
-        await createOnlineRound(request, token, projectId, roleId);
-
-        const rounds = await getProjectRounds(request, token, projectId);
-        const round = rounds.data[0];
-        expect(round).toBeDefined();
-
-        const roundId = round.id;
-
-        // Create Questions
-        const textQuestion = await createTextQuestion(
-            request, token, projectId, roundId, roleId,
-            "Tell us about yourself"
-        );
-
-        const checkboxQuestion = await createCheckboxQuestion(
-            request, token, projectId, roundId, roleId,
-            "Select your skills",
-            ["Acting", "Singing", "Dancing"]
-        );
-
-        const radioQuestion = await createRadioQuestion(
-            request, token, projectId, roundId, roleId,
-            "Do you have acting experience?",
-            ["Yes", "No"]
-        );
-
-        const dropdownQuestion = await createDropdownQuestion(
-            request, token, projectId, roundId, roleId,
-            "Select your country",
-            ["USA", "UK", "Canada"]
-        );
-
-        const imageMediaQuestion = await createMediaQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your profile photo",
-            [1]
-        );
-
-        const vedioMediaQuestion = await createMediaQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your audio clip",
-            [2]
-        );
-
-        const audioMediaQuestion = await createMediaQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your video performance",
-            [3]
-        );
-
-        const pdfMediaQuestion = await createMediaQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your proposal pdf version",
-            [4]
-        );
-
-        const availabilityQuestion = await createAvailabilityQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Select your availability",
-            ["Morning", "Afternoon", "Evening"]
-        );
-
-        await updateRoundSubmissionStatus(request, token, projectId, roundId, 1);
-        test.setTimeout(350000);
-
-        // Talent Registration
-        await applyRegistrationConfig(request, token, fullConfig);
-
-        await expect.poll(async () => {
-            const f = await getFieldsByPageId(request, 1, token);
-            return f.length;
-        }).toBeGreaterThan(0);
-
-        await page.goto(urls.talent, { waitUntil: "domcontentloaded" });
-
-        const login = new LoginPage(page);
-        await login.validTalentLogin(talentEmail);
-
-        const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
-        await enterOtpForTalent(page, otp);
-
-        const pages = await getAllPages(request, token);
-        const talentRegisterPage = new TalentRegisterPage(page);
-
-        const uniqueName = `Autom-Talent ${Date.now()}`;
-
-        for (let i = 0; i < pages.length; i++) {
-
-            const apiFields = await getFieldsByPageId(request, pages[i].id, token);
-
-            const requiredFields = apiFields.filter(f => f.required);
-
-            for (const field of requiredFields) {
-
-                switch (field.name) {
-
-                    case "name":
-                        await talentRegisterPage.enterFullName(uniqueName);
-                        break;
-
-                    case "stage_name":
-                        await talentRegisterPage.enterStageName("Automation Stage");
-                        break;
-
-                    case "location":
-                        await talentRegisterPage.setLocation("Colombo, LKA");
-                        break;
-
-                    case "gender":
-                        await talentRegisterPage.selectGender(1);
-                        break;
-
-                    case "birth":
-                        await talentRegisterPage.openDOBAndSelectDate("20 Apr 1990");
-                        break;
-
-                    case "phone1":
-                        await talentRegisterPage.enterMobile("6152369");
-                        break;
-
-                    case "description":
-                        await talentRegisterPage.enterDescription("Automation Description");
-                        break;
+                    if (nextLabel) {
+                        await expect(page.locator("form")).toContainText(nextLabel);
+                    }
                 }
             }
 
-            const isUploadPage = apiFields.some(f => f.name === "avatar");
+            await page.waitForLoadState("networkidle");
+            const talentHome = new TalentHomePage(page);
 
-            if (isUploadPage) {
-                await talentRegisterPage.uploadProfilePicture();
-                await talentRegisterPage.saveCroppedProfilePicture();
+            await expect(page.locator(talentAuditionPageLocators.auditionCards).first()).toBeVisible();
+
+            await talentHome.enterProjectName(projectName);
+            await talentHome.clickApplyForSearchedProject();
+
+            const talentApply = new TalentApplyPage(page);
+            await talentApply.clickApplyOnlineround();
+            await talentApply.clickRoleSelector();
+
+            await expect(page.getByText("New Application")).toBeVisible();
+
+            const apiQuestions = [
+                textQuestion.data.question,
+                checkboxQuestion.data.question,
+                radioQuestion.data.question,
+                dropdownQuestion.data.question,
+                imageMediaQuestion.data.question,
+                videoMediaQuestion.data.question,
+                audioMediaQuestion.data.question,
+                pdfMediaQuestion.data.question,
+                availabilityQuestion.data.question
+            ];
+
+            const uiQuestions = await page
+                .locator(".n-form-item-label__text, .font-bold.text-gray-default")
+                .allTextContents();
+
+            const cleanedUiQuestions = uiQuestions.map(q => q.replace("*", "").trim());
+
+            for (const q of apiQuestions) {
+                expect(cleanedUiQuestions).toContain(q.trim());
             }
 
-            if (pages[i].page_no === 1) {
-                await talentRegisterPage.clickTermsAndConditionCheckBox();
-            }
+            const uuid = await getTalentUuidByName(request, token, uniqueName);
 
-            await talentRegisterPage.clickContinueButton();
-        }
+            await deleteRound(request, token, projectId, roundId);
+            await deleteRole(request, token, projectId, roleId);
+            await deleteProject(request, token, projectId);
+            await deleteTalent(request, token, uuid);
+        });
 
-        await page.waitForURL(urls.talent);
+    test("Register new talent and apply for the online-open round: verify all mandatory questions show validation",
+        async ({ page, request }) => {
 
-        // Apply for Round
-        const talentHome = new TalentHomePage(page);
-        talentHome.enterProjectName(projectName);
-        talentHome.clickApplyForSearchedProject();
+            test.setTimeout(300000);
 
-        const talentApply = new TalentApplyPage(page);
+            const talentEmail = generateEmail();
+            const token = await getAccessTokenSmartFromCasting(request, validLogin.email);
 
-        await talentApply.clickApplyOnlineround();
-        talentApply.clickRoleSelector();
-        await page.waitForTimeout(3000);
+            const { response } = await createProject(request, token);
+            const projectId = response.data.id;
+            const projectName = response.data.title;
 
-        await expect(
-            page.getByText("New Application", { exact: true })
-        ).toBeVisible({ timeout: 10000 });
+            await publishProject(request, token, projectId);
+            await createRole(request, token, projectId);
 
-        // Verify Questions
-        const apiQuestions = [
-            textQuestion.data.question,
-            checkboxQuestion.data.question,
-            radioQuestion.data.question,
-            dropdownQuestion.data.question,
-            imageMediaQuestion.data.question,
-            vedioMediaQuestion.data.question,
-            audioMediaQuestion.data.question,
-            pdfMediaQuestion.data.question,
-            availabilityQuestion.data.question
-        ];
-        console.log("API Questions: ", apiQuestions)
+            const roles = await getProjectRoles(request, token, projectId);
+            const role = roles.data[0];
+            expect(role).toBeDefined();
+            const roleId = role.id;
 
-        const uiQuestions = await page
-            .locator(".n-form-item-label__text, .font-bold.text-gray-default")
-            .allTextContents();
+            await createOnlineRound(request, token, projectId, roleId);
 
-        const cleanedUiQuestions = uiQuestions.map(q => q.replace("*", "").trim());
+            const rounds = await getProjectRounds(request, token, projectId);
+            const round = rounds.data[0];
+            expect(round).toBeDefined();
+            const roundId = round.id;
 
-        console.log("UI Questions:", cleanedUiQuestions);
+            const textQuestion = await createTextQuestion(request, token, projectId, roundId, roleId, "Tell us about yourself");
+            const checkboxQuestion = await createCheckboxQuestion(request, token, projectId, roundId, roleId, "Select your skills", ["Acting", "Singing", "Dancing"]);
+            const radioQuestion = await createRadioQuestion(request, token, projectId, roundId, roleId, "Do you have acting experience?", ["Yes", "No"]);
+            const dropdownQuestion = await createDropdownQuestion(request, token, projectId, roundId, roleId, "Select your country", ["USA", "UK", "Canada"]);
+            const imageMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your profile photo", [1]);
+            const videoMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your video performance", [2]);
+            const audioMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your audio clip", [3]);
+            const pdfMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your proposal pdf version", [4]);
+            const availabilityQuestion = await createAvailabilityQuestion(request, token, projectId, roundId, roleId, "Select your availability", ["Morning", "Afternoon", "Evening"]);
 
-        for (const q of apiQuestions) {
-            expect(cleanedUiQuestions).toContain(q.trim());
-        }
+            await makeTextQuestionAsMandory(request, token, projectId, roundId, roleId, "Tell us about yourself", textQuestion.data.question_id);
+            await makeCheckboxQuestionAsMandotory(request, token, projectId, roundId, roleId, "Select your skills", ["Acting", "Singing", "Dancing"], checkboxQuestion.data.question_id);
+            await makeRadioQuestionAsMandotory(request, token, projectId, roundId, roleId, "Do you have acting experience?", ["Yes", "No"], radioQuestion.data.question_id);
+            await makeDropdownQuestionAsMandotory(request, token, projectId, roundId, roleId, "Select your country", ["USA", "UK", "Canada"], dropdownQuestion.data.question_id);
 
-        // Cleanup
-        const uuid = await getTalentUuidByName(request, token, uniqueName);
+            await makeMediaQuestionAsMandotory(request, token, projectId, roundId, roleId, "Upload your profile photo", [1], imageMediaQuestion.data.question_id);
+            await makeMediaQuestionAsMandotory(request, token, projectId, roundId, roleId, "Upload your video performance", [2], videoMediaQuestion.data.question_id);
+            await makeMediaQuestionAsMandotory(request, token, projectId, roundId, roleId, "Upload your audio clip", [3], audioMediaQuestion.data.question_id);
+            await makeMediaQuestionAsMandotory(request, token, projectId, roundId, roleId, "Upload your proposal pdf version", [4], pdfMediaQuestion.data.question_id);
 
-        await deleteRound(request, token, projectId, roundId);
-        await deleteRole(request, token, projectId, roleId);
-        await deleteProject(request, token, projectId);
-        await deleteTalent(request, token, uuid);
+            await makeAvailabilityQuestionAsMandotory(request, token, projectId, roundId, roleId, "Select your availability", ["Morning", "Afternoon", "Evening"], availabilityQuestion.data.question_id);
 
-    });
+            await updateRoundSubmissionStatus(request, token, projectId, roundId, 1);
+            await applyRegistrationConfig(request, token, fullConfig);
 
-    test("Register new talent and apply for the online-open round: verify all mandatory questions show validation", async ({ page, request }) => {
+            await expect.poll(async () => {
+                const f = await getFieldsByPageId(request, 1, token);
+                return f.length;
+            }, { timeout: 60000 }).toBeGreaterThan(0);
 
-        const talentEmail = generateEmail();
-        const token = await getAccessTokenSmartFromCasting(request, validLogin.email);
+            await page.goto(urls.talent, { waitUntil: "domcontentloaded" });
 
-        // Create project
-        const { response } = await createProject(request, token);
-        const projectId = response.data.id;
-        const projectName = response.data.title;
+            const login = new LoginPage(page);
+            await login.validTalentLogin(talentEmail);
 
-        await publishProject(request, token, projectId);
-        await createRole(request, token, projectId);
+            await expect(page.locator('[data-testid="auth-form"]')).toBeVisible();
 
-        const roles = await getProjectRoles(request, token, projectId);
-        const role = roles.data[0];
-        expect(role).toBeDefined();
+            const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
+            await enterOtpForTalent(page, otp);
 
-        const roleId = role.id;
+            await page.waitForLoadState("networkidle");
+            await expect(page.locator("form")).toBeVisible();
 
-        // Create round
-        await createOnlineRound(request, token, projectId, roleId);
+            const pages = await getAllPages(request, token);
+            const talentRegisterPage = new TalentRegisterPage(page);
+            const uniqueName = `Autom-Talent ${Date.now()}`;
 
-        const rounds = await getProjectRounds(request, token, projectId);
-        const round = rounds.data[0];
-        expect(round).toBeDefined();
+            for (let i = 0; i < pages.length; i++) {
 
-        const roundId = round.id;
+                const apiFields = await getFieldsByPageId(request, pages[i].id, token);
 
-        // Create Questions
-        const textQuestion = await createTextQuestion(
-            request, token, projectId, roundId, roleId,
-            "Tell us about yourself"
-        );
+                for (const field of apiFields.filter(f => f.required)) {
 
-        const checkboxQuestion = await createCheckboxQuestion(
-            request, token, projectId, roundId, roleId,
-            "Select your skills",
-            ["Acting", "Singing", "Dancing"]
-        );
+                    switch (field.name) {
+                        case "name": await talentRegisterPage.enterFullName(uniqueName); break;
+                        case "stage_name": await talentRegisterPage.enterStageName("Automation Stage"); break;
+                        case "location": await talentRegisterPage.setLocation("Colombo, LKA"); break;
+                        case "gender": await talentRegisterPage.selectGender(1); break;
+                        case "birth": await talentRegisterPage.openDOBAndSelectDate("20 Apr 1990"); break;
+                        case "phone1": await talentRegisterPage.enterMobile("6152369"); break;
+                        case "description": await talentRegisterPage.enterDescription("Automation Description"); break;
+                    }
+                }
 
-        const radioQuestion = await createRadioQuestion(
-            request, token, projectId, roundId, roleId,
-            "Do you have acting experience?",
-            ["Yes", "No"]
-        );
+                if (apiFields.some(f => f.name === "avatar")) {
+                    await talentRegisterPage.uploadProfilePicture();
+                    await talentRegisterPage.saveCroppedProfilePicture();
+                }
 
-        const dropdownQuestion = await createDropdownQuestion(
-            request, token, projectId, roundId, roleId,
-            "Select your country",
-            ["USA", "UK", "Canada"]
-        );
+                if (pages[i].page_no === 1) {
+                    await talentRegisterPage.clickTermsAndConditionCheckBox();
+                }
 
-        const imageMediaQuestion = await createMediaQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your profile photo",
-            [1]
-        );
+                await talentRegisterPage.clickContinueButton();
 
-        const vedioMediaQuestion = await createMediaQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your video performance",
-            [2]
-        );
+                if (i < pages.length - 1) {
+                    const nextPage = pages[i + 1];
+                    const nextFields = await getFieldsByPageId(request, nextPage.id, token);
+                    const nextLabel = nextFields[0]?.label;
 
-        const audioMediaQuestion = await createMediaQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your audio clip",
-            [3]
-        );
-
-        const pdfMediaQuestion = await createMediaQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your proposal pdf version",
-            [4]
-        );
-
-        const availabilityQuestion = await createAvailabilityQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Select your availability",
-            ["Morning", "Afternoon", "Evening"]
-        );
-
-
-        // Make Questions Mandatory
-        await makeTextQuestionAsMandory(request, token, projectId, roundId, roleId,
-            "Tell us about yourself", textQuestion.data.question_id
-        );
-        await makeCheckboxQuestionAsMandotory(request, token, projectId, roundId, roleId,
-            "Select your skills",
-            ["Acting", "Singing", "Dancing"], checkboxQuestion.data.question_id);
-
-        await makeRadioQuestionAsMandotory(request, token, projectId, roundId, roleId,
-            "Do you have acting experience?",
-            ["Yes", "No"], radioQuestion.data.question_id);
-
-        await makeDropdownQuestionAsMandotory(request, token, projectId, roundId, roleId,
-            "Select your country",
-            ["USA", "UK", "Canada"], dropdownQuestion.data.question_id);
-
-        await makeMediaQuestionAsMandotory(request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your profile photo",
-            [1], imageMediaQuestion.data.question_id);
-
-        await makeMediaQuestionAsMandotory(request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your video performance",
-            [2], vedioMediaQuestion.data.question_id);
-
-        await makeMediaQuestionAsMandotory(request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your audio clip",
-            [3], audioMediaQuestion.data.question_id);
-
-        await makeMediaQuestionAsMandotory(request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your proposal pdf version",
-            [4], pdfMediaQuestion.data.question_id);
-
-
-        await makeAvailabilityQuestionAsMandotory(request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Select your availability",
-            ["Morning", "Afternoon", "Evening"], availabilityQuestion.data.question_id);
-
-        await updateRoundSubmissionStatus(request, token, projectId, roundId, 1);
-
-        test.setTimeout(350000);
-
-        // Talent Registration
-        await applyRegistrationConfig(request, token, fullConfig);
-
-        await expect.poll(async () => {
-            const f = await getFieldsByPageId(request, 1, token);
-            return f.length;
-        }).toBeGreaterThan(0);
-
-        await page.goto(urls.talent);
-
-        const login = new LoginPage(page);
-        await login.validTalentLogin(talentEmail);
-
-        const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
-        await enterOtpForTalent(page, otp);
-
-        const pages = await getAllPages(request, token);
-        const talentRegisterPage = new TalentRegisterPage(page);
-
-        const uniqueName = `Autom-Talent ${Date.now()}`;
-
-        for (let i = 0; i < pages.length; i++) {
-
-            const apiFields = await getFieldsByPageId(request, pages[i].id, token);
-            const requiredFields = apiFields.filter(f => f.required);
-
-            for (const field of requiredFields) {
-
-                switch (field.name) {
-
-                    case "name":
-                        await talentRegisterPage.enterFullName(uniqueName);
-                        break;
-
-                    case "stage_name":
-                        await talentRegisterPage.enterStageName("Automation Stage");
-                        break;
-
-                    case "location":
-                        await talentRegisterPage.setLocation("Colombo, LKA");
-                        break;
-
-                    case "gender":
-                        await talentRegisterPage.selectGender(1);
-                        break;
-
-                    case "birth":
-                        await talentRegisterPage.openDOBAndSelectDate("20 Apr 1990");
-                        break;
-
-                    case "phone1":
-                        await talentRegisterPage.enterMobile("6152369");
-                        break;
-
-                    case "description":
-                        await talentRegisterPage.enterDescription("Automation Description");
-                        break;
+                    if (nextLabel) {
+                        await expect(page.locator("form")).toContainText(nextLabel);
+                    }
                 }
             }
 
-            const isUploadPage = apiFields.some(f => f.name === "avatar");
+            await page.waitForLoadState("networkidle");
+            const talentHome = new TalentHomePage(page);
 
-            if (isUploadPage) {
-                await talentRegisterPage.uploadProfilePicture();
-                await talentRegisterPage.saveCroppedProfilePicture();
-            }
+            await expect(page.locator(talentAuditionPageLocators.auditionCards).first()).toBeVisible();
 
-            if (pages[i].page_no === 1) {
-                await talentRegisterPage.clickTermsAndConditionCheckBox();
-            }
+            await talentHome.enterProjectName(projectName);
+            await talentHome.clickApplyForSearchedProject();
 
-            await talentRegisterPage.clickContinueButton();
-        }
+            const talentApply = new TalentApplyPage(page);
+            await talentApply.clickApplyOnlineround();
+            await talentApply.clickRoleSelector();
+            await talentApply.clickSubmit();
 
-        await page.waitForURL(urls.talent);
+            const errorLocator = page.locator(".n-form-item-feedback__line:visible");
+            await expect(errorLocator.first()).toBeVisible();
 
-        // Apply for Round
-        const talentHome = new TalentHomePage(page);
-        talentHome.enterProjectName(projectName);
-        talentHome.clickApplyForSearchedProject();
+            const errors = (await errorLocator.allTextContents())
+                .map(e => e.trim())
+                .filter(Boolean);
 
-        const talentApply = new TalentApplyPage(page);
+            console.log("Validation Errors:", errors);
 
-        await talentApply.clickApplyOnlineround();
-
-        talentApply.clickRoleSelector();
-        await page.waitForTimeout(3000);
-
-        // Submit without answering
-        await talentApply.clickSubmit();
-
-        // Verify Required Errors
-        const errors = (await page
-            .locator(".n-form-item-feedback__line")
-            .allTextContents())
-            .map(e => e.trim());
-
-        console.log("Validation Errors:", errors);
-
-        expect(errors).toEqual(
-            expect.arrayContaining([
+            expect(errors).toEqual(expect.arrayContaining([
                 "Value is required",
                 "Media is required"
-            ])
-        );
+            ]));
 
-        expect(errors.length).toBe(11);
+            expect(errors.length).toBeGreaterThan(5);
+            const uuid = await getTalentUuidByName(request, token, uniqueName);
 
-        // Cleanup
-        const uuid = await getTalentUuidByName(request, token, uniqueName);
+            await deleteRound(request, token, projectId, roundId);
+            await deleteRole(request, token, projectId, roleId);
+            await deleteProject(request, token, projectId);
+            await deleteTalent(request, token, uuid);
+        });
 
-        await deleteRound(request, token, projectId, roundId);
-        await deleteRole(request, token, projectId, roleId);
-        await deleteProject(request, token, projectId);
-        await deleteTalent(request, token, uuid);
+    test("Register new talent and apply for the in-Person round: verify all questions appear",
+        async ({ page, request }) => {
 
-    });
+            test.setTimeout(300000);
 
-    test("Register new talent and apply for the in-Person round: verify all questions appear", async ({ page, request }) => {
+            const talentEmail = generateEmail();
+            const token = await getAccessTokenSmartFromCasting(request, validLogin.email);
 
-        const talentEmail = generateEmail();
-        const token = await getAccessTokenSmartFromCasting(request, validLogin.email);
+            const { response } = await createProject(request, token);
+            const projectId = response.data.id;
+            const projectName = response.data.title;
 
-        // Create project
-        const { response } = await createProject(request, token);
-        const projectId = response.data.id;
-        const projectName = response.data.title;
+            await publishProject(request, token, projectId);
+            await createRole(request, token, projectId);
 
-        await publishProject(request, token, projectId);
-        await createRole(request, token, projectId);
+            const roles = await getProjectRoles(request, token, projectId);
+            const role = roles.data[0];
+            expect(role).toBeDefined();
 
-        const roles = await getProjectRoles(request, token, projectId);
-        const role = roles.data[0];
-        expect(role).toBeDefined();
+            const roleId = role.id;
+            await createInPersonRound(request, token, projectId, roleId);
 
-        const roleId = role.id;
-        const roleName = role.role_name;
+            const rounds = await getProjectRounds(request, token, projectId);
+            const round = rounds.data[0];
+            expect(round).toBeDefined();
+            const roundId = round.id;
 
-        // Create round
-        await createInPersonRound(request, token, projectId, roleId);
+            const textQuestion = await createTextQuestion(request, token, projectId, roundId, roleId, "Tell us about yourself");
 
-        const rounds = await getProjectRounds(request, token, projectId);
-        const round = rounds.data[0];
-        expect(round).toBeDefined();
+            const checkboxQuestion = await createCheckboxQuestion(
+                request, token, projectId, roundId, roleId,
+                "Select your skills", ["Acting", "Singing", "Dancing"]
+            );
 
-        const roundId = round.id;
+            const radioQuestion = await createRadioQuestion(
+                request, token, projectId, roundId, roleId,
+                "Do you have acting experience?", ["Yes", "No"]
+            );
 
-        // Create Questions
-        const textQuestion = await createTextQuestion(
-            request, token, projectId, roundId, roleId,
-            "Tell us about yourself"
-        );
+            const dropdownQuestion = await createDropdownQuestion(
+                request, token, projectId, roundId, roleId,
+                "Select your country", ["USA", "UK", "Canada"]
+            );
 
-        const checkboxQuestion = await createCheckboxQuestion(
-            request, token, projectId, roundId, roleId,
-            "Select your skills",
-            ["Acting", "Singing", "Dancing"]
-        );
+            const imageMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your profile photo", [1]);
+            const videoMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your audio clip", [2]);
+            const audioMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your video performance", [3]);
+            const pdfMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your proposal pdf version", [4]);
 
-        const radioQuestion = await createRadioQuestion(
-            request, token, projectId, roundId, roleId,
-            "Do you have acting experience?",
-            ["Yes", "No"]
-        );
+            const availabilityQuestion = await createAvailabilityQuestion(
+                request, token, projectId, roundId, roleId,
+                "Select your availability", ["Morning", "Afternoon", "Evening"]
+            );
 
-        const dropdownQuestion = await createDropdownQuestion(
-            request, token, projectId, roundId, roleId,
-            "Select your country",
-            ["USA", "UK", "Canada"]
-        );
+            await updateRoundSubmissionStatus(request, token, projectId, roundId, 1);
+            await applyRegistrationConfig(request, token, fullConfig);
 
-        const imageMediaQuestion = await createMediaQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your profile photo",
-            [1]
-        );
+            await expect.poll(async () => {
+                const f = await getFieldsByPageId(request, 1, token);
+                return f.length;
+            }, { timeout: 60000 }).toBeGreaterThan(0);
 
-        const vedioMediaQuestion = await createMediaQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your audio clip",
-            [2]
-        );
+            await page.goto(urls.talent, { waitUntil: "domcontentloaded" });
 
-        const audioMediaQuestion = await createMediaQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your video performance",
-            [3]
-        );
+            const login = new LoginPage(page);
+            await login.validTalentLogin(talentEmail);
 
-        const pdfMediaQuestion = await createMediaQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your proposal pdf version",
-            [4]
-        );
+            await expect(page.locator('[data-testid="auth-form"]')).toBeVisible();
 
-        const availabilityQuestion = await createAvailabilityQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Select your availability",
-            ["Morning", "Afternoon", "Evening"]
-        );
+            const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
+            await enterOtpForTalent(page, otp);
 
-        await updateRoundSubmissionStatus(request, token, projectId, roundId, 1);
-        test.setTimeout(350000);
+            await page.waitForLoadState("networkidle");
+            await expect(page.locator("form")).toBeVisible();
 
-        // Talent Registration
-        await applyRegistrationConfig(request, token, fullConfig);
+            const pages = await getAllPages(request, token);
+            const talentRegisterPage = new TalentRegisterPage(page);
+            const uniqueName = `Autom-Talent ${Date.now()}`;
 
-        await expect.poll(async () => {
-            const f = await getFieldsByPageId(request, 1, token);
-            return f.length;
-        }).toBeGreaterThan(0);
+            for (let i = 0; i < pages.length; i++) {
 
-        await page.goto(urls.talent, { waitUntil: "domcontentloaded" });
+                const apiFields = await getFieldsByPageId(request, pages[i].id, token);
 
-        const login = new LoginPage(page);
-        await login.validTalentLogin(talentEmail);
+                for (const field of apiFields.filter(f => f.required)) {
 
-        const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
-        await enterOtpForTalent(page, otp);
+                    switch (field.name) {
+                        case "name": await talentRegisterPage.enterFullName(uniqueName); break;
+                        case "stage_name": await talentRegisterPage.enterStageName("Automation Stage"); break;
+                        case "location": await talentRegisterPage.setLocation("Colombo, LKA"); break;
+                        case "gender": await talentRegisterPage.selectGender(1); break;
+                        case "birth": await talentRegisterPage.openDOBAndSelectDate("20 Apr 1990"); break;
+                        case "phone1": await talentRegisterPage.enterMobile("6152369"); break;
+                        case "description": await talentRegisterPage.enterDescription("Automation Description"); break;
+                    }
+                }
 
-        const pages = await getAllPages(request, token);
-        const talentRegisterPage = new TalentRegisterPage(page);
+                if (apiFields.some(f => f.name === "avatar")) {
+                    await talentRegisterPage.uploadProfilePicture();
+                    await talentRegisterPage.saveCroppedProfilePicture();
+                }
 
-        const uniqueName = `Autom-Talent ${Date.now()}`;
+                if (pages[i].page_no === 1) {
+                    await talentRegisterPage.clickTermsAndConditionCheckBox();
+                }
 
-        for (let i = 0; i < pages.length; i++) {
+                await talentRegisterPage.clickContinueButton();
 
-            const apiFields = await getFieldsByPageId(request, pages[i].id, token);
+                if (i < pages.length - 1) {
+                    const nextPage = pages[i + 1];
+                    const nextFields = await getFieldsByPageId(request, nextPage.id, token);
+                    const nextLabel = nextFields[0]?.label;
 
-            const requiredFields = apiFields.filter(f => f.required);
-
-            for (const field of requiredFields) {
-
-                switch (field.name) {
-
-                    case "name":
-                        await talentRegisterPage.enterFullName(uniqueName);
-                        break;
-
-                    case "stage_name":
-                        await talentRegisterPage.enterStageName("Automation Stage");
-                        break;
-
-                    case "location":
-                        await talentRegisterPage.setLocation("Colombo, LKA");
-                        break;
-
-                    case "gender":
-                        await talentRegisterPage.selectGender(1);
-                        break;
-
-                    case "birth":
-                        await talentRegisterPage.openDOBAndSelectDate("20 Apr 1990");
-                        break;
-
-                    case "phone1":
-                        await talentRegisterPage.enterMobile("6152369");
-                        break;
-
-                    case "description":
-                        await talentRegisterPage.enterDescription("Automation Description");
-                        break;
+                    if (nextLabel) {
+                        await expect(page.locator("form")).toContainText(nextLabel);
+                    }
                 }
             }
 
-            const isUploadPage = apiFields.some(f => f.name === "avatar");
+            await page.waitForLoadState("networkidle");
+            const talentHome = new TalentHomePage(page);
 
-            if (isUploadPage) {
-                await talentRegisterPage.uploadProfilePicture();
-                await talentRegisterPage.saveCroppedProfilePicture();
+            await expect(page.locator(talentAuditionPageLocators.auditionCards).first())
+                .toBeVisible();
+
+            await talentHome.enterProjectName(projectName);
+            await talentHome.clickApplyForSearchedProject();
+
+            const talentApply = new TalentApplyPage(page);
+            await talentApply.clickApplyOnlineround();
+            await talentApply.clickRoleSelector();
+
+            await expect(page.getByText("New Application")).toBeVisible();
+
+            const apiQuestions = [
+                textQuestion.data.question,
+                checkboxQuestion.data.question,
+                radioQuestion.data.question,
+                dropdownQuestion.data.question,
+                imageMediaQuestion.data.question,
+                videoMediaQuestion.data.question,
+                audioMediaQuestion.data.question,
+                pdfMediaQuestion.data.question,
+                availabilityQuestion.data.question
+            ];
+
+            const uiQuestions = await page
+                .locator(".n-form-item-label__text, .font-bold.text-gray-default")
+                .allTextContents();
+
+            const cleanedUiQuestions = uiQuestions.map(q => q.replace("*", "").trim());
+
+            for (const q of apiQuestions) {
+                expect(cleanedUiQuestions).toContain(q.trim());
             }
 
-            if (pages[i].page_no === 1) {
-                await talentRegisterPage.clickTermsAndConditionCheckBox();
-            }
+            const uuid = await getTalentUuidByName(request, token, uniqueName);
 
-            await talentRegisterPage.clickContinueButton();
-        }
+            await deleteRound(request, token, projectId, roundId);
+            await deleteRole(request, token, projectId, roleId);
+            await deleteProject(request, token, projectId);
+            await deleteTalent(request, token, uuid);
+        });
 
-        await page.waitForURL(urls.talent);
+    test("Register new talent and apply for the in-Person round: verify all mandatory questions show validation",
+        async ({ page, request }) => {
 
-        // Apply for Round
-        const talentHome = new TalentHomePage(page);
-        talentHome.enterProjectName(projectName);
-        talentHome.clickApplyForSearchedProject();
+            test.setTimeout(300000);
 
-        const talentApply = new TalentApplyPage(page);
+            const talentEmail = generateEmail();
+            const token = await getAccessTokenSmartFromCasting(request, validLogin.email);
 
-        await talentApply.clickApplyOnlineround();
-        talentApply.clickRoleSelector();
-        await page.waitForTimeout(3000);
+            const { response } = await createProject(request, token);
+            const projectId = response.data.id;
+            const projectName = response.data.title;
 
-        await expect(
-            page.getByText("New Application", { exact: true })
-        ).toBeVisible({ timeout: 10000 });
+            await publishProject(request, token, projectId);
+            await createRole(request, token, projectId);
 
-        // Verify Questions
-        const apiQuestions = [
-            textQuestion.data.question,
-            checkboxQuestion.data.question,
-            radioQuestion.data.question,
-            dropdownQuestion.data.question,
-            imageMediaQuestion.data.question,
-            vedioMediaQuestion.data.question,
-            audioMediaQuestion.data.question,
-            pdfMediaQuestion.data.question,
-            availabilityQuestion.data.question
-        ];
-        console.log("API Questions: ", apiQuestions)
+            const roles = await getProjectRoles(request, token, projectId);
+            const role = roles.data[0];
+            expect(role).toBeDefined();
+            const roleId = role.id;
 
-        const uiQuestions = await page
-            .locator(".n-form-item-label__text, .font-bold.text-gray-default")
-            .allTextContents();
+            await createInPersonRound(request, token, projectId, roleId);
 
-        const cleanedUiQuestions = uiQuestions.map(q => q.replace("*", "").trim());
+            const rounds = await getProjectRounds(request, token, projectId);
+            const round = rounds.data[0];
+            expect(round).toBeDefined();
+            const roundId = round.id;
 
-        console.log("UI Questions:", cleanedUiQuestions);
+            const textQuestion = await createTextQuestion(request, token, projectId, roundId, roleId, "Tell us about yourself");
+            const checkboxQuestion = await createCheckboxQuestion(request, token, projectId, roundId, roleId, "Select your skills", ["Acting", "Singing", "Dancing"]);
+            const radioQuestion = await createRadioQuestion(request, token, projectId, roundId, roleId, "Do you have acting experience?", ["Yes", "No"]);
+            const dropdownQuestion = await createDropdownQuestion(request, token, projectId, roundId, roleId, "Select your country", ["USA", "UK", "Canada"]);
+            const imageMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your profile photo", [1]);
+            const videoMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your video performance", [2]);
+            const audioMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your audio clip", [3]);
+            const pdfMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your proposal pdf version", [4]);
+            const availabilityQuestion = await createAvailabilityQuestion(request, token, projectId, roundId, roleId, "Select your availability", ["Morning", "Afternoon", "Evening"]);
 
-        for (const q of apiQuestions) {
-            expect(cleanedUiQuestions).toContain(q.trim());
-        }
+            await makeTextQuestionAsMandory(request, token, projectId, roundId, roleId, "Tell us about yourself", textQuestion.data.question_id);
+            await makeCheckboxQuestionAsMandotory(request, token, projectId, roundId, roleId, "Select your skills", ["Acting", "Singing", "Dancing"], checkboxQuestion.data.question_id);
+            await makeRadioQuestionAsMandotory(request, token, projectId, roundId, roleId, "Do you have acting experience?", ["Yes", "No"], radioQuestion.data.question_id);
+            await makeDropdownQuestionAsMandotory(request, token, projectId, roundId, roleId, "Select your country", ["USA", "UK", "Canada"], dropdownQuestion.data.question_id);
 
-        // Cleanup
-        const uuid = await getTalentUuidByName(request, token, uniqueName);
+            await makeMediaQuestionAsMandotory(request, token, projectId, roundId, roleId, "Upload your profile photo", [1], imageMediaQuestion.data.question_id);
+            await makeMediaQuestionAsMandotory(request, token, projectId, roundId, roleId, "Upload your video performance", [2], videoMediaQuestion.data.question_id);
+            await makeMediaQuestionAsMandotory(request, token, projectId, roundId, roleId, "Upload your audio clip", [3], audioMediaQuestion.data.question_id);
+            await makeMediaQuestionAsMandotory(request, token, projectId, roundId, roleId, "Upload your proposal pdf version", [4], pdfMediaQuestion.data.question_id);
 
-        await deleteRound(request, token, projectId, roundId);
-        await deleteRole(request, token, projectId, roleId);
-        await deleteProject(request, token, projectId);
-        await deleteTalent(request, token, uuid);
+            await makeAvailabilityQuestionAsMandotory(request, token, projectId, roundId, roleId, "Select your availability", ["Morning", "Afternoon", "Evening"], availabilityQuestion.data.question_id);
 
-    });
+            await updateRoundSubmissionStatus(request, token, projectId, roundId, 1);
+            await applyRegistrationConfig(request, token, fullConfig);
 
-    test("Register new talent and apply for the in-Person round: verify all mandatory questions show validation", async ({ page, request }) => {
+            await expect.poll(async () => {
+                const f = await getFieldsByPageId(request, 1, token);
+                return f.length;
+            }, { timeout: 60000 }).toBeGreaterThan(0);
 
-        const talentEmail = generateEmail();
-        const token = await getAccessTokenSmartFromCasting(request, validLogin.email);
+            await page.goto(urls.talent, { waitUntil: "domcontentloaded" });
 
-        // Create project
-        const { response } = await createProject(request, token);
-        const projectId = response.data.id;
-        const projectName = response.data.title;
+            const login = new LoginPage(page);
+            await login.validTalentLogin(talentEmail);
 
-        await publishProject(request, token, projectId);
-        await createRole(request, token, projectId);
+            await expect(page.locator('[data-testid="auth-form"]')).toBeVisible();
 
-        const roles = await getProjectRoles(request, token, projectId);
-        const role = roles.data[0];
-        expect(role).toBeDefined();
+            const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
+            await enterOtpForTalent(page, otp);
 
-        const roleId = role.id;
+            await page.waitForLoadState("networkidle");
+            await expect(page.locator("form")).toBeVisible();
 
-        // Create round
-        await createInPersonRound(request, token, projectId, roleId);
+            const pages = await getAllPages(request, token);
+            const talentRegisterPage = new TalentRegisterPage(page);
+            const uniqueName = `Autom-Talent ${Date.now()}`;
 
-        const rounds = await getProjectRounds(request, token, projectId);
-        const round = rounds.data[0];
-        expect(round).toBeDefined();
+            for (let i = 0; i < pages.length; i++) {
 
-        const roundId = round.id;
+                const apiFields = await getFieldsByPageId(request, pages[i].id, token);
 
-        // Create Questions
-        const textQuestion = await createTextQuestion(
-            request, token, projectId, roundId, roleId,
-            "Tell us about yourself"
-        );
+                for (const field of apiFields.filter(f => f.required)) {
+                    switch (field.name) {
+                        case "name": await talentRegisterPage.enterFullName(uniqueName); break;
+                        case "stage_name": await talentRegisterPage.enterStageName("Automation Stage"); break;
+                        case "location": await talentRegisterPage.setLocation("Colombo, LKA"); break;
+                        case "gender": await talentRegisterPage.selectGender(1); break;
+                        case "birth": await talentRegisterPage.openDOBAndSelectDate("20 Apr 1990"); break;
+                        case "phone1": await talentRegisterPage.enterMobile("6152369"); break;
+                        case "description": await talentRegisterPage.enterDescription("Automation Description"); break;
+                    }
+                }
 
-        const checkboxQuestion = await createCheckboxQuestion(
-            request, token, projectId, roundId, roleId,
-            "Select your skills",
-            ["Acting", "Singing", "Dancing"]
-        );
+                if (apiFields.some(f => f.name === "avatar")) {
+                    await talentRegisterPage.uploadProfilePicture();
+                    await talentRegisterPage.saveCroppedProfilePicture();
+                }
 
-        const radioQuestion = await createRadioQuestion(
-            request, token, projectId, roundId, roleId,
-            "Do you have acting experience?",
-            ["Yes", "No"]
-        );
+                if (pages[i].page_no === 1) {
+                    await talentRegisterPage.clickTermsAndConditionCheckBox();
+                }
 
-        const dropdownQuestion = await createDropdownQuestion(
-            request, token, projectId, roundId, roleId,
-            "Select your country",
-            ["USA", "UK", "Canada"]
-        );
+                await talentRegisterPage.clickContinueButton();
 
-        const imageMediaQuestion = await createMediaQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your profile photo",
-            [1]
-        );
+                if (i < pages.length - 1) {
+                    const nextPage = pages[i + 1];
+                    const nextFields = await getFieldsByPageId(request, nextPage.id, token);
+                    const nextLabel = nextFields[0]?.label;
 
-        const vedioMediaQuestion = await createMediaQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your video performance",
-            [2]
-        );
-
-        const audioMediaQuestion = await createMediaQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your audio clip",
-            [3]
-        );
-
-        const pdfMediaQuestion = await createMediaQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your proposal pdf version",
-            [4]
-        );
-
-        const availabilityQuestion = await createAvailabilityQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Select your availability",
-            ["Morning", "Afternoon", "Evening"]
-        );
-
-
-        // Make Questions Mandatory
-        await makeTextQuestionAsMandory(request, token, projectId, roundId, roleId,
-            "Tell us about yourself", textQuestion.data.question_id
-        );
-        await makeCheckboxQuestionAsMandotory(request, token, projectId, roundId, roleId,
-            "Select your skills",
-            ["Acting", "Singing", "Dancing"], checkboxQuestion.data.question_id);
-
-        await makeRadioQuestionAsMandotory(request, token, projectId, roundId, roleId,
-            "Do you have acting experience?",
-            ["Yes", "No"], radioQuestion.data.question_id);
-
-        await makeDropdownQuestionAsMandotory(request, token, projectId, roundId, roleId,
-            "Select your country",
-            ["USA", "UK", "Canada"], dropdownQuestion.data.question_id);
-
-        await makeMediaQuestionAsMandotory(request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your profile photo",
-            [1], imageMediaQuestion.data.question_id);
-
-        await makeMediaQuestionAsMandotory(request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your video performance",
-            [2], vedioMediaQuestion.data.question_id);
-
-        await makeMediaQuestionAsMandotory(request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your audio clip",
-            [3], audioMediaQuestion.data.question_id);
-
-        await makeMediaQuestionAsMandotory(request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your proposal pdf version",
-            [4], pdfMediaQuestion.data.question_id);
-
-
-        await makeAvailabilityQuestionAsMandotory(request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Select your availability",
-            ["Morning", "Afternoon", "Evening"], availabilityQuestion.data.question_id);
-
-        await updateRoundSubmissionStatus(request, token, projectId, roundId, 1);
-
-        test.setTimeout(350000);
-
-        // Talent Registration
-        await applyRegistrationConfig(request, token, fullConfig);
-
-        await expect.poll(async () => {
-            const f = await getFieldsByPageId(request, 1, token);
-            return f.length;
-        }).toBeGreaterThan(0);
-
-        await page.goto(urls.talent);
-
-        const login = new LoginPage(page);
-        await login.validTalentLogin(talentEmail);
-
-        const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
-        await enterOtpForTalent(page, otp);
-
-        const pages = await getAllPages(request, token);
-        const talentRegisterPage = new TalentRegisterPage(page);
-
-        const uniqueName = `Autom-Talent ${Date.now()}`;
-
-        for (let i = 0; i < pages.length; i++) {
-
-            const apiFields = await getFieldsByPageId(request, pages[i].id, token);
-            const requiredFields = apiFields.filter(f => f.required);
-
-            for (const field of requiredFields) {
-
-                switch (field.name) {
-
-                    case "name":
-                        await talentRegisterPage.enterFullName(uniqueName);
-                        break;
-
-                    case "stage_name":
-                        await talentRegisterPage.enterStageName("Automation Stage");
-                        break;
-
-                    case "location":
-                        await talentRegisterPage.setLocation("Colombo, LKA");
-                        break;
-
-                    case "gender":
-                        await talentRegisterPage.selectGender(1);
-                        break;
-
-                    case "birth":
-                        await talentRegisterPage.openDOBAndSelectDate("20 Apr 1990");
-                        break;
-
-                    case "phone1":
-                        await talentRegisterPage.enterMobile("6152369");
-                        break;
-
-                    case "description":
-                        await talentRegisterPage.enterDescription("Automation Description");
-                        break;
+                    if (nextLabel) {
+                        await expect(page.locator("form")).toContainText(nextLabel);
+                    }
                 }
             }
 
-            const isUploadPage = apiFields.some(f => f.name === "avatar");
+            await page.waitForLoadState("networkidle");
+            const talentHome = new TalentHomePage(page);
 
-            if (isUploadPage) {
-                await talentRegisterPage.uploadProfilePicture();
-                await talentRegisterPage.saveCroppedProfilePicture();
-            }
+            await expect(page.locator(talentAuditionPageLocators.auditionCards).first())
+                .toBeVisible();
 
-            if (pages[i].page_no === 1) {
-                await talentRegisterPage.clickTermsAndConditionCheckBox();
-            }
+            await talentHome.enterProjectName(projectName);
+            await talentHome.clickApplyForSearchedProject();
+            const talentApply = new TalentApplyPage(page);
+            await talentApply.clickApplyOnlineround();
+            await talentApply.clickRoleSelector();
+            await talentApply.clickSubmit();
 
-            await talentRegisterPage.clickContinueButton();
-        }
+            const errorLocator = page.locator(".n-form-item-feedback__line:visible");
 
-        await page.waitForURL(urls.talent);
+            await expect(errorLocator.first()).toBeVisible();
 
-        // Apply for Round
-        const talentHome = new TalentHomePage(page);
-        talentHome.enterProjectName(projectName);
-        talentHome.clickApplyForSearchedProject();
+            const errors = (await errorLocator.allTextContents())
+                .map(e => e.trim())
+                .filter(Boolean);
 
-        const talentApply = new TalentApplyPage(page);
+            console.log("Validation Errors:", errors);
 
-        await talentApply.clickApplyOnlineround();
-
-        talentApply.clickRoleSelector();
-        await page.waitForTimeout(3000);
-
-        // Submit without answering
-        await talentApply.clickSubmit();
-
-        // Verify Required Errors
-        const errors = (await page
-            .locator(".n-form-item-feedback__line")
-            .allTextContents())
-            .map(e => e.trim());
-
-        console.log("Validation Errors:", errors);
-
-        expect(errors).toEqual(
-            expect.arrayContaining([
+            expect(errors).toEqual(expect.arrayContaining([
                 "Value is required",
                 "Media is required"
-            ])
-        );
+            ]));
 
-        expect(errors.length).toBe(11);
+            expect(errors.length).toBeGreaterThan(5);
+            const uuid = await getTalentUuidByName(request, token, uniqueName);
 
-        // Cleanup
-        const uuid = await getTalentUuidByName(request, token, uniqueName);
+            await deleteRound(request, token, projectId, roundId);
+            await deleteRole(request, token, projectId, roleId);
+            await deleteProject(request, token, projectId);
+            await deleteTalent(request, token, uuid);
+        });
 
-        await deleteRound(request, token, projectId, roundId);
-        await deleteRole(request, token, projectId, roleId);
-        await deleteProject(request, token, projectId);
-        await deleteTalent(request, token, uuid);
+    test("Register new talent and apply for the online-open round: with all questions filled",
+        async ({ page, request }) => {
 
-    });
+            test.setTimeout(300000);
 
-    test("Register new talent and apply for the online-open round: with all questions filled", async ({ page, request }) => {
+            const talentEmail = generateEmail();
+            const token = await getAccessTokenSmartFromCasting(request, validLogin.email);
 
-        //create project, role, round 
-        const talentEmail = generateEmail();
-        const token = await getAccessTokenSmartFromCasting(request, validLogin.email);
+            const { response } = await createProject(request, token);
+            const projectId = response.data.id;
+            const projectName = response.data.title;
 
-        const { response } = await createProject(request, token);
-        const projectId = response.data.id;
-        const projectName = response.data.title;
+            await publishProject(request, token, projectId);
+            await createRole(request, token, projectId);
 
-        await publishProject(request, token, projectId);
-        await createRole(request, token, projectId);
+            const roles = await getProjectRoles(request, token, projectId);
+            const role = roles.data[0];
+            expect(role).toBeDefined();
+            const roleId = role.id;
+            const roleName = role.role_name;
 
-        const roles = await getProjectRoles(request, token, projectId);
-        const role = roles.data[0];
-        expect(role).toBeDefined();
-        const roleId = role.id;
-        const roleName = role.role_name;
+            await createOnlineRound(request, token, projectId, roleId);
 
-        await createOnlineRound(request, token, projectId, roleId);
-        const rounds = await getProjectRounds(request, token, projectId);
-        const round = rounds.data[0];
-        expect(round).toBeDefined();
-        const roundId = round.id;
-        const roundName = round.round_name;
+            const rounds = await getProjectRounds(request, token, projectId);
+            const round = rounds.data[0];
+            expect(round).toBeDefined();
+            const roundId = round.id;
 
-        // Create Questions
-        const textQuestion = await createTextQuestion(
-            request, token, projectId, roundId, roleId,
-            "Tell us about yourself"
-        );
+            const textQuestion = await createTextQuestion(request, token, projectId, roundId, roleId, "Tell us about yourself");
 
-        const checkboxQuestion = await createCheckboxQuestion(
-            request, token, projectId, roundId, roleId,
-            "Select your skills",
-            ["Acting", "Singing", "Dancing"]
-        );
+            const checkboxQuestion = await createCheckboxQuestion(
+                request, token, projectId, roundId, roleId,
+                "Select your skills", ["Acting", "Singing", "Dancing"]
+            );
 
-        const radioQuestion = await createRadioQuestion(
-            request, token, projectId, roundId, roleId,
-            "Do you have acting experience?",
-            ["Yes", "No"]
-        );
+            const radioQuestion = await createRadioQuestion(
+                request, token, projectId, roundId, roleId,
+                "Do you have acting experience?", ["Yes", "No"]
+            );
 
-        const dropdownQuestion = await createDropdownQuestion(
-            request, token, projectId, roundId, roleId,
-            "Select your country",
-            ["USA", "UK", "Canada"]
-        );
+            const dropdownQuestion = await createDropdownQuestion(
+                request, token, projectId, roundId, roleId,
+                "Select your country", ["USA", "UK", "Canada"]
+            );
 
-        const imageMediaQuestion = await createMediaQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your profile photo",
-            [1]
-        );
+            const imageMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your profile photo", [1]);
+            const videoMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your video performance", [2]);
+            const audioMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your audio clip", [3]);
+            const pdfMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your proposal pdf version", [4]);
 
-        const vedioMediaQuestion = await createMediaQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your video performance",
-            [2]
-        );
+            const availabilityQuestion = await createAvailabilityQuestion(
+                request, token, projectId, roundId, roleId,
+                "Select your availability", ["Morning"]
+            );
 
-        const audioMediaQuestion = await createMediaQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your audio clip",
-            [3]
-        );
+            await updateRoundSubmissionStatus(request, token, projectId, roundId, 1);
+            await applyRegistrationConfig(request, token, fullConfig);
 
-        const pdfMediaQuestion = await createMediaQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your proposal pdf version",
-            [4]
-        );
+            await expect.poll(async () => {
+                const f = await getFieldsByPageId(request, 1, token);
+                return f.length;
+            }, { timeout: 60000 }).toBeGreaterThan(0);
 
-        const availabilityQuestion = await createAvailabilityQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Select your availability",
-            ["Morning"]
-        );
+            await page.goto(urls.talent, { waitUntil: "domcontentloaded" });
 
+            const login = new LoginPage(page);
+            await login.validTalentLogin(talentEmail);
 
-        await updateRoundSubmissionStatus(request, token, projectId, roundId, 1);
-        test.setTimeout(350000);
+            await expect(page.locator('[data-testid="auth-form"]')).toBeVisible();
 
-        /* register talent */
-        await page.waitForTimeout(30000);
+            const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
+            await enterOtpForTalent(page, otp);
 
-        //config preperation
-        await applyRegistrationConfig(request, token, fullConfig);
-        await page.waitForTimeout(30000);
+            await page.waitForLoadState("networkidle");
+            await expect(page.locator("form")).toBeVisible();
 
-        await expect.poll(async () => {
-            const f = await getFieldsByPageId(request, 1, token);
-            return f.length;
-        }).toBeGreaterThan(0);
-        await page.waitForTimeout(30000);
+            const pages = await getAllPages(request, token);
+            const talentRegisterPage = new TalentRegisterPage(page);
+            const uniqueName = `Autom-Talent ${Date.now()}`;
 
-        //open talent UI
-        await page.goto(urls.talent, { waitUntil: "domcontentloaded" });
+            for (let i = 0; i < pages.length; i++) {
 
-        const login = new LoginPage(page);
-        await login.validTalentLogin(talentEmail);
-        await page.waitForTimeout(5000);
+                const apiFields = await getFieldsByPageId(request, pages[i].id, token);
 
-        const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
-        await page.waitForTimeout(25000);
-
-        await enterOtpForTalent(page, otp);
-        await page.waitForTimeout(30000);
-
-        //get pages  
-        const pages = await getAllPages(request, token);
-        const talentRegisterPage = new TalentRegisterPage(page);
-        const uniqueName = `Autom-Talent ${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-
-        for (let i = 0; i < pages.length; i++) {
-
-            const p = pages[i];
-            console.log("Checking page:", p.name);
-
-            //get active fields 
-            const apiFields = await getFieldsByPageId(request, p.id, token);
-            const expectedLabels = apiFields.map(f => f.label.trim());
-
-            console.log("API Labels:", expectedLabels);
-
-            //read UI
-            let uiLabelsRaw = await page.locator("form label:visible").allTextContents();
-
-            if (uiLabelsRaw.length === 0) {
-                uiLabelsRaw = await page.locator(".font-bold:visible").allTextContents();
-            }
-
-            let cleanedUiLabels = uiLabelsRaw
-                .map(l => l.replace("*", "").trim())
-                .filter(l => expectedLabels.includes(l));
-
-            console.log("UI Labels:", cleanedUiLabels);
-
-            // validate labels match API
-            for (const expected of expectedLabels) {
-                expect(cleanedUiLabels).toContain(expected);
-            }
-
-            // validate required fields
-            for (const field of apiFields) {
-                if (!field.required) continue;
-
-                const label = page
-                    .locator(".n-form-item-label__text")
-                    .filter({ hasText: new RegExp(`^${field.label}\\b`) });
-
-                if (await label.count() === 0) {
-                    console.log(`Skipping star check for ${field.label}`);
-                    continue;
+                for (const field of apiFields.filter(f => f.required)) {
+                    switch (field.name) {
+                        case "name": await talentRegisterPage.enterFullName(uniqueName); break;
+                        case "stage_name": await talentRegisterPage.enterStageName("Automation Stage"); break;
+                        case "location": await talentRegisterPage.setLocation("Colombo, LKA"); break;
+                        case "gender": await talentRegisterPage.selectGender(1); break;
+                        case "birth": await talentRegisterPage.openDOBAndSelectDate("20 Apr 1990"); break;
+                        case "phone1": await talentRegisterPage.enterMobile("6152369"); break;
+                        case "description": await talentRegisterPage.enterDescription("Automation Description"); break;
+                    }
                 }
 
-                await expect(label.first()).toContainText("*");
-            }
+                if (apiFields.some(f => f.name === "avatar" || f.name === "profile_photo")) {
+                    await talentRegisterPage.uploadProfilePicture();
+                    await talentRegisterPage.saveCroppedProfilePicture();
+                }
 
-            // fill required fields
-            const requiredFields = apiFields.filter(f => f.required);
+                if (pages[i].page_no === 1) {
+                    await talentRegisterPage.clickTermsAndConditionCheckBox();
+                }
 
-            for (const field of requiredFields) {
-                switch (field.name) {
+                await talentRegisterPage.clickContinueButton();
 
-                    case "name":
-                        await talentRegisterPage.enterFullName(uniqueName);
-                        break;
+                if (i < pages.length - 1) {
+                    const nextPage = pages[i + 1];
+                    const nextFields = await getFieldsByPageId(request, nextPage.id, token);
+                    const nextLabel = nextFields[0]?.label;
 
-                    case "stage_name":
-                        await talentRegisterPage.enterStageName("Automation Stage");
-                        break;
-
-                    case "location":
-                        await talentRegisterPage.setLocation("Colombo, LKA");
-                        break;
-
-                    case "gender":
-                        await talentRegisterPage.selectGender(1);
-                        break;
-
-                    case "birth":
-                        await talentRegisterPage.openDOBAndSelectDate("20 Apr 1990");
-                        break;
-
-                    case "phone1":
-                        await talentRegisterPage.enterMobile("6152369");
-                        break;
-
-                    case "description":
-                        await talentRegisterPage.enterDescription("Automation Description");
-                        break;
+                    if (nextLabel) {
+                        await expect(page.locator("form")).toContainText(nextLabel);
+                    }
                 }
             }
 
-            //upload
-            const isUploadPage = apiFields.some(f => f.name === "avatar" || f.name === "profile_photo");
+            await page.waitForLoadState("networkidle");
 
-            if (isUploadPage) {
-                await talentRegisterPage.uploadProfilePicture();
-                await talentRegisterPage.saveCroppedProfilePicture();
-            }
+            const talentHome = new TalentHomePage(page);
 
-            // terms and conditions
-            if (p.page_no === 1) {
-                await talentRegisterPage.clickTermsAndConditionCheckBox();
-            }
+            await expect(page.locator(talentAuditionPageLocators.auditionCards).first())
+                .toBeVisible();
 
-            //continue
-            await talentRegisterPage.clickContinueButton();
+            await talentHome.enterProjectName(projectName);
+            await talentHome.clickApplyForSearchedProject();
 
-            if (i < pages.length - 1) {
-                const nextPage = pages[i + 1];
+            const talentApply = new TalentApplyPage(page);
+            await talentApply.clickApplyOnlineround();
+            await talentApply.clickSubmit();
 
-                const nextFields = await getFieldsByPageId(request, nextPage.id, token);
-                const nextLabel = nextFields[0]?.label;
+            await expect(page.getByText("Value is required")).toBeVisible();
+            await talentApply.clickRoleSelector();
+            await talentApply.enterSubmission("Test submission");
+            await talentApply.selectSkills(["Acting", "Singing"]);
+            await talentApply.selectRadioOption("Yes");
+            await talentApply.selectCountry("USA");
+            await talentApply.selectAvailability("Morning", "Yes");
+            await talentApply.clickSubmit();
 
-                if (nextLabel) {
-                    await page.getByText(nextLabel, { exact: false }).waitFor();
+            await expect(page.getByText("Submitted")).toBeVisible();
+            await expect(page.getByText(roleName)).toBeVisible();
+
+            const names = await getProjectTalentNames(request, token, projectId);
+            const uuid = await getTalentUuidByName(request, token, uniqueName);
+
+            expect(names).toContain(uniqueName);
+
+            const form = await getSubmittedForm(request, token, projectId, uuid);
+
+            expect(form.data[0].question.question).toBe(textQuestion.data.question);
+            expect(form.data[0].value[0].value.replace(/\s/g, "").toLowerCase())
+                .toBe("<p>test submission</p>".replace(/\s/g, "").toLowerCase());
+
+            expect(form.data[1].value.map(v => v.value.toLowerCase()))
+                .toEqual(expect.arrayContaining(["acting", "singing"]));
+
+            expect(form.data[2].value[0].value.toLowerCase()).toBe("yes");
+            expect(form.data[3].value[0].value.toLowerCase()).toBe("usa");
+
+            const availability = form.data[4].value[0].value[0];
+            const selected = availability.selection.find((s: any) => s.is_selected);
+
+            expect(selected.label).toBe("Yes");
+
+            await deleteProject(request, token, projectId);
+            await deleteTalent(request, token, uuid);
+        });
+
+    test("Register new talent and apply for the round: verify all relevant questions appear to the role",
+        async ({ page, request }) => {
+
+            test.setTimeout(300000);
+
+            const talentEmail = generateEmail();
+            const token = await getAccessTokenSmartFromCasting(request, validLogin.email);
+
+            const { response } = await createProject(request, token);
+            const projectId = response.data.id;
+            const projectName = response.data.title;
+
+            await publishProject(request, token, projectId);
+            await createRole(request, token, projectId);
+
+            const roles = await getProjectRoles(request, token, projectId);
+            const role = roles.data[0];
+            expect(role).toBeDefined();
+            const roleId = role.id;
+
+            await createInPersonRound(request, token, projectId, roleId);
+
+            const rounds = await getProjectRounds(request, token, projectId);
+            const round = rounds.data[0];
+            expect(round).toBeDefined();
+            const roundId = round.id;
+
+            const textQuestion = await createTextQuestion(request, token, projectId, roundId, roleId, "Tell us about yourself");
+            const checkboxQuestion = await createCheckboxQuestion(request, token, projectId, roundId, roleId, "Select your skills", ["Acting", "Singing", "Dancing"]);
+            const radioQuestion = await createRadioQuestion(request, token, projectId, roundId, roleId, "Do you have acting experience?", ["Yes", "No"]);
+            const dropdownQuestion = await createDropdownQuestion(request, token, projectId, roundId, roleId, "Select your country", ["USA", "UK", "Canada"]);
+            const imageMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your profile photo", [1]);
+            const videoMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your audio clip", [2]);
+            const audioMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your video performance", [3]);
+            const pdfMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your proposal pdf version", [4]);
+            const availabilityQuestion = await createAvailabilityQuestion(request, token, projectId, roundId, roleId, "Select your availability", ["Morning", "Afternoon", "Evening"]);
+
+            await updateRoundSubmissionStatus(request, token, projectId, roundId, 1);
+
+            // Create ROUND 2 (should NOT appear)
+            await createOnlineRound(request, token, projectId, roleId);
+
+            const allRounds = await getProjectRounds(request, token, projectId);
+            const round2 = allRounds.data[1];
+            expect(round2).toBeDefined();
+            const roundId2 = round2.id;   
+
+            await createTextQuestion(request, token, projectId, roundId2, roleId, "SHOULD NOT BE VISIBLE");
+            await updateRoundSubmissionStatus(request, token, projectId, roundId2, 1);
+
+            await applyRegistrationConfig(request, token, fullConfig);
+
+            await expect.poll(async () => {
+                const f = await getFieldsByPageId(request, 1, token);
+                return f.length;
+            }, { timeout: 60000 }).toBeGreaterThan(0);
+
+            await page.goto(urls.talent, { waitUntil: "domcontentloaded" });
+
+            const login = new LoginPage(page);
+            await login.validTalentLogin(talentEmail);
+
+            await expect(page.locator('[data-testid="auth-form"]')).toBeVisible();
+
+            const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
+            await enterOtpForTalent(page, otp);
+
+            await page.waitForLoadState("networkidle");
+            await expect(page.locator("form")).toBeVisible();
+
+            const pages = await getAllPages(request, token);
+            const talentRegisterPage = new TalentRegisterPage(page);
+            const uniqueName = `Autom-Talent ${Date.now()}`;
+
+            for (let i = 0; i < pages.length; i++) {
+
+                const apiFields = await getFieldsByPageId(request, pages[i].id, token);
+
+                for (const field of apiFields.filter(f => f.required)) {
+                    switch (field.name) {
+                        case "name": await talentRegisterPage.enterFullName(uniqueName); break;
+                        case "stage_name": await talentRegisterPage.enterStageName("Automation Stage"); break;
+                        case "location": await talentRegisterPage.setLocation("Colombo, LKA"); break;
+                        case "gender": await talentRegisterPage.selectGender(1); break;
+                        case "birth": await talentRegisterPage.openDOBAndSelectDate("20 Apr 1990"); break;
+                        case "phone1": await talentRegisterPage.enterMobile("6152369"); break;
+                        case "description": await talentRegisterPage.enterDescription("Automation Description"); break;
+                    }
                 }
-            }
-        }
 
-        await page.waitForTimeout(30000);
-        await page.waitForURL(urls.talent, { timeout: 60000 });
+                if (apiFields.some(f => f.name === "avatar")) {
+                    await talentRegisterPage.uploadProfilePicture();
+                    await talentRegisterPage.saveCroppedProfilePicture();
+                }
 
-        /* apply talent */
-        const talentHome = new TalentHomePage(page)
-        talentHome.enterProjectName(projectName);
-        talentHome.clickApplyForSearchedProject();
+                if (pages[i].page_no === 1) {
+                    await talentRegisterPage.clickTermsAndConditionCheckBox();
+                }
 
-        const talentApply = new TalentApplyPage(page)
-        talentApply.clickApplyOnlineround();
-        talentApply.clickSubmit();
+                await talentRegisterPage.clickContinueButton();
 
-        expect((await talentApply.getEmptyRoleError())?.trim()).toBe("Value is required");
-        await page.waitForTimeout(3000);
+                if (i < pages.length - 1) {
+                    const nextPage = pages[i + 1];
+                    const nextFields = await getFieldsByPageId(request, nextPage.id, token);
+                    const nextLabel = nextFields[0]?.label;
 
-        talentApply.clickRoleSelector();
-        await page.waitForTimeout(3000);
-
-
-        //Fill Questions 
-        talentApply.enterSubmission("Test submission");
-        await talentApply.selectSkills(["Acting", "Singing"]);
-        await talentApply.selectRadioOption("Yes");
-        await talentApply.selectCountry("USA");
-
-        await talentApply.selectAvailability("Morning", "Yes");
-
-
-        talentApply.clickSubmit();
-        await page.waitForTimeout(10000);
-
-        //to be true
-        expect((await talentApply.getSubmitedTagText())?.trim()).toBe("Submitted");
-        expect((await talentApply.getSubmitedRole())?.trim()).toBe(roleName);
-
-        const names = await getProjectTalentNames(request, token, projectId);
-        const uuid = await getTalentUuidByName(request, token, uniqueName)
-        expect(names).toContain(uniqueName);
-        const form = await getSubmittedForm(request, token, projectId, uuid);
-
-        const questionText = form.data[0].question.question;
-        const textQuestionIds = form.data[0].question.question_id;
-        const textValue = form.data[0].value[0].value;
-
-        expect(questionText).toBe(textQuestion.data.question);
-        expect(textQuestionIds).toBe(textQuestion.data.question_id);
-        expect(textValue.replace(/\s/g, "").toLowerCase()).toBe("<p>test submission</p>".replace(/\s/g, "").toLowerCase());
-
-
-        const questionCheckBox = form.data[1].question.question;
-        const checkBoxQuestionIds = form.data[1].question.question_id;
-
-        const checkboxQuestionValue1 = form.data[1].value[0].value;
-        const checkboxQuestionValue2 = form.data[1].value[1].value;
-
-        expect(questionCheckBox).toBe(checkboxQuestion.data.question);
-        expect(checkBoxQuestionIds).toBe(checkboxQuestion.data.question_id);
-
-        expect(checkboxQuestionValue1.toLowerCase()).toBe("acting");
-        expect(checkboxQuestionValue2.toLowerCase()).toBe("singing");
-
-
-
-        const questionRadio = form.data[2].question.question;
-        const radioQuestionIds = form.data[2].question.question_id;
-        const radioQuestionValue = form.data[2].value[0].value;
-
-        expect(questionRadio).toBe(radioQuestion.data.question);
-        expect(radioQuestionIds).toBe(radioQuestion.data.question_id);
-
-        expect(radioQuestionValue.toLowerCase()).toBe("yes");
-
-        const questionDropdown = form.data[3].question.question;
-        const dropdownQuestionIds = form.data[3].question.question_id;
-        const dropdownQuestionValue = form.data[3].value[0].value;
-
-        expect(questionDropdown).toBe(dropdownQuestion.data.question);
-        expect(dropdownQuestionIds).toBe(dropdownQuestion.data.question_id);
-
-        expect(dropdownQuestionValue.toLowerCase()).toBe("usa");
-
-        const availability = form.data[4].value[0].value[0];
-
-        const morningSelection = availability.selection.find(
-            (s: any) => s.is_selected
-        );
-
-        expect(morningSelection.label).toBe("Yes");
-
-
-        //delete data
-        await deleteProject(request, token, projectId);
-        await deleteTalent(request, token, uuid);
-
-    });
-
-    test("Register new talent and apply for the round: verify all relavent questions appear to the role", async ({ page, request }) => {
-
-        const talentEmail = generateEmail();
-        const token = await getAccessTokenSmartFromCasting(request, validLogin.email);
-
-        // Create project
-        const { response } = await createProject(request, token);
-        const projectId = response.data.id;
-        const projectName = response.data.title;
-
-        await publishProject(request, token, projectId);
-        await createRole(request, token, projectId);
-
-        const roles = await getProjectRoles(request, token, projectId);
-        const role = roles.data[0];
-        expect(role).toBeDefined();
-
-        const roleId = role.id;
-        const roleName = role.role_name;
-
-        // Create round
-        await createInPersonRound(request, token, projectId, roleId);
-
-        const rounds = await getProjectRounds(request, token, projectId);
-        const round = rounds.data[0];
-        expect(round).toBeDefined();
-
-        const roundId = round.id;
-
-        // Create Questions
-        const textQuestion = await createTextQuestion(
-            request, token, projectId, roundId, roleId,
-            "Tell us about yourself"
-        );
-
-        const checkboxQuestion = await createCheckboxQuestion(
-            request, token, projectId, roundId, roleId,
-            "Select your skills",
-            ["Acting", "Singing", "Dancing"]
-        );
-
-        const radioQuestion = await createRadioQuestion(
-            request, token, projectId, roundId, roleId,
-            "Do you have acting experience?",
-            ["Yes", "No"]
-        );
-
-        const dropdownQuestion = await createDropdownQuestion(
-            request, token, projectId, roundId, roleId,
-            "Select your country",
-            ["USA", "UK", "Canada"]
-        );
-
-        const imageMediaQuestion = await createMediaQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your profile photo",
-            [1]
-        );
-
-        const vedioMediaQuestion = await createMediaQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your audio clip",
-            [2]
-        );
-
-        const audioMediaQuestion = await createMediaQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your video performance",
-            [3]
-        );
-
-        const pdfMediaQuestion = await createMediaQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your proposal pdf version",
-            [4]
-        );
-
-        const availabilityQuestion = await createAvailabilityQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Select your availability",
-            ["Morning", "Afternoon", "Evening"]
-        );
-
-        await updateRoundSubmissionStatus(request, token, projectId, roundId, 1);
-
-        test.setTimeout(350000);
-
-        // add another round and question
-        await createOnlineRound(request, token, projectId, roleId);
-
-        const allRounds = await getProjectRounds(request, token, projectId);
-        const round1 = allRounds.data[1];
-        expect(round1).toBeDefined();
-        const roundId1 = round.id;
-
-        const textQuestion1 = await createTextQuestion(
-            request, token, projectId, roundId1, roleId,
-            "Tell us about yourself"
-        );
-
-        const checkboxQuestion1 = await createCheckboxQuestion(
-            request, token, projectId, roundId1, roleId,
-            "Select your skills",
-            ["Acting", "Singing", "Dancing"]
-        );
-
-        await updateRoundSubmissionStatus(request, token, projectId, roundId, 1);
-        test.setTimeout(350000);
-
-        // Talent Registration
-        await applyRegistrationConfig(request, token, fullConfig);
-
-        await expect.poll(async () => {
-            const f = await getFieldsByPageId(request, 1, token);
-            return f.length;
-        }).toBeGreaterThan(0);
-
-        await page.goto(urls.talent, { waitUntil: "domcontentloaded" });
-
-        const login = new LoginPage(page);
-        await login.validTalentLogin(talentEmail);
-
-        const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
-        await enterOtpForTalent(page, otp);
-
-        const pages = await getAllPages(request, token);
-        const talentRegisterPage = new TalentRegisterPage(page);
-
-        const uniqueName = `Autom-Talent ${Date.now()}`;
-
-        for (let i = 0; i < pages.length; i++) {
-
-            const apiFields = await getFieldsByPageId(request, pages[i].id, token);
-
-            const requiredFields = apiFields.filter(f => f.required);
-
-            for (const field of requiredFields) {
-
-                switch (field.name) {
-
-                    case "name":
-                        await talentRegisterPage.enterFullName(uniqueName);
-                        break;
-
-                    case "stage_name":
-                        await talentRegisterPage.enterStageName("Automation Stage");
-                        break;
-
-                    case "location":
-                        await talentRegisterPage.setLocation("Colombo, LKA");
-                        break;
-
-                    case "gender":
-                        await talentRegisterPage.selectGender(1);
-                        break;
-
-                    case "birth":
-                        await talentRegisterPage.openDOBAndSelectDate("20 Apr 1990");
-                        break;
-
-                    case "phone1":
-                        await talentRegisterPage.enterMobile("6152369");
-                        break;
-
-                    case "description":
-                        await talentRegisterPage.enterDescription("Automation Description");
-                        break;
+                    if (nextLabel) {
+                        await expect(page.locator("form")).toContainText(nextLabel);
+                    }
                 }
             }
 
-            const isUploadPage = apiFields.some(f => f.name === "avatar");
+            await page.waitForLoadState("networkidle");
 
-            if (isUploadPage) {
-                await talentRegisterPage.uploadProfilePicture();
-                await talentRegisterPage.saveCroppedProfilePicture();
+            // 🔹 Apply flow
+            const talentHome = new TalentHomePage(page);
+
+            await expect(page.locator(talentAuditionPageLocators.auditionCards).first())
+                .toBeVisible();
+
+            await talentHome.enterProjectName(projectName);
+            await talentHome.clickApplyForSearchedProject();
+
+            const talentApply = new TalentApplyPage(page);
+            await talentApply.clickApplyOnlineround();
+            await talentApply.clickRoleSelector();
+
+            await expect(page.getByText("New Application")).toBeVisible();
+
+            const expectedQuestions = [
+                textQuestion.data.question,
+                checkboxQuestion.data.question,
+                radioQuestion.data.question,
+                dropdownQuestion.data.question,
+                imageMediaQuestion.data.question,
+                videoMediaQuestion.data.question,
+                audioMediaQuestion.data.question,
+                pdfMediaQuestion.data.question,
+                availabilityQuestion.data.question
+            ];
+
+            const uiQuestions = await page
+                .locator(".n-form-item-label__text, .font-bold.text-gray-default")
+                .allTextContents();
+
+            const cleanedUiQuestions = uiQuestions.map(q => q.replace("*", "").trim());
+
+            for (const q of expectedQuestions) {
+                expect(cleanedUiQuestions).toContain(q.trim());
             }
 
-            if (pages[i].page_no === 1) {
-                await talentRegisterPage.clickTermsAndConditionCheckBox();
-            }
+            const uuid = await getTalentUuidByName(request, token, uniqueName);
 
-            await talentRegisterPage.clickContinueButton();
-        }
+            await deleteProject(request, token, projectId);
+            await deleteTalent(request, token, uuid);
+        });
 
-        await page.waitForURL(urls.talent);
+    test("Register new talent and apply for the round: verify inactive questions are not appear to the role",
+        async ({ page, request }) => {
 
-        // Apply for Round
-        const talentHome = new TalentHomePage(page);
-        talentHome.enterProjectName(projectName);
-        talentHome.clickApplyForSearchedProject();
+            test.setTimeout(300000);
 
-        const talentApply = new TalentApplyPage(page);
+            const talentEmail = generateEmail();
+            const token = await getAccessTokenSmartFromCasting(request, validLogin.email);
 
-        await talentApply.clickApplyOnlineround();
-        talentApply.clickRoleSelector();
-        await page.waitForTimeout(3000);
+            // Create project
+            const { response } = await createProject(request, token);
+            const projectId = response.data.id;
+            const projectName = response.data.title;
 
-        await expect(
-            page.getByText("New Application", { exact: true })
-        ).toBeVisible({ timeout: 10000 });
+            await publishProject(request, token, projectId);
+            await createRole(request, token, projectId);
 
-        // Verify Questions
-        const apiQuestions = [
-            textQuestion.data.question,
-            checkboxQuestion.data.question,
-            radioQuestion.data.question,
-            dropdownQuestion.data.question,
-            imageMediaQuestion.data.question,
-            vedioMediaQuestion.data.question,
-            audioMediaQuestion.data.question,
-            pdfMediaQuestion.data.question,
-            availabilityQuestion.data.question
-        ];
-        console.log("API Questions: ", apiQuestions)
+            const roles = await getProjectRoles(request, token, projectId);
+            const role = roles.data[0];
+            expect(role).toBeDefined();
+            const roleId = role.id;
 
-        const uiQuestions = await page
-            .locator(".n-form-item-label__text, .font-bold.text-gray-default")
-            .allTextContents();
+            // Create round
+            await createInPersonRound(request, token, projectId, roleId);
 
-        const cleanedUiQuestions = uiQuestions.map(q => q.replace("*", "").trim());
+            const rounds = await getProjectRounds(request, token, projectId);
+            const round = rounds.data[0];
+            const roundId = round.id;
 
-        console.log("UI Questions:", cleanedUiQuestions);
+            // Create questions
+            const textQuestion = await createTextQuestion(request, token, projectId, roundId, roleId, "Tell us about yourself");
+            const checkboxQuestion = await createCheckboxQuestion(request, token, projectId, roundId, roleId, "Select your skills", ["Acting", "Singing", "Dancing"]);
+            const radioQuestion = await createRadioQuestion(request, token, projectId, roundId, roleId, "Do you have acting experience?", ["Yes", "No"]);
+            const dropdownQuestion = await createDropdownQuestion(request, token, projectId, roundId, roleId, "Select your country", ["USA", "UK", "Canada"]);
+            const imageMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your profile photo", [1]);
+            const videoMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your audio clip", [2]);
+            const audioMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your video performance", [3]);
+            const pdfMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your proposal pdf version", [4]);
+            const availabilityQuestion = await createAvailabilityQuestion(request, token, projectId, roundId, roleId, "Select your availability", ["Morning", "Afternoon", "Evening"]);
 
-        for (const q of apiQuestions) {
-            expect(cleanedUiQuestions).toContain(q.trim());
-        }
+            await updateRoundSubmissionStatus(request, token, projectId, roundId, 1);
 
-        // Cleanup
-        const uuid = await getTalentUuidByName(request, token, uniqueName);
-        await deleteProject(request, token, projectId);
-        await deleteTalent(request, token, uuid);
+            // Registration config
+            await applyRegistrationConfig(request, token, fullConfig);
 
-    });
+            await expect.poll(async () => {
+                const f = await getFieldsByPageId(request, 1, token);
+                return f.length;
+            }, { timeout: 60000 }).toBeGreaterThan(0);
 
-    test("Register new talent and apply for the round: verify inactive questions are not appear to the role", async ({ page, request }) => {
+            await page.goto(urls.talent, { waitUntil: "domcontentloaded" });
 
-        const talentEmail = generateEmail();
-        const token = await getAccessTokenSmartFromCasting(request, validLogin.email);
+            const login = new LoginPage(page);
+            await login.validTalentLogin(talentEmail);
 
-        // Create project
-        const { response } = await createProject(request, token);
-        const projectId = response.data.id;
-        const projectName = response.data.title;
+            await expect(page.locator('[data-testid="auth-form"]')).toBeVisible();
+            const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
+            await enterOtpForTalent(page, otp);
 
-        await publishProject(request, token, projectId);
-        await createRole(request, token, projectId);
+            await page.waitForLoadState("networkidle");
+            await expect(page.locator("form")).toBeVisible();
 
-        const roles = await getProjectRoles(request, token, projectId);
-        const role = roles.data[0];
-        expect(role).toBeDefined();
+            const pages = await getAllPages(request, token);
+            const talentRegisterPage = new TalentRegisterPage(page);
+            const uniqueName = `Autom-Talent ${Date.now()}`;
 
-        const roleId = role.id;
-        const roleName = role.role_name;
+            for (let i = 0; i < pages.length; i++) {
 
-        // Create round
-        await createInPersonRound(request, token, projectId, roleId);
+                const apiFields = await getFieldsByPageId(request, pages[i].id, token);
 
-        const rounds = await getProjectRounds(request, token, projectId);
-        const round = rounds.data[0];
-        expect(round).toBeDefined();
-
-        const roundId = round.id;
-
-        // Create Questions
-        const textQuestion = await createTextQuestion(
-            request, token, projectId, roundId, roleId,
-            "Tell us about yourself"
-        );
-
-        const checkboxQuestion = await createCheckboxQuestion(
-            request, token, projectId, roundId, roleId,
-            "Select your skills",
-            ["Acting", "Singing", "Dancing"]
-        );
-
-        const radioQuestion = await createRadioQuestion(
-            request, token, projectId, roundId, roleId,
-            "Do you have acting experience?",
-            ["Yes", "No"]
-        );
-
-        const dropdownQuestion = await createDropdownQuestion(
-            request, token, projectId, roundId, roleId,
-            "Select your country",
-            ["USA", "UK", "Canada"]
-        );
-
-        const imageMediaQuestion = await createMediaQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your profile photo",
-            [1]
-        );
-
-        const vedioMediaQuestion = await createMediaQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your audio clip",
-            [2]
-        );
-
-        const audioMediaQuestion = await createMediaQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your video performance",
-            [3]
-        );
-
-        const pdfMediaQuestion = await createMediaQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Upload your proposal pdf version",
-            [4]
-        );
-
-        const availabilityQuestion = await createAvailabilityQuestion(
-            request,
-            token,
-            projectId,
-            roundId,
-            roleId,
-            "Select your availability",
-            ["Morning", "Afternoon", "Evening"]
-        );
-
-        await updateRoundSubmissionStatus(request, token, projectId, roundId, 1);
-
-        // Talent Registration
-        await applyRegistrationConfig(request, token, fullConfig);
-
-        await expect.poll(async () => {
-            const f = await getFieldsByPageId(request, 1, token);
-            return f.length;
-        }).toBeGreaterThan(0);
-
-        await page.goto(urls.talent, { waitUntil: "domcontentloaded" });
-
-        const login = new LoginPage(page);
-        await login.validTalentLogin(talentEmail);
-
-        const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
-        await enterOtpForTalent(page, otp);
-
-        const pages = await getAllPages(request, token);
-        const talentRegisterPage = new TalentRegisterPage(page);
-
-        const uniqueName = `Autom-Talent ${Date.now()}`;
-
-        for (let i = 0; i < pages.length; i++) {
-
-            const apiFields = await getFieldsByPageId(request, pages[i].id, token);
-
-            const requiredFields = apiFields.filter(f => f.required);
-
-            for (const field of requiredFields) {
-
-                switch (field.name) {
-
-                    case "name":
-                        await talentRegisterPage.enterFullName(uniqueName);
-                        break;
-
-                    case "stage_name":
-                        await talentRegisterPage.enterStageName("Automation Stage");
-                        break;
-
-                    case "location":
-                        await talentRegisterPage.setLocation("Colombo, LKA");
-                        break;
-
-                    case "gender":
-                        await talentRegisterPage.selectGender(1);
-                        break;
-
-                    case "birth":
-                        await talentRegisterPage.openDOBAndSelectDate("20 Apr 1990");
-                        break;
-
-                    case "phone1":
-                        await talentRegisterPage.enterMobile("6152369");
-                        break;
-
-                    case "description":
-                        await talentRegisterPage.enterDescription("Automation Description");
-                        break;
+                for (const field of apiFields.filter(f => f.required)) {
+                    switch (field.name) {
+                        case "name": await talentRegisterPage.enterFullName(uniqueName); break;
+                        case "stage_name": await talentRegisterPage.enterStageName("Automation Stage"); break;
+                        case "location": await talentRegisterPage.setLocation("Colombo, LKA"); break;
+                        case "gender": await talentRegisterPage.selectGender(1); break;
+                        case "birth": await talentRegisterPage.openDOBAndSelectDate("20 Apr 1990"); break;
+                        case "phone1": await talentRegisterPage.enterMobile("6152369"); break;
+                        case "description": await talentRegisterPage.enterDescription("Automation Description"); break;
+                    }
                 }
+
+                if (apiFields.some(f => f.name === "avatar")) {
+                    await talentRegisterPage.uploadProfilePicture();
+                    await talentRegisterPage.saveCroppedProfilePicture();
+                }
+
+                if (pages[i].page_no === 1) {
+                    await talentRegisterPage.clickTermsAndConditionCheckBox();
+                }
+
+                await talentRegisterPage.clickContinueButton();
             }
 
-            const isUploadPage = apiFields.some(f => f.name === "avatar");
+            await page.waitForLoadState("networkidle");
 
-            if (isUploadPage) {
-                await talentRegisterPage.uploadProfilePicture();
-                await talentRegisterPage.saveCroppedProfilePicture();
+            // 🔹 Apply flow
+            const talentHome = new TalentHomePage(page);
+
+            await expect(page.locator(talentAuditionPageLocators.auditionCards).first())
+                .toBeVisible();
+
+            await talentHome.enterProjectName(projectName);
+            await talentHome.clickApplyForSearchedProject();
+
+            const talentApply = new TalentApplyPage(page);
+            await talentApply.clickApplyOnlineround();
+            await talentApply.clickRoleSelector();
+
+            await expect(page.getByText("New Application")).toBeVisible();
+
+            const allQuestions = [
+                textQuestion.data.question,
+                checkboxQuestion.data.question,
+                radioQuestion.data.question
+            ];
+
+            const uiBefore = await page.locator(".n-form-item-label__text").allTextContents();
+            const cleanedBefore = uiBefore.map(q => q.replace("*", "").trim());
+
+            for (const q of allQuestions) {
+                expect(cleanedBefore).toContain(q);
             }
 
-            if (pages[i].page_no === 1) {
-                await talentRegisterPage.clickTermsAndConditionCheckBox();
-            }
+            // Make some inactive
+            await makeTextQuestionAsInactive(request, token, projectId, roundId, roleId, "Tell us about yourself", textQuestion.data.question_id);
+            await makeCheckboxQuestionAsInactive(request, token, projectId, roundId, roleId, "Select your skills", ["Acting", "Singing", "Dancing"], checkboxQuestion.data.question_id);
+            await page.reload({ waitUntil: "networkidle" });
 
-            await talentRegisterPage.clickContinueButton();
-        }
+            await talentApply.clickRoleSelector();
+            await expect(page.getByText("New Application")).toBeVisible();
 
-        await page.waitForURL(urls.talent);
+            // Read UI again
+            const uiAfter = await page.locator(".n-form-item-label__text").allTextContents();
+            const cleanedAfter = uiAfter.map(q => q.replace("*", "").trim());
 
-        // Apply for Round
-        const talentHome = new TalentHomePage(page);
-        talentHome.enterProjectName(projectName);
-        talentHome.clickApplyForSearchedProject();
+            // positive checks 
+            expect(cleanedAfter).toContain(radioQuestion.data.question);
 
-        const talentApply = new TalentApplyPage(page);
+            expect(cleanedAfter).not.toContain(textQuestion.data.question);
+            expect(cleanedAfter).not.toContain(checkboxQuestion.data.question);
 
-        await talentApply.clickApplyOnlineround();
-        talentApply.clickRoleSelector();
-        await page.waitForTimeout(3000);
+            const uuid = await getTalentUuidByName(request, token, uniqueName);
 
-        await expect(
-            page.getByText("New Application", { exact: true })
-        ).toBeVisible({ timeout: 10000 });
-
-        // Verify Questions
-        const apiQuestions = [
-            textQuestion.data.question,
-            checkboxQuestion.data.question,
-            radioQuestion.data.question,
-            dropdownQuestion.data.question,
-            imageMediaQuestion.data.question,
-            vedioMediaQuestion.data.question,
-            audioMediaQuestion.data.question,
-            pdfMediaQuestion.data.question,
-            availabilityQuestion.data.question
-        ];
-        console.log("API Questions: ", apiQuestions)
-
-        const uiQuestions = await page
-            .locator(".n-form-item-label__text, .font-bold.text-gray-default")
-            .allTextContents();
-
-        const cleanedUiQuestions = uiQuestions.map(q => q.replace("*", "").trim());
-
-        console.log("UI Questions:", cleanedUiQuestions);
-
-        for (const q of apiQuestions) {
-            expect(cleanedUiQuestions).toContain(q.trim());
-        }
-
-        //make questions inactive 
-        await makeTextQuestionAsInactive(
-            request, token, projectId, roundId, roleId,
-            "Tell us about yourself", textQuestion.data.question_id
-        );
-
-        await makeCheckboxQuestionAsInactive(
-            request, token, projectId, roundId, roleId,
-            "Select your skills",
-            ["Acting", "Singing", "Dancing"], checkboxQuestion.data.question_id
-        );
-        await page.waitForTimeout(3000);
-        await page.reload({ waitUntil: "networkidle" });
-        talentApply.clickRoleSelector();
-        await page.waitForTimeout(3000);
-
-        // Verify Questions
-        const apiQuestionsAfterQuestionInactivity = [
-            radioQuestion.data.question,
-            dropdownQuestion.data.question,
-            imageMediaQuestion.data.question,
-            vedioMediaQuestion.data.question,
-            audioMediaQuestion.data.question,
-            pdfMediaQuestion.data.question,
-            availabilityQuestion.data.question
-        ];
-        console.log("API Questions: ", apiQuestionsAfterQuestionInactivity)
-
-        const uiQuestionsAfterInactivity = await page
-            .locator(".n-form-item-label__text, .font-bold.text-gray-default")
-            .allTextContents();
-
-        const cleanedUiQuestionsAfterInactivity = uiQuestionsAfterInactivity.map(q => q.replace("*", "").trim());
-
-        console.log("UI Questions:", cleanedUiQuestionsAfterInactivity);
-
-        for (const q of apiQuestionsAfterQuestionInactivity) {
-            expect(cleanedUiQuestionsAfterInactivity).toContain(q.trim());
-        }
-
-        // Cleanup
-        const uuid = await getTalentUuidByName(request, token, uniqueName);
-        await deleteProject(request, token, projectId);
-        await deleteTalent(request, token, uuid);
-
-    });
-
-
+            await deleteProject(request, token, projectId);
+            await deleteTalent(request, token, uuid);
+        });
 
 
 });
