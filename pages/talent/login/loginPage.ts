@@ -1,4 +1,4 @@
-import { Page } from "@playwright/test";
+import { expect, Page } from "@playwright/test";
 import { talentloginPageLocators } from "./loginPageLocators";
 import { urls } from "@/utils/urls";
 
@@ -13,6 +13,7 @@ export default class loginPage {
   }
 
   async enterEmail(email: string) {
+    await expect(this.page.locator(talentloginPageLocators.emailInput)).toBeVisible();
     await this.page.locator(talentloginPageLocators.emailInput).fill(email);
   }
 

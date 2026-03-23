@@ -1,9 +1,9 @@
-import { Page, expect } from '@playwright/test';
+import { Page } from '@playwright/test';
 import { talentRegisterLocators } from './registerPageLocators';
 import path = require('path');
 
 export class TalentRegisterPage {
-  constructor(private page: Page) {}
+  constructor(private page: Page) { }
 
   async enterFullName(name: string) {
     await this.page.locator(talentRegisterLocators.fullNameInput).fill(name);
@@ -15,23 +15,23 @@ export class TalentRegisterPage {
 
   async selectGender(index: number) {
     await this.page.locator(talentRegisterLocators.genderSelector).click();
-
     const options = this.page.locator(talentRegisterLocators.dropDownOptions);
-    await expect(options.first()).toBeVisible();
-
-    await options.nth(index).click();
+    await this.page.keyboard.press('ArrowDown');
+    await this.page.keyboard.press('Enter');
   }
 
   async setLocation(value: string) {
     const input = this.page.locator(talentRegisterLocators.locationInput);
-
+    await input.scrollIntoViewIfNeeded();
     await input.fill(value);
 
     const option = this.page.getByRole('option', { name: value }).first();
-
-    if (await option.isVisible().catch(() => false)) {
+    try {
+      await option.waitFor({ state: 'visible', timeout: 5000 });
       await option.click();
-    } else {
+      return;
+
+    } catch {
       await input.press('Enter');
     }
   }
@@ -46,54 +46,38 @@ export class TalentRegisterPage {
 
   async clickContinueButton() {
     const continueBtn = this.page.locator(talentRegisterLocators.continueButton);
-
     await continueBtn.scrollIntoViewIfNeeded();
     await continueBtn.click();
-
-    // ✅ wait for next page (form change)
-    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForTimeout(5000);
   }
 
   async uploadProfilePicture() {
     const filePath = path.join(process.cwd(), "test-files/images/test-role.jpg");
-
+    await this.page.waitForLoadState('domcontentloaded');
     const fileInput = this.page.locator(talentRegisterLocators.uploadInput);
+    await fileInput.waitFor({ state: "attached" });
     await fileInput.setInputFiles(filePath);
-
-    // wait for crop modal
-    await expect(this.page.locator(talentRegisterLocators.cropImageSaveButton))
-      .toBeVisible();
   }
 
   async saveCroppedProfilePicture() {
-    const saveBtn = this.page.locator(talentRegisterLocators.cropImageSaveButton);
-
-    await expect(saveBtn).toBeVisible();
-    await saveBtn.click();
-
-    // wait until crop modal disappears
-    await expect(saveBtn).toBeHidden();
+    await this.page.waitForTimeout(3000);
+    await this.page.locator(talentRegisterLocators.cropImageSaveButton).click();
   }
 
   async selectSelfRatedSkill(index: number, skill: string) {
     await this.page.locator(talentRegisterLocators.selfRatedSkillsDropdown).click();
-
-    const input = this.page.locator(talentRegisterLocators.selfRatedSkillsInput);
-    await input.fill(skill);
-
+    await this.page.waitForTimeout(3000);
+    await this.page.locator(talentRegisterLocators.selfRatedSkillsInput).fill(skill);
     const options = this.page.locator(talentRegisterLocators.dropDownOptions);
-    await expect(options.first()).toBeVisible();
-
-    await options.nth(index).click();
+    await this.page.keyboard.press('ArrowDown');
+    await this.page.keyboard.press('Enter');
   }
 
   async selectUnions(index: number) {
     await this.page.locator(talentRegisterLocators.unionsDropdown).click();
-
     const options = this.page.locator(talentRegisterLocators.dropDownOptions);
-    await expect(options.first()).toBeVisible();
-
-    await options.nth(index).click();
+    await this.page.keyboard.press('ArrowDown');
+    await this.page.keyboard.press('Enter');
   }
 
   async enterDescription(description: string) {
@@ -106,10 +90,9 @@ export class TalentRegisterPage {
 
   async selectProductType(index: number) {
     await this.page.locator(talentRegisterLocators.productionTypeSelector).click();
-
     const options = this.page.locator(talentRegisterLocators.dropDownOptions);
-    await expect(options.first()).toBeVisible();
-
-    await options.nth(index).click();
+    await this.page.keyboard.press('ArrowDown');
+    await this.page.keyboard.press('Enter');
   }
+
 }

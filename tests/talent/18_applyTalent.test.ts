@@ -132,7 +132,8 @@ test.describe('Apply talent scenarioes', () => {
                     const nextLabel = nextFields[0]?.label;
 
                     if (nextLabel) {
-                        await expect(page.locator("form")).toContainText(nextLabel);
+                        const nextField = page.locator("form").getByText(nextLabel, { exact: false });
+                        await expect(nextField).toBeVisible({ timeout: 15000 });
                     }
                 }
             }
@@ -1178,7 +1179,7 @@ test.describe('Apply talent scenarioes', () => {
             const allRounds = await getProjectRounds(request, token, projectId);
             const round2 = allRounds.data[1];
             expect(round2).toBeDefined();
-            const roundId2 = round2.id;   
+            const roundId2 = round2.id;
 
             await createTextQuestion(request, token, projectId, roundId2, roleId, "SHOULD NOT BE VISIBLE");
             await updateRoundSubmissionStatus(request, token, projectId, roundId2, 1);

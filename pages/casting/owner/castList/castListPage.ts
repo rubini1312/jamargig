@@ -62,11 +62,18 @@ export default class CastListPage {
         const name = this.page.locator(castListLocators.addwcl_nameInput);
         await name.fill(wclName);
     }
-
     async selectRole(wclRoleName: string) {
-        await this.page.locator(castListLocators.addwcl_roleDropdown).click();
-        await this.page.locator(castListLocators.addwcl_roleDropdownInput).fill(wclRoleName);
-        await this.page.getByText(wclRoleName).click();
+        const dropdown = this.page.locator(castListLocators.addwcl_roleDropdown);
+        const input = this.page.locator(castListLocators.addwcl_roleDropdownInput);
+        await dropdown.click();
+
+        await input.fill(wclRoleName);
+        const option = this.page.locator('.n-base-select-option', {
+            hasText: wclRoleName
+        }).first();
+
+        await expect(option).toBeVisible({ timeout: 10000 });
+        await option.click();
     }
 
     async clickAdd() {
