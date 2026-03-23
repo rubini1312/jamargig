@@ -342,7 +342,6 @@ export default class RolePage {
 
     async submitNewRole() {
         await this.page.locator(roleLocators.roleNewSubmitButton).click();
-
         const modal = this.page.locator('[data-testid="role-new-modal"]');
         await expect(modal).toBeHidden({ timeout: 10000 });
     }

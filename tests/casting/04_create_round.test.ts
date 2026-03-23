@@ -75,8 +75,6 @@ test.describe('Casting owner create round scenarios', () => {
             expect(msg).toBeGreaterThanOrEqual(3);
         }
 
-        // Close the modal
-        await roundPage.closeNewRoundModal();
     });
 
     // =========================================================

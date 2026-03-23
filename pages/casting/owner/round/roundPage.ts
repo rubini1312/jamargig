@@ -620,7 +620,7 @@ export default class RoundPage {
     }
 
     async editRound() {
-        await this.page.locator(roundLocators.editRound_name).click();
+       await this.page.locator(roundLocators.editRound_name).click();
         await this.page.locator(roundLocators.roundNameInput_editable).press('Control+A');
         await this.page.locator(roundLocators.roundNameInput_editable).press('Delete');
         await this.page.locator(roundLocators.roundNameInput_editable).fill('Edited Automated Round');
@@ -633,7 +633,7 @@ export default class RoundPage {
         await this.page.getByText("About the round").waitFor({ timeout: 30000 });
     }
 
-    async saveEditedRoundData() {
+        async saveEditedRoleData() {
         await this.page.locator(roundLocators.editRound_saveBtn).click();
     }
 
@@ -641,25 +641,6 @@ export default class RoundPage {
         await expect(
             this.page.locator('[data-testid="round-name-content"]')
         ).toHaveText(editedRoleName);
-    }
-
-    async ensureRoundVisible(roundName: string): Promise<void> {
-        await expect(async () => {
-            await this.searchRound(roundName);
-
-            const row = this.page.locator('[data-col-key="round_name"]', {
-                hasText: roundName
-            });
-
-            if (!(await row.first().isVisible().catch(() => false))) {
-                await this.page.reload();
-                await this.page.waitForLoadState('networkidle');
-                await this.searchRound(roundName);
-            }
-
-            await expect(row).toBeVisible();
-
-        }).toPass({ timeout: 15000 });
     }
 
 }

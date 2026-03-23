@@ -85,7 +85,5 @@ test.describe('Casting owner create role scenarios', () => {
             expect(msg).toBeGreaterThanOrEqual(0);
         }
 
-        // Close the modal
-        await rolePage.closeNewRoleModal();
     });
 });
