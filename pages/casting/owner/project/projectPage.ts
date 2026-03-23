@@ -185,7 +185,7 @@ export default class ProjectPage {
   async openSearchedProject(name: string): Promise<void> {
     await expect(async () => {
 
-      // 🔄 refresh to get latest data (important for API-created projects)
+      // refresh to get latest data (important for API-created projects)
       await this.page.reload();
       await this.page.waitForLoadState('networkidle');
 
@@ -198,19 +198,19 @@ export default class ProjectPage {
 
       await searchInput.fill(name);
 
-      // ✅ wait for result
+      // wait for result
       const projectResult = this.page.locator('[data-testid^="project-list-card-"]', {
         hasText: name,
       });
 
       await expect(projectResult).toBeVisible();
 
-      // ✅ click project
+      // click project
       await projectResult.first().click();
 
     }).toPass({ timeout: 20000 });
 
-    // ✅ ensure navigation happened
+    // ensure navigation happened
     await expect(this.page).toHaveURL(/\/projects\/\d+/);
     
   }

@@ -342,8 +342,9 @@ export default class RolePage {
 
     async submitNewRole() {
         await this.page.locator(roleLocators.roleNewSubmitButton).click();
-        await this.page.locator(roleLocators.roleNameInput).waitFor({ state: "detached", timeout: 7000 }).catch(() => { });
-        await this.page.waitForTimeout(5000);
+
+        const modal = this.page.locator('[data-testid="role-new-modal"]');
+        await expect(modal).toBeHidden({ timeout: 10000 });
     }
 
     async closeNewRoleModal() {
