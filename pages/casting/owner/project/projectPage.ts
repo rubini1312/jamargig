@@ -231,6 +231,8 @@ export default class ProjectPage {
 
     await dropdown.click();
   }
+
+  
   async clickDeleteConfirmationBtn() {
     await this.page.locator(projectLocators.deleteConfirmationBtn).click();
 

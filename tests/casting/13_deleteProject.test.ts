@@ -68,7 +68,7 @@
 //         const rolePage = new RolePage(page);
 
 //         await projectPage.openSearchedProject(projectName);
-//         await projectPage.clickDeleteProject();
+//         await projectPage.clickDeleteProject(projectName, projectId);
 //         await projectPage.clickDeleteConfirmationBtn();
 
 //         await expect(page.locator(roundLocators.deleteConfirmationBtn)).toBeHidden();
