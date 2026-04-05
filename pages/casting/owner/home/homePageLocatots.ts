@@ -1,5 +1,7 @@
 export const logoutLocators = {
-  profileButton: '.profile-button',
+
+  profileButton: "//div[@role='button']//img",
   logoutButton: 'button:has-text("Logout")',
+  manageAccountBtn : "//a[@href='/profile']"
   
 };

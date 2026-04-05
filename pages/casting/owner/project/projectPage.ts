@@ -4,7 +4,7 @@ import { projectLocators } from "./projectPageLocators";
 export default class ProjectPage {
   constructor(public page: Page) { }
 
-  // ---------- OPEN CREATE MENU (FIXED) ----------
+  // ---------- OPEN CREATE MENU ----------
   async openCreateMenu() {
     const btn = this.page.locator(projectLocators.createBtn);
 

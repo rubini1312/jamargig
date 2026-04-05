@@ -2,8 +2,8 @@ import { generateEmail } from "./random-data";
 
 export const validLogin = {
   email: "automation@example.com",
-  password : "@ut0maT3123",
-  tenant_id : "63e31adc898a4"
+  password: "@ut0maT31234",
+  tenant_id: "63e31adc898a4"
 };
 
 export const invalidPasswordLogin = {
@@ -13,11 +13,11 @@ export const invalidPasswordLogin = {
 
 
 export const emptyLogin = {
-  email:" ",
+  email: " ",
   password: " ",
 };
 
 export const invalidEmailLogin = {
   invalidformatemail: Math.random().toString(36).slice(2),
-  unAuthorizedEmail : generateEmail()
+  unAuthorizedEmail: generateEmail()
 };

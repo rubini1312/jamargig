@@ -124,4 +124,16 @@ export default class loginPage {
     await this.page.locator(loginLocators.valueRequiredError).waitFor({ state: "visible", timeout: 10000 });
     return this.page.locator(loginLocators.valueRequiredError).textContent();
   }
+
+
+  async clickOnForgotPasswordLink() {
+
+    const resetPassword = this.page.locator(loginLocators.forgotPasswordLink);
+
+    await expect(resetPassword).toBeEnabled();
+
+    await this.page.locator(loginLocators.forgotPasswordLink).click();
+    await expect(this.page.getByText("Enter your email to send a login token")).toBeVisible();
+
+  }
 }

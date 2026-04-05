@@ -4,5 +4,6 @@ export const loginLocators = {
     logInButton: '[data-testid="login-submit-button"]',
     enterOtpInput: '[data-testid="twofa-pin-input-input-0"]',
     unAuthorizedLoginAlert: '[role="alert"]',
-    valueRequiredError: ".n-form-item-feedback__line"
+    valueRequiredError: ".n-form-item-feedback__line",
+    forgotPasswordLink : '[data-testid="login-reset-password-link"]'
 }

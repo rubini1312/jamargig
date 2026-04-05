@@ -12,9 +12,10 @@ const API_TOKEN = process.env.MAILTRAP_API_TOKEN!;
 export async function getOtpFromMailtrap(
   request: APIRequestContext,
   email: string,
-  timeoutMs = 30000
-): Promise<string> {
+  timeoutMs = 30000,
+  shouldExist = true
 
+): Promise<string | null> {
   const startTime = Date.now();
 
   while (Date.now() - startTime < timeoutMs) {
@@ -73,10 +74,13 @@ export async function getOtpFromMailtrap(
     await wait(3000);
   }
 
-  throw new Error("OTP not received from Mailtrap");
+  if (shouldExist) {
+    throw new Error("OTP not received from Mailtrap");
+  }
+
+  return null;
+
 }
-
-
 
 function wait(ms: number) {
   return new Promise(res => setTimeout(res, ms));
@@ -130,4 +134,31 @@ export async function enterOtpForTalent(page: Page, code: string) {
   }
 
   console.log("OTP entered");
+}
+
+export async function enterOtpForCastingResetPassword(page: Page, code: string) {
+  const digits = code.split("");
+
+  for (let i = 0; i < digits.length; i++) {
+    const box = page.locator(`[data-testid="reset-passcode-input-input-${i}"]`);
+    await box.waitFor({ state: "visible", timeout: 15000 });
+    await box.fill(digits[i]);
+  }
+
+  console.log("OTP entered");
+
+  const verifyBtn = page.locator('button:has-text("Verify")');
+
+  if (await verifyBtn.isVisible().catch(() => false)) {
+    await verifyBtn.click();
+    await page.waitForTimeout(30000);
+
+  }
+
+  // wait until really on projects page
+  await page.waitForURL("**/projects", { timeout: 60000 });
+
+  // wait a bit more for session to settle
+  await page.waitForLoadState("domcontentloaded");
+  await page.waitForTimeout(1500);
 }
