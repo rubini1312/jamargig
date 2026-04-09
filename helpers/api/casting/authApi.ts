@@ -112,10 +112,14 @@ export async function getAccessTokenSmartFromCastingForDynamicUser(
   const verifyBody = await verifyRes.json();
   return verifyBody.access_token;
 }
-export async function changePassword(request: APIRequestContext,
-  token: string, newPassword: string) {
-  return await request.patch(
-    urls.casting_base + + "team/me",
+
+export async function changePassword(
+  request: APIRequestContext,
+  token: string,
+  newPassword: string
+) {
+  const response = await request.patch(
+    urls.casting_base + "team/me",
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -126,4 +130,19 @@ export async function changePassword(request: APIRequestContext,
       },
     }
   );
+
+  // Print basic response info
+  console.log("Status:", response.status());
+  console.log("Status Text:", response.statusText());
+
+  // Print response body (JSON or text)
+  try {
+    const body = await response.json();
+    console.log("Response Body:", JSON.stringify(body, null, 2));
+  } catch (err) {
+    const text = await response.text();
+    console.log("Response Text:", text);
+  }
+
+  return response;
 }

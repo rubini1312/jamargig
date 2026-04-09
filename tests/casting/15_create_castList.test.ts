@@ -6,7 +6,7 @@ import { createProject, deleteProject, publishProject } from "@/helpers/api/cast
 import { createRole, deleteAllRoles, getProjectRoles } from "@/helpers/api/casting/roleApi";
 import ProjectPage from "@/pages/casting/owner/project/projectPage";
 import { getAccessTokenSmartFromCasting } from "@/helpers/api/casting/authApi";
-import CastListPage from "@/pages/casting/owner/castList/castListPage";
+import CastListPage from "@/pages/casting/owner/workingCastList/workingCastListPage";
 
 test.describe('Casting owner create wcl scenarios', () => {
     let token: string;

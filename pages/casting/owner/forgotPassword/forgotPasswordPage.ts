@@ -30,8 +30,8 @@ export default class ForgotpasswordPage {
         await this.page.locator(forgotPasswordLocators.resetPassword_newPassword).fill(password);
         await this.page.locator(forgotPasswordLocators.resetPassword_confirmPassword).fill(password);
         await this.page.locator(forgotPasswordLocators.savePasswordButton).click();
-        await expect(this.page.getByText("Save Password")).toBeHidden();
-
+        const saveBtn = this.page.getByRole('button', { name: 'Save Password' });
+        await expect(saveBtn).toBeDisabled();
     }
 
     async resetPasswordWithInvalidPassowrdsAndValidation(password: string, confirmPassword: string, expectedMsg: string, count: number) {

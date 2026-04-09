@@ -1,5 +1,5 @@
 import { expect, Page } from "@playwright/test";
-import { castListLocators } from "./castListLocators";
+import { castListLocators } from "./workingCastListLocators";
 
 export default class CastListPage {
     constructor(public page: Page) { }

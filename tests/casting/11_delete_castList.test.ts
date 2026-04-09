@@ -17,7 +17,7 @@ import { applyRegistrationConfig, deleteTalent, getFieldsByPageId, getTalentUuid
 import { apiConfig } from "@/test-data/dataModelConfig";
 import { createTextQuestion } from "@/helpers/api/casting/questionApi";
 import { createWorkingCastList } from "@/helpers/api/casting/castListApi";
-import CastListPage from "@/pages/casting/owner/castList/castListPage";
+import CastListPage from "@/pages/casting/owner/workingCastList/workingCastListPage";
 
 test.describe('Casting owner delete round scenarios', () => {
     let token: string;

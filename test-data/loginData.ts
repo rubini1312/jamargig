@@ -2,7 +2,7 @@ import { generateEmail } from "./random-data";
 
 export const validLogin = {
   email: "automation@example.com",
-  password: "@ut0maT31234",
+  password: "@ut0maT3123",
   tenant_id: "63e31adc898a4"
 };
 

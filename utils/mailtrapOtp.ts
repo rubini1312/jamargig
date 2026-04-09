@@ -55,7 +55,7 @@ export async function getOtpFromMailtrap(
       );
 
       if (!bodyRes.ok()) {
-        await wait(5000);
+        await wait(10000);
         continue;
       }
 
