@@ -9,7 +9,7 @@ import { validLogin } from "@/test-data/loginData";
 import { changePassword, getAccessTokenSmartFromCastingForDynamicUser } from "@/helpers/api/casting/authApi";
 import { emptyResetPasswords, emptyNewPassword, emptyConfirmPassword, mistmatchPasswords, resetPassword } from "@/test-data/resetPasswordData";
 
-test.describe("Casting owner Change Password Scenarioes", () => {
+test.describe("Casting owner Change Password Scenarios", () => {
 
     let token: string;
     test.beforeEach(async ({ page, request }) => {

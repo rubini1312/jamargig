@@ -13,7 +13,7 @@ import { getAccessTokenSmartFromCasting } from "@/helpers/api/casting/authApi";
 import { getTalentAccessToken } from "@/helpers/api/talent/authApi";
 import { talentRegisterLocators } from "@/pages/talent/register/registerPageLocators";
 
-test.describe('Talent registration scenarioes', () => {
+test.describe('Talent registration scenarios', () => {
   let token: string;
   let projectId: number;
   let uniqueName: string;

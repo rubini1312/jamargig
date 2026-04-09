@@ -5,7 +5,7 @@ import { urls } from "@/utils/urls";
 import HomePage from "@/pages/casting/owner/home/homePage";
 import ManageAccountPage from "@/pages/casting/owner/manageAccount/manageAccountPage";
 
-test.describe("Casting owner Change Password Scenarioes", () => {
+test.describe("Casting owner Change Password Scenarios", () => {
 
     test.beforeEach(async ({ page, request }) => {
         await page.goto(urls.casting);
