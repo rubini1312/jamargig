@@ -10,7 +10,7 @@ import { changePassword, getAccessTokenSmartFromCastingForDynamicUser } from "@/
 import { emptyResetPasswords, emptyNewPassword, emptyConfirmPassword, mistmatchPasswords, resetPassword } from "@/test-data/resetPasswordData";
 import { updateCastingSettings } from "@/helpers/api/casting/settingsApi";
 
-test.describe("Casting owner Reset Password Scenarioes", () => {
+test.describe('Casting owner Change Password Scenarios', () => {
 
     let token: string;
 

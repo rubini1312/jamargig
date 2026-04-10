@@ -16,7 +16,7 @@ import { TalentApplyPage } from "@/pages/talent/apply/applyRoundPage";
 import { getAccessTokenSmartFromCasting } from "@/helpers/api/casting/authApi";
 import { talentAuditionPageLocators } from "@/pages/talent/audition/auditionPageLocators";
 
-test.describe('Apply talent scenarioes', () => {
+test.describe('Apply talent scenarios', () => {
 
     let token: string;
 
