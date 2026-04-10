@@ -11,6 +11,24 @@ import { createProject } from "@/helpers/api/casting/projectApi";
 
 test.describe("Casting owner create project flow", () => {
 
+  const validImageFiles = [
+    { name: "jpg", file: "test-role.jpg" },
+    { name: "png", file: "test-pngFile.png" },
+    { name: "gif", file: "test-gifFile.gif" },
+    { name: "webp", file: "test-webpFile.webp" },
+  ];
+
+  const inValidFiles = [
+    { name: "ico", path: "test-files/images/test-icoFile.ico" },
+    { name: "svg", path: "test-files/images/test-svgFile.svg" },
+    { name: "tiff", path: "test-files/images/test-tiffFile.tiff" },
+    { name: "mp3", path: "test-files/audioes/file_example_MP3_700KB.mp3" },
+    { name: "mp4", path: "test-files/videos/file_example_MP4_1920_18MG.mp4" },
+    { name: "pdf", path: "test-files/pdfs/file-sample_150kB.pdf" },
+
+  ];
+
+
   test.beforeEach(async ({ page, request }) => {
     await page.goto(urls.casting);
     const login = new LoginPage(page);
@@ -106,5 +124,65 @@ test.describe("Casting owner create project flow", () => {
     await expect(page.locator(`text=${projectData.title}`)).toBeVisible();
 
   });
+
+  // =========================================================
+  for (const img of validImageFiles) {
+
+    test(`Upload image and verify preview appears - ${img.name}`, async ({ page }) => {
+
+      const projectPage = new ProjectPage(page);
+      await projectPage.openCreateMenu();
+      await projectPage.selectNewProject();
+
+      // Upload file
+      await page.setInputFiles(
+        'input[type="file"]',
+        `test-files/images/${img.file}`
+      );
+
+      // Preview image
+      const previewImage = page.locator(
+        '[data-testid="project-image-image-preview"]'
+      );
+
+      await expect(previewImage).toBeVisible();
+      await expect(previewImage).toHaveAttribute("src", /.+/);
+
+      //s Container state
+      const container = page.locator('[data-testid="project-image-dragger"]');
+      await expect(container).toHaveClass(/has-preview/);
+    });
+  }
+
+  // =========================================================
+  for (const file of inValidFiles) {
+
+    test(`Upload invalid file - ${file.name} and verify preview NOT shown`, async ({ page }) => {
+
+      const projectPage = new ProjectPage(page);
+      await projectPage.openCreateMenu();
+      await projectPage.selectNewProject();
+
+      // Upload invalid file
+      await page.setInputFiles('input[type="file"]', file.path);
+
+      const previewImage = page.locator(
+        '[data-testid="project-image-image-preview"]'
+      );
+
+      // Preview should NOT appear
+      await expect(previewImage).toHaveCount(0);
+
+      // Container should NOT have preview state
+      const container = page.locator('[data-testid="project-image-dragger"]');
+      await expect(container).not.toHaveClass(/has-preview/);
+
+      const errorMsg = page.locator("text=Invalid file");
+      if (await errorMsg.isVisible()) {
+        await expect(errorMsg).toBeVisible();
+      }
+
+    });
+  }
 
 });

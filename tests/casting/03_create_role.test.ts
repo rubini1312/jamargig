@@ -15,6 +15,23 @@ test.describe('Casting owner create role scenarios', () => {
     let projectId: number;
     let projectName: string;
 
+    const validImageFiles = [
+        { name: "jpg", file: "test-role.jpg" },
+        { name: "png", file: "test-pngFile.png" },
+        { name: "gif", file: "test-gifFile.gif" },
+        { name: "webp", file: "test-webpFile.webp" },
+    ];
+
+    const inValidFiles = [
+        { name: "ico", path: "test-files/images/test-icoFile.ico" },
+        { name: "svg", path: "test-files/images/test-svgFile.svg" },
+        { name: "tiff", path: "test-files/images/test-tiffFile.tiff" },
+        { name: "mp3", path: "test-files/audioes/file_example_MP3_700KB.mp3" },
+        { name: "mp4", path: "test-files/videos/file_example_MP4_1920_18MG.mp4" },
+        { name: "pdf", path: "test-files/pdfs/file-sample_150kB.pdf" },
+
+    ];
+
     test.beforeAll(async ({ request }) => {
         token = await getAccessTokenSmartFromCasting(request, validLogin.email);
         const { response } = await createProject(request, token);
@@ -86,4 +103,69 @@ test.describe('Casting owner create role scenarios', () => {
         }
 
     });
+
+
+    // =========================================================
+    for (const img of validImageFiles) {
+
+        test(`Upload image and verify preview appears - ${img.name}`, async ({ page }) => {
+
+            const rolePage = new RolePage(page);
+            const projectPage = new ProjectPage(page);
+
+            await projectPage.openSearchedProject(projectName);
+
+            await rolePage.gotoRolesTab();
+            await rolePage.openCreateRole();
+
+            // Upload file
+            await page.setInputFiles(
+                'input[type="file"]',
+                `test-files/images/${img.file}`
+            );
+
+            // Verify preview image
+            const previewImage = page.locator(
+                '[data-testid="role-image-image-preview"]'
+            );
+
+            await expect(previewImage).toBeVisible();
+            await expect(previewImage).toHaveAttribute("src", /.+/);
+
+            // Verify container state
+            const container = page.locator('[data-testid="role-image-dragger"]');
+            await expect(container).toHaveClass(/has-preview/);
+        });
+    }
+
+    // =========================================================
+    for (const file of inValidFiles) {
+
+        test(`Upload invalid file - ${file.name} and verify preview NOT shown`, async ({ page }) => {
+
+            const projectPage = new ProjectPage(page);
+            await projectPage.openCreateMenu();
+            await projectPage.selectNewProject();
+
+            // Upload invalid file
+            await page.setInputFiles('input[type="file"]', file.path);
+
+            const previewImage = page.locator(
+                '[data-testid="role-image-image-preview"]'
+            );
+
+            // Preview should NOT appear
+            await expect(previewImage).toHaveCount(0);
+
+            // Container should NOT have preview state
+            const container = page.locator('[data-testid="project-image-dragger"]');
+            await expect(container).not.toHaveClass(/has-preview/);
+
+            const errorMsg = page.locator("text=Invalid file");
+            if (await errorMsg.isVisible()) {
+                await expect(errorMsg).toBeVisible();
+            }
+
+        });
+    }
 });

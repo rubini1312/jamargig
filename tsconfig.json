@@ -2,12 +2,29 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["*"],
-      "@utils/*": ["utils/*"],
-      "@api/*": ["helpers/api/*"],
-      "@pages/*": ["pages/*"],
-      "types": ["node", "playwright"]
+      "@/*": [
+        "*"
+      ],
+      "@utils/*": [
+        "utils/*"
+      ],
+      "@api/*": [
+        "helpers/api/*"
+      ],
+      "@pages/*": [
+        "pages/*"
+      ],
+      "types": [
+        "node",
+        "@playwright/test"
+      ]
     }
   },
-  "include": ["tests", "pages", "utils", "helpers", "test-data/dataModelConfig.ts"]
+  "include": [
+    "tests",
+    "pages",
+    "utils",
+    "helpers",
+    "test-data/dataModelConfig.ts"
+  ]
 }
