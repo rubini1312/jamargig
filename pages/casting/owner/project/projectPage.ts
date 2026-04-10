@@ -212,29 +212,78 @@ export default class ProjectPage {
 
     // ensure navigation happened
     await expect(this.page).toHaveURL(/\/projects\/\d+/);
+
+  }
+
+  async searchProject(name: string): Promise<void> {
+    await expect(async () => {
+
+      await this.page.reload();
+      await this.page.waitForLoadState('networkidle');
+
+      const searchIcon = this.page.locator(projectLocators.projectSearchIcon);
+      await expect(searchIcon).toBeVisible();
+      await searchIcon.hover();
+
+      const searchInput = this.page.locator('input[placeholder*="Search"]:visible');
+      await expect(searchInput).toBeVisible();
+
+      await searchInput.fill(name);
+
+      // wait for result
+      const projectResult = this.page.locator('[data-testid^="project-list-card-"]', {
+        hasText: name,
+      });
+
+      await expect(projectResult).toBeVisible();
+    }).toPass({ timeout: 20000 });
+
+  }
+
+  async verifyDeletedProject(name: string): Promise<void> {
+
+    await this.page.reload();
+    await this.page.waitForLoadState('networkidle');
+
+    const searchIcon = this.page.locator(projectLocators.projectSearchIcon);
+    await expect(searchIcon).toBeVisible();
+    await searchIcon.hover();
+
+    const searchInput = this.page.locator('input[placeholder*="Search"]:visible');
+    await expect(searchInput).toBeVisible();
+
+    await searchInput.fill(name);
+
+    await expect(this.page.locator(projectLocators.emptyProjectsMessage)).toContainText('No projects to display');
+
+
+  }
+
+  async clickDeleteProject(projectName: string) {
+
+    const projectCard = this.page
+      .locator('[data-testid^="project-list-card-"]')
+      .filter({ hasText: projectName });
+
+    await expect(projectCard).toHaveCount(1);
+    await this.page.waitForTimeout(10000);
+
+    const dropdown = await this.page.locator("div[class='n-element dropdown-action tertiary']");
+    await projectCard.hover();
+
+    await dropdown.highlight();
+    await dropdown.click({ force: true });
+    await expect(this.page.getByText('Delete')).toBeVisible();
     
   }
 
-  async clickDeleteProject(projectName: string, projectId: number) {
-
-    const projectCard = this.page
-      .locator('[data-testid="project-list-content"]')
-      .filter({ hasText: projectName });
-
-    await expect(projectCard).toBeVisible({ timeout: 10000 });
-
-    const dropdown = this.page.getByTestId(
-      `project-list-dropdown-action-${projectId}-trigger`
-    );
-
-    await expect(dropdown).toBeVisible();
-
-    await dropdown.click();
-  }
-
-  
   async clickDeleteConfirmationBtn() {
-    await this.page.locator(projectLocators.deleteConfirmationBtn).click();
+
+    await this.page.locator(':text("Delete")').click();
+    await expect(this.page.getByText('Confirm')).toBeVisible();
+
+    await this.page.locator(':text-is("Confirm")').click();
+    await expect(this.page.getByText('Confirm')).toBeHidden();
 
   }
 
