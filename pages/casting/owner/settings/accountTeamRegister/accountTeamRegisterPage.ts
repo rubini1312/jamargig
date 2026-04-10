@@ -18,8 +18,10 @@ export class AccountTeamRegisterPage {
     }
 
     async assertTokenValidation(expectedText: string) {
-        const errors = this.page.locator(accountTeamRegisterLocators.tokenValidation);
-        await expect(errors).toHaveText(expectedText);
+        const alert = this.page.locator('.n-alert-body__content');
+
+        await expect(alert).toBeVisible();
+        await expect(alert).toContainText(expectedText);
     }
 
     async clickNext() {

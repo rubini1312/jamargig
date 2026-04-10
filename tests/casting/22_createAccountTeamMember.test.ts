@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { APIRequestContext, expect, test } from "@playwright/test";
 import LoginPage from "../../pages/casting/owner/login/loginPage";
 import { validLogin } from "@/test-data/loginData";
 import { urls } from "@/utils/urls";
@@ -6,6 +6,8 @@ import { generateEmail } from "@/test-data/random-data";
 import { AccountTypePage } from "@/pages/casting/owner/settings/accountTeam/accountTeamPage";
 import { MailtrapService } from "@/utils/mailtrapInvitation";
 import { AccountTeamRegisterPage } from "@/pages/casting/owner/settings/accountTeamRegister/accountTeamRegisterPage";
+import { getAccessTokenSmartFromCasting } from "@/helpers/api/casting/authApi";
+import { getUserUuidByEmail, removeTeamMember } from "../../helpers/api/casting/accountTeamApi";
 
 test.describe("Casting owner Account Team Member Type flow", () => {
 
@@ -68,7 +70,6 @@ test.describe("Casting owner Account Team Member Type flow", () => {
         await page.goto(urls.casting + "/settings");
         await expect(page.getByTitle('Member Types')).toBeVisible();
         const accountTeamPage = new AccountTypePage(page);
-        const accountTeamRegistrationPage = new AccountTeamRegisterPage(page);
         const email = generateEmail();
 
         await accountTeamPage.clickCreatememberButton();
@@ -103,7 +104,7 @@ test.describe("Casting owner Account Team Member Type flow", () => {
         await registerPage.enterDataForRegistration("abc@gmail.com", "TestAutomation-Member");
         await registerPage.CheckTermsAndConditions();
         await registerPage.clickNext();
-        await registerPage.assertTokenValidation('The selected invitation token is invalid.');
+        await registerPage.assertTokenValidation('Please provide the email that the invitation send to');
 
     });
 
@@ -149,6 +150,10 @@ test.describe("Casting owner Account Team Member Type flow", () => {
         await registerPage.clickNext();
         await invitePage.waitForURL("**/projects", { timeout: 60000 });
 
+        const token = await getAccessTokenSmartFromCasting(request, validLogin.email);
+        const memberUuid = await getUserUuidByEmail(request, token, email);
+        await removeTeamMember(request, token, memberUuid, email);
     });
 
 });
+

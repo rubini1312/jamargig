@@ -650,12 +650,33 @@ export async function deleteAllQuestions(
   }
 }
 
+
+type Selection = {
+  label: string;
+  is_selected: boolean;
+};
+
+type FormValue = {
+  value: any; 
+};
+
+type FormItem = {
+  question: {
+    question: string;
+  };
+  value: FormValue[];
+};
+
+type SubmittedForm = {
+  data: FormItem[];
+};
+
 export async function getSubmittedForm(
   request: APIRequestContext,
   token: string,
   projectId: number,
   talentUuid: string
-): Promise<any> {
+): Promise<SubmittedForm> {
 
   const res = await request.get(
     urls.casting_base + `projects/${projectId}/talent/${talentUuid}/submitted-form`,
@@ -670,5 +691,7 @@ export async function getSubmittedForm(
 
   expect(res.status()).toBe(200);
 
-  return await res.json();
+  const json = await res.json();
+
+  return json as SubmittedForm;
 }

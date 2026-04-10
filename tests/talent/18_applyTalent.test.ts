@@ -225,7 +225,11 @@ test.describe('Apply talent scenarios', () => {
 
             await expect(page.locator('[data-testid="auth-form"]')).toBeVisible();
 
-            const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
+
+            const otp = await getOtpFromMailtrap(request, talentEmail, 120000, false);
+            if (!otp) {
+                throw new Error("OTP not received from Mailtrap");
+            }
             await enterOtpForTalent(page, otp);
 
             await page.waitForLoadState("networkidle");
@@ -396,8 +400,10 @@ test.describe('Apply talent scenarios', () => {
 
             await expect(page.locator('[data-testid="auth-form"]')).toBeVisible();
 
-            const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
-            await enterOtpForTalent(page, otp);
+            const otp = await getOtpFromMailtrap(request, talentEmail, 120000, false);
+            if (!otp) {
+                throw new Error("OTP not received from Mailtrap");
+            } await enterOtpForTalent(page, otp);
 
             await page.waitForLoadState("networkidle");
             await expect(page.locator("form")).toBeVisible();
@@ -567,8 +573,10 @@ test.describe('Apply talent scenarios', () => {
 
             await expect(page.locator('[data-testid="auth-form"]')).toBeVisible();
 
-            const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
-            await enterOtpForTalent(page, otp);
+            const otp = await getOtpFromMailtrap(request, talentEmail, 120000, false);
+            if (!otp) {
+                throw new Error("OTP not received from Mailtrap");
+            } await enterOtpForTalent(page, otp);
 
             await page.waitForLoadState("networkidle");
             await expect(page.locator("form")).toBeVisible();
@@ -721,8 +729,10 @@ test.describe('Apply talent scenarios', () => {
 
             await expect(page.locator('[data-testid="auth-form"]')).toBeVisible();
 
-            const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
-            await enterOtpForTalent(page, otp);
+            const otp = await getOtpFromMailtrap(request, talentEmail, 120000, false);
+            if (!otp) {
+                throw new Error("OTP not received from Mailtrap");
+            } await enterOtpForTalent(page, otp);
 
             await page.waitForLoadState("networkidle");
             await expect(page.locator("form")).toBeVisible();
@@ -879,7 +889,10 @@ test.describe('Apply talent scenarios', () => {
 
             await expect(page.locator('[data-testid="auth-form"]')).toBeVisible();
 
-            const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
+            const otp = await getOtpFromMailtrap(request, talentEmail, 120000, false);
+            if (!otp) {
+                throw new Error("OTP not received from Mailtrap");
+            }
             await enterOtpForTalent(page, otp);
 
             await page.waitForLoadState("networkidle");
@@ -1034,8 +1047,10 @@ test.describe('Apply talent scenarios', () => {
 
             await expect(page.locator('[data-testid="auth-form"]')).toBeVisible();
 
-            const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
-            await enterOtpForTalent(page, otp);
+            const otp = await getOtpFromMailtrap(request, talentEmail, 120000, false);
+            if (!otp) {
+                throw new Error("OTP not received from Mailtrap");
+            } await enterOtpForTalent(page, otp);
 
             await page.waitForLoadState("networkidle");
             await expect(page.locator("form")).toBeVisible();
@@ -1198,8 +1213,10 @@ test.describe('Apply talent scenarios', () => {
 
             await expect(page.locator('[data-testid="auth-form"]')).toBeVisible();
 
-            const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
-            await enterOtpForTalent(page, otp);
+            const otp = await getOtpFromMailtrap(request, talentEmail, 120000, false);
+            if (!otp) {
+                throw new Error("OTP not received from Mailtrap");
+            } await enterOtpForTalent(page, otp);
 
             await page.waitForLoadState("networkidle");
             await expect(page.locator("form")).toBeVisible();
@@ -1346,8 +1363,10 @@ test.describe('Apply talent scenarios', () => {
             await login.validTalentLogin(talentEmail);
 
             await expect(page.locator('[data-testid="auth-form"]')).toBeVisible();
-            const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
-            await enterOtpForTalent(page, otp);
+            const otp = await getOtpFromMailtrap(request, talentEmail, 120000, false);
+            if (!otp) {
+                throw new Error("OTP not received from Mailtrap");
+            } await enterOtpForTalent(page, otp);
 
             await page.waitForLoadState("networkidle");
             await expect(page.locator("form")).toBeVisible();

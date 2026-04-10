@@ -1,7 +1,9 @@
 import { Page } from "playwright";
 import { talentApplyPageLocators } from "./applyRoundPageLocators";
-import path = require("path");
-
+import path from "path";
+import process from "process";
+import fs from "fs";
+import { expect } from "playwright/test";
 
 export class TalentApplyPage {
     constructor(private page: Page) { }
@@ -114,4 +116,51 @@ export class TalentApplyPage {
             .click();
 
     }
+
+
+    async verifyImageIsDownloadable(
+        page: Page,
+        mediaName: string
+    ) {
+        const downloadDir = path.join(process.cwd(), "downloads");
+
+        if (!fs.existsSync(downloadDir)) {
+            fs.mkdirSync(downloadDir);
+        }
+
+        const checkbox = page.locator('div[role="checkbox"]').first();
+        await expect(checkbox).toBeVisible();
+
+        const card = page.locator('div[role="button"]', { hasText: 'Test role' });
+
+        await card.scrollIntoViewIfNeeded();
+        await card.click();
+
+        const image = page.locator(`img[src*="${mediaName}"]`);
+        await expect(image).toBeVisible();
+
+        await page.waitForFunction((name) => {
+            const img = document.querySelector(`img[src*="${name}"]`) as HTMLImageElement;
+            return img && img.complete && img.naturalWidth > 0;
+        }, mediaName);
+
+        const [newPage] = await Promise.all([
+            page.waitForEvent("popup"),
+            page.locator('span[role="button"]').last().click()
+        ]);
+
+        await newPage.waitForLoadState();
+
+        const url = newPage.url();
+        console.log("File URL:", url);
+
+        const response = await page.request.get(url);
+        const buffer = await response.body();
+
+        const filePath = path.join(downloadDir, mediaName);
+        fs.writeFileSync(filePath, buffer);
+
+        console.log("Downloaded:", filePath);
+    }
+
 }

@@ -75,8 +75,10 @@ test.describe('Talent registration scenarios', () => {
       await login.validTalentLogin(talentEmail);
       await expect(page.locator('[data-testid="auth-form"]')).toBeVisible();
 
-      const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
-      await enterOtpForTalent(page, otp);
+      const otp = await getOtpFromMailtrap(request, talentEmail, 120000, false);
+      if (!otp) {
+        throw new Error("OTP not received from Mailtrap");
+      } await enterOtpForTalent(page, otp);
 
       await expect(page.locator(talentRegisterLocators.fullNameInput)).toBeVisible();
       await page.waitForLoadState("networkidle");
@@ -198,8 +200,10 @@ test.describe('Talent registration scenarios', () => {
     await login.validTalentLogin(talentEmail);
     await expect(page.locator('[data-testid="auth-form"]')).toBeVisible();
 
-    const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
-    await enterOtpForTalent(page, otp);
+    const otp = await getOtpFromMailtrap(request, talentEmail, 120000, false);
+    if (!otp) {
+      throw new Error("OTP not received from Mailtrap");
+    } await enterOtpForTalent(page, otp);
 
     await expect(page.locator(talentRegisterLocators.fullNameInput)).toBeVisible();
     await page.waitForLoadState("networkidle");

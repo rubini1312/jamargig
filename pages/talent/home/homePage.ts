@@ -1,5 +1,6 @@
 import { Page } from "playwright";
 import { talentHomePageLocators } from "./homePageLocator";
+import { expect } from "playwright/test";
 
 
 export class TalentHomePage {
@@ -9,9 +10,11 @@ export class TalentHomePage {
     await this.page.locator(talentHomePageLocators.projectSearchBar).fill(project);
   }
 
-  async clickApplyForSearchedProject() {
+  async clickApplyForSearchedProject(roleName : string) {
     await this.page.locator(talentHomePageLocators.searchedProjectApplyButton).click();
+
+    await this.page.waitForLoadState('domcontentloaded');
+    await this.page.waitForLoadState('networkidle');
+    await expect(this.page.getByText(roleName)).toBeVisible();
   }
-
-
 }

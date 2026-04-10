@@ -1,6 +1,14 @@
 import { APIRequestContext, expect, request } from "@playwright/test";
 import { urls } from "@/utils/urls";
 
+type ApiField = {
+  id: number;
+  name: string;
+  label?: string;
+  required: boolean;
+  status: boolean;
+  order: number;
+};
 
 export async function getAllPages(request: APIRequestContext, token: string) {
   const response = await request.get(
@@ -25,14 +33,22 @@ export async function getAllPages(request: APIRequestContext, token: string) {
 }
 
 
+type ApiFieldForPageIds = {
+  id: number;
+  label: string;
+  name: string;
+  status: boolean;
+  order: number;
+  required?: boolean;
+};
 export async function getFieldsByPageId(
   request: APIRequestContext,
   pageId: number,
   token: string
-) {
+): Promise<ApiFieldForPageIds[]> {
+
   const url = urls.casting_base + `registration-pages/${pageId}/fields`;
 
-  // retry up to 5 times if backend not ready yet
   for (let attempt = 0; attempt < 5; attempt++) {
 
     const response = await request.get(url, {
@@ -47,26 +63,29 @@ export async function getFieldsByPageId(
       );
     }
 
-    const body = await response.json();
+    const body: { data: ApiFieldForPageIds[] } = await response.json();
 
     if (!Array.isArray(body.data)) {
       throw new Error("Fields API did not return array");
     }
 
     const activeFields = body.data
-      .filter((f: any) => f.status === true)
-      .sort((a: any, b: any) => a.order - b.order);
+      .filter((f) => f.status)
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
     if (activeFields.length > 0) {
       return activeFields;
     }
 
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise(resolve => setTimeout(resolve, 500));
   }
 
   console.warn(`No active fields found for page ${pageId}`);
   return [];
 }
+
+
+
 
 type FieldConfig = { status: boolean; required?: boolean; };
 

@@ -38,7 +38,7 @@ export default defineConfig({
     args: ["--disable-web-security"]
     },
     viewport: { width: 1920, height: 1080 },
-    headless: false,
+    headless: true,
     screenshot: 'on',
     video: 'on',
     /* Base URL to use in actions like `await page.goto('')`. */
