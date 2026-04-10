@@ -274,7 +274,7 @@ export default class ProjectPage {
     await dropdown.highlight();
     await dropdown.click({ force: true });
     await expect(this.page.getByText('Delete')).toBeVisible();
-    
+
   }
 
   async clickDeleteConfirmationBtn() {

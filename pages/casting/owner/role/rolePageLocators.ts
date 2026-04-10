@@ -66,6 +66,14 @@ export const roleLocators = {
   editRoleDescription_editable : "//div[@aria-label='Editor editing area: main']",
   emptyRoleName_error :"//div[@class='n-form-item-feedback__line']",
   roleNameInput_editable : 'input[data-testid="role-name"]',
-  editRole_saveBtn : "//span[normalize-space()='Save']"
+  editRole_saveBtn : "//span[normalize-space()='Save']",
+
+  //tabs
+  materialsTab : '[data-testid="projects.roles.material-tab"]',
+  addMaterial_btn : '[data-testid="material-add-button"]',
+  materialBrowse_option : '[data-testid="material-add-button-browse"]',
+  fileDragger : '[data-testid="material-add-upload-dragger"]',
+  imageAdd_btn : '[data-testid="material-add-submit-button"]',
+  imageDownloadable_toggle : '[data-testid="material-downloadable"]'
 
 };

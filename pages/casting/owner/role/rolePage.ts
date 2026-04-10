@@ -32,6 +32,7 @@ export default class RolePage {
     }
 
     async gotoRolesTab() {
+
         await this.openFirstProjectIfNeeded();
 
         const tab = this.page.getByTestId("projects.roles-tab");
@@ -41,8 +42,6 @@ export default class RolePage {
 
         await this.page.getByText("Add role").waitFor({ timeout: 30000 });
     }
-
-
 
 
 
@@ -579,4 +578,84 @@ export default class RolePage {
         }).toPass({ timeout: 15000 });
     }
 
+
+    //materials
+    async goToMaterialsTab() {
+
+        const tab = this.page.locator(roleLocators.materialsTab);
+
+        await tab.waitFor({ state: "visible", timeout: 30000 });
+        await tab.click();
+
+        await this.page.getByText("Add Material").waitFor({ timeout: 30000 });
+    }
+
+    async openAddMaterialModel() {
+
+        const tab = this.page.locator(roleLocators.addMaterial_btn);
+        await tab.waitFor({ state: "visible", timeout: 30000 });
+        await tab.click();
+
+        const browseFileOption = this.page.locator(roleLocators.materialBrowse_option);
+        await browseFileOption.waitFor({ state: "visible", timeout: 30000 });
+        await browseFileOption.click();
+
+        await this.page.getByText("Drop file or browse").waitFor({ timeout: 30000 });
+    }
+
+    async uploadMaterial(filePath: string) {
+        await this.page.setInputFiles(
+            '[data-testid="material-add-upload"] input[type="file"]',
+            filePath
+        );
+    }
+
+    async clickAddFile() {
+        const add = this.page.locator(roleLocators.imageAdd_btn);
+        await add.waitFor({ state: "visible", timeout: 30000 });
+        await add.click();
+        await expect(this.page.getByText('Uploading')).toBeVisible();
+        await expect(this.page.getByText('Uploading')).toBeHidden();
+
+    }
+
+    async verifyMaterialAdded(fileName: string) {
+        await expect
+            .poll(async () => {
+                return await this.page
+                    .locator('td[data-col-key="name"]', { hasText: fileName })
+                    .count();
+            }, { timeout: 30000 })
+            .toBeGreaterThan(0);
+
+        const allRoles = await this.page.locator('td[data-col-key="name"]').allTextContents();
+
+    }
+
+    async verifyDefaultStatusOfDownloadableToggle() {
+        const toggle = this.page.locator(roleLocators.imageDownloadable_toggle);
+
+        await expect(toggle).toBeVisible();
+        await expect(toggle).toHaveAttribute('aria-checked', 'false');
+    }
+
+    async verifyEnableStatusOfDownloadableToggle() {
+        const toggle = this.page.locator(roleLocators.imageDownloadable_toggle);
+
+        await expect(toggle).toBeVisible();
+        await toggle.click();
+        await expect(toggle).toHaveAttribute('aria-checked', 'true');
+    }
+
+    async verifyDisableStatusOfDownloadableToggle() {
+        const toggle = this.page.locator(roleLocators.imageDownloadable_toggle);
+
+        await expect(toggle).toBeVisible();
+
+        if ((await toggle.getAttribute('aria-checked')) === 'false') {
+            await toggle.click();
+        }
+        await toggle.click();
+        await expect(toggle).toHaveAttribute('aria-checked', 'false');
+    }
 }
