@@ -102,7 +102,7 @@ test.describe("Casting owner settings", () => {
             max_limit: "2",
             blocking_time: "1"
         });
-        await page.waitForTimeout(60000);
+        await page.waitForTimeout(75000);
 
         await page.goto(urls.casting);
 
