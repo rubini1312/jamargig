@@ -15,7 +15,7 @@ test.describe('Casting owner Change Password Scenarios', () => {
     let token: string;
 
     test.beforeEach(async ({ page, request }) => {
-        token = await getAccessTokenSmartFromCastingForDynamicUser(request, validLogin.email, "@ut0maT312345");
+        token = await getAccessTokenSmartFromCastingForDynamicUser(request, validLogin.email, validLogin.password);
 
         await updateCastingSettings(request, token, {
             two_factor_auth: false,

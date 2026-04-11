@@ -71,8 +71,11 @@ test.describe('Apply talent scenarios', () => {
             // OTP handling
             await expect(page.locator('[data-testid="auth-form"]')).toBeVisible();
 
-            const otp = await getOtpFromMailtrap(request, talentEmail, 120000);
-            await enterOtpForTalent(page, otp);
+            const otp = await getOtpFromMailtrap(request, talentEmail, 120000, false);
+            if (!otp) {
+                throw new Error("OTP not received from Mailtrap");
+            } await enterOtpForTalent(page, otp);
+
 
             await page.waitForLoadState("networkidle");
             await expect(page.locator("form")).toBeVisible();
@@ -148,7 +151,7 @@ test.describe('Apply talent scenarios', () => {
                 .toBeVisible();
 
             await talentHome.enterProjectName(projectName);
-            await talentHome.clickApplyForSearchedProject();
+            await talentHome.clickApplyForSearchedProject(roleName);
 
             const talentApply = new TalentApplyPage(page);
 
@@ -299,7 +302,7 @@ test.describe('Apply talent scenarios', () => {
             await expect(page.locator(talentAuditionPageLocators.auditionCards).first()).toBeVisible();
 
             await talentHome.enterProjectName(projectName);
-            await talentHome.clickApplyForSearchedProject();
+            await talentHome.clickApplyForSearchedProject(roleName);
 
             const talentApply = new TalentApplyPage(page);
 
@@ -347,7 +350,7 @@ test.describe('Apply talent scenarios', () => {
             const roles = await getProjectRoles(request, token, projectId);
             const role = roles.data[0];
             expect(role).toBeDefined();
-
+            const roleName = role.role_name;
             const roleId = role.id;
 
             await createOnlineRound(request, token, projectId, roleId);
@@ -471,7 +474,7 @@ test.describe('Apply talent scenarios', () => {
             await expect(page.locator(talentAuditionPageLocators.auditionCards).first()).toBeVisible();
 
             await talentHome.enterProjectName(projectName);
-            await talentHome.clickApplyForSearchedProject();
+            await talentHome.clickApplyForSearchedProject(roleName);
 
             const talentApply = new TalentApplyPage(page);
             await talentApply.clickApplyOnlineround();
@@ -535,6 +538,7 @@ test.describe('Apply talent scenarios', () => {
             const round = rounds.data[0];
             expect(round).toBeDefined();
             const roundId = round.id;
+            const roleName = role.role_name;
 
             const textQuestion = await createTextQuestion(request, token, projectId, roundId, roleId, "Tell us about yourself");
             const checkboxQuestion = await createCheckboxQuestion(request, token, projectId, roundId, roleId, "Select your skills", ["Acting", "Singing", "Dancing"]);
@@ -630,7 +634,7 @@ test.describe('Apply talent scenarios', () => {
             await expect(page.locator(talentAuditionPageLocators.auditionCards).first()).toBeVisible();
 
             await talentHome.enterProjectName(projectName);
-            await talentHome.clickApplyForSearchedProject();
+            await talentHome.clickApplyForSearchedProject(roleName);
 
             const talentApply = new TalentApplyPage(page);
             await talentApply.clickApplyOnlineround();
@@ -678,6 +682,7 @@ test.describe('Apply talent scenarios', () => {
             const roles = await getProjectRoles(request, token, projectId);
             const role = roles.data[0];
             expect(role).toBeDefined();
+            const roleName = role.role_name;
 
             const roleId = role.id;
             await createInPersonRound(request, token, projectId, roleId);
@@ -787,7 +792,7 @@ test.describe('Apply talent scenarios', () => {
                 .toBeVisible();
 
             await talentHome.enterProjectName(projectName);
-            await talentHome.clickApplyForSearchedProject();
+            await talentHome.clickApplyForSearchedProject(roleName);
 
             const talentApply = new TalentApplyPage(page);
             await talentApply.clickApplyOnlineround();
@@ -844,6 +849,7 @@ test.describe('Apply talent scenarios', () => {
             const role = roles.data[0];
             expect(role).toBeDefined();
             const roleId = role.id;
+            const roleName = role.role_name;
 
             await createInPersonRound(request, token, projectId, roleId);
 
@@ -947,7 +953,7 @@ test.describe('Apply talent scenarios', () => {
                 .toBeVisible();
 
             await talentHome.enterProjectName(projectName);
-            await talentHome.clickApplyForSearchedProject();
+            await talentHome.clickApplyForSearchedProject(roleName);
             const talentApply = new TalentApplyPage(page);
             await talentApply.clickApplyOnlineround();
             await talentApply.clickRoleSelector();
@@ -1105,7 +1111,7 @@ test.describe('Apply talent scenarios', () => {
                 .toBeVisible();
 
             await talentHome.enterProjectName(projectName);
-            await talentHome.clickApplyForSearchedProject();
+            await talentHome.clickApplyForSearchedProject(roleName);
 
             const talentApply = new TalentApplyPage(page);
             await talentApply.clickApplyOnlineround();
@@ -1168,6 +1174,7 @@ test.describe('Apply talent scenarios', () => {
             const role = roles.data[0];
             expect(role).toBeDefined();
             const roleId = role.id;
+            const roleName = role.role_name;
 
             await createInPersonRound(request, token, projectId, roleId);
 
@@ -1272,7 +1279,7 @@ test.describe('Apply talent scenarios', () => {
                 .toBeVisible();
 
             await talentHome.enterProjectName(projectName);
-            await talentHome.clickApplyForSearchedProject();
+            await talentHome.clickApplyForSearchedProject(roleName);
 
             const talentApply = new TalentApplyPage(page);
             await talentApply.clickApplyOnlineround();
@@ -1328,7 +1335,7 @@ test.describe('Apply talent scenarios', () => {
             const role = roles.data[0];
             expect(role).toBeDefined();
             const roleId = role.id;
-
+            const roleName = role.role_name;
             // Create round
             await createInPersonRound(request, token, projectId, roleId);
 
@@ -1412,7 +1419,7 @@ test.describe('Apply talent scenarios', () => {
                 .toBeVisible();
 
             await talentHome.enterProjectName(projectName);
-            await talentHome.clickApplyForSearchedProject();
+            await talentHome.clickApplyForSearchedProject(roleName);
 
             const talentApply = new TalentApplyPage(page);
             await talentApply.clickApplyOnlineround();
