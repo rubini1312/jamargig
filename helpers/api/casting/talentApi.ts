@@ -318,3 +318,29 @@ export async function updateTalentRegistration(
 
   return await res.json();
 }
+
+export async function getTalentSearchTotalCount(
+  request: APIRequestContext,
+  token: string,
+  searchText?: string
+): Promise<number> {
+
+  const res = await request.post(
+    urls.casting_base + `talent/search?page=1`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      data: {
+        ...(searchText ? { search: searchText } : {})
+      }
+    }
+  );
+
+  expect(res.status()).toBe(200);
+
+  const body = await res.json();
+
+  return body.total;
+}

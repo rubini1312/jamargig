@@ -1,7 +1,7 @@
 import { createProject, deleteProject, publishProject } from "@/helpers/api/casting/projectApi";
 import { createRole, deleteRole, getProjectRoles } from "@/helpers/api/casting/roleApi";
 import { createOnlineRound, deleteRound, getProjectRounds, updateRoundSubmissionStatus } from "@/helpers/api/casting/roundApi";
-import { applyRegistrationConfig, deleteTalent, getAllPages, getFieldsByPageId, getProjectTalentNames, getTalentUuidByName, updateTalentRegistration } from "@/helpers/api/casting/talentApi";
+import { applyRegistrationConfig, deleteTalent, getAllPages, getFieldsByPageId, getProjectTalentNames, getTalentSearchTotalCount, getTalentUuidByName, updateTalentRegistration } from "@/helpers/api/casting/talentApi";
 import { fullConfig } from "@/test-data/dataModelConfig";
 import { validLogin } from "@/test-data/loginData";
 import { urls } from "@/utils/urls";
@@ -13,6 +13,7 @@ import { createAvailabilityQuestion, createCheckboxQuestion, createDropdownQuest
 import { getAccessTokenSmartFromCasting } from "@/helpers/api/casting/authApi";
 import TalentLoginPage from "@/pages/talent/login/loginPage";
 import CastingLoginPage from "@/pages/casting/owner/login/loginPage";
+import Talentpage from "@/pages/casting/owner/talentProfile/talentPage";
 
 test.describe('Apply talent scenarios', () => {
 
@@ -22,7 +23,7 @@ test.describe('Apply talent scenarios', () => {
         token = await getAccessTokenSmartFromCasting(request, validLogin.email);
     });
 
-    test("Register new talent and apply for the online-open round: verify all questions appear",
+    test("Register new talent and verify talent appears after search talent",
         async ({ page, request }) => {
 
             test.setTimeout(300000);
@@ -204,4 +205,36 @@ test.describe('Apply talent scenarios', () => {
             await deleteProject(request, token, projectId);
             await deleteTalent(request, token, uuid);
         });
+
+    test("Verify talent count from API matches UI placeholder", async ({ page, request }) => {
+
+        await page.goto(urls.casting);
+        const castingLogin = new CastingLoginPage(page);
+
+        await castingLogin.validLoginwithUI(
+            validLogin.email,
+            validLogin.password,
+            request
+        );
+
+        //talent page- search & verify
+        await page.goto(urls.casting + "/talents");
+        await expect(page).toHaveURL(/talents/);
+
+        await page.waitForLoadState('networkidle');
+        const talentPage = new Talentpage(page);
+
+        // API total count
+        const apiCount = await getTalentSearchTotalCount(request, token);
+
+        // UI placeholder count
+        const uiCount = await talentPage.getTalentCountFromPlaceholder();
+
+        console.log("API Count:", apiCount);
+        console.log("UI Count:", uiCount);
+
+        // Assertion
+        expect(uiCount).toBe(apiCount);
+
+    });
 });
