@@ -15,7 +15,7 @@ import TalentLoginPage from "@/pages/talent/login/loginPage";
 import CastingLoginPage from "@/pages/casting/owner/login/loginPage";
 import Talentpage from "@/pages/casting/owner/talentProfile/talentPage";
 
-test.describe('Apply talent scenarios', () => {
+test.describe('Search talent scenarios', () => {
 
     let token: string;
 

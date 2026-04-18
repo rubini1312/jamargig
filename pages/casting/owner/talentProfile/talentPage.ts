@@ -16,4 +16,11 @@ export default class Talentpage {
 
         return count;
     }
+
+
+    async clickDownloadButton() {
+        const downloadBtn = this.page.locator('.filters-header button').nth(2);
+        await downloadBtn.click();
+    }
 }
+
