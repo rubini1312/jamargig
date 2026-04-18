@@ -22,7 +22,7 @@ test.describe("Casting owner Change Password Scenarios", () => {
         const homePage = new HomePage(page);
         const manageAccountPage = new ManageAccountPage(page);
         manageAccountPage.clickOnPasswordField();
-        manageAccountPage.changePasswordWithInvalidPasswordsAndValidate('abcd', '', 'Password confirmation does not match.');
+        manageAccountPage.changePasswordWithInvalidPasswordsAndValidate('abcd', ' ', 'Password confirmation does not match.');
 
     });
 

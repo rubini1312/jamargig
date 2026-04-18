@@ -292,7 +292,7 @@ test.describe('Casting owner delete role scenarios', () => {
         await createRole(request, token, projectId);
 
         const roles = await getProjectRoles(request, token, projectId);
-        const role = roles.data[roles.data.length - 1]; 
+        const role = roles.data[roles.data.length - 1];
         expect(role).toBeDefined();
 
         const roleId = role.id;
