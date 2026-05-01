@@ -9,7 +9,7 @@ import ProjectDetailsPage from "@/pages/casting/owner/projectDetails/projectDeta
 import { projectDetailsLocators } from "@/pages/casting/owner/projectDetails/projectDetailsPageLocators";
 import Talentpage from "@/pages/casting/owner/talentProfile/talentPage";
 
-test.describe('Casting owner- export talent record scenarios', () => {
+test.describe('Casting owner-export talent records scenarios', () => {
     let token: string;
     let uniqueName: string;
 

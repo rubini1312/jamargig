@@ -15,7 +15,7 @@ import { generateEmail } from "@/test-data/random-data";
 import { getTalentAccessToken } from "@/helpers/api/talent/authApi";
 
 
-test.describe('Casting owner create question scenarios', () => {
+test.describe('Casting owner delete question scenarios', () => {
     let token: string;
     let projectId: number;
     let roleId: number;

@@ -17,7 +17,7 @@ import { createTextQuestion } from "@/helpers/api/casting/questionApi";
 import RolePage from "@/pages/casting/owner/role/rolePage";
 
 
-test.describe('Casting owner edit  round  scenarios', () => {
+test.describe('Casting owner edit round scenarios', () => {
     let token: string;
     let projectId: number;
     let roundId: number;

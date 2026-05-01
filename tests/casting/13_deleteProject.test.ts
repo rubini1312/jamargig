@@ -10,7 +10,7 @@ import { getAccessTokenSmartFromCasting } from "@/helpers/api/casting/authApi";
 import RolePage from "@/pages/casting/owner/role/rolePage";
 
 
-test.describe('Casting owner delete role scenarios', () => {
+test.describe('Casting owner delete project scenarios', () => {
     let token: string;
     let projectId: number;
     let roundId: number;

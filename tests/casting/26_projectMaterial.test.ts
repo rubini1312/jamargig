@@ -10,7 +10,7 @@ import { createRole, deleteAllRoles, getProjectRoles } from "@/helpers/api/casti
 import ProjectPage from "@/pages/casting/owner/project/projectPage";
 import { getAccessTokenSmartFromCasting } from "@/helpers/api/casting/authApi";
 
-test.describe('Casting owner create role scenarios', () => {
+test.describe('Casting owner project material scenarios', () => {
     let token: string;
     let projectId: number;
     let projectName: string;

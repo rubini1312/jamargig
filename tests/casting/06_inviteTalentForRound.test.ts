@@ -122,7 +122,7 @@ test.describe('Casting owner invite talent scenarios', () => {
 
 
     // =========================================================
-    test('Invite talent and verify invited talent appreas in the list', async ({ page, request }) => {
+    test('Invite talent and verify invited talent appears in the list', async ({ page, request }) => {
 
         test.setTimeout(90000);
 

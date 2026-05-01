@@ -21,7 +21,7 @@ import RolePage from "@/pages/casting/owner/role/rolePage";
 import { createWorkingCastList } from "@/helpers/api/casting/castListApi";
 import { roleLocators } from "@/pages/casting/owner/role/rolePageLocators";
 
-test.describe('Casting owner delete role scenarios', () => {
+test.describe('Casting owner edit role scenarios', () => {
     let token: string;
     let projectId: number;
     let roundId: number;

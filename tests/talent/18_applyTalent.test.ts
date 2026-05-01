@@ -12,7 +12,8 @@ import { TalentRegisterPage } from "@/pages/talent/register/registerPage";
 import { TalentHomePage } from "@/pages/talent/home/homePage";
 import { generateEmail } from "@/test-data/random-data";
 import { createAvailabilityQuestion, createCheckboxQuestion, createDropdownQuestion, createMediaQuestion, createRadioQuestion, createTextQuestion, getSubmittedForm, makeAvailabilityQuestionAsMandotory, makeCheckboxQuestionAsInactive, makeCheckboxQuestionAsMandotory, makeDropdownQuestionAsMandotory, makeMediaQuestionAsMandotory, makeRadioQuestionAsMandotory, makeTextQuestionAsInactive, makeTextQuestionAsMandory, updateQuestionAsInactive } from "@/helpers/api/casting/questionApi";
-import { TalentApplyPage } from "@/pages/talent/apply/applyRoundPage";
+//import { TalentApplyPage } from "@/pages/talent/apply/applyRoundPage";
+import { TalentApplyPage } from "@/pages/talent/apply/applyroundPage";
 import { getAccessTokenSmartFromCasting } from "@/helpers/api/casting/authApi";
 import { talentAuditionPageLocators } from "@/pages/talent/audition/auditionPageLocators";
 
