@@ -1,7 +1,7 @@
 import LoginPage from "../../pages/talent/login/loginPage";
 import { urls } from "@/utils/urls";
 import { getOtpFromMailtrap, enterOtpForTalent } from "@/utils/mailtrapOtp";
-import { test, expect } from './_setup/talentTest';
+import { test, expect } from '../_setup/talentTest';
 import { TalentRegisterPage } from "@/pages/talent/register/registerPage";
 import { createProject, deleteProject, getPublishedProjects, publishProject } from "@/helpers/api/casting/projectApi";
 import { talentAuditionPageLocators } from "@/pages/talent/audition/auditionPageLocators";

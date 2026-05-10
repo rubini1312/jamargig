@@ -5,7 +5,7 @@ import { applyRegistrationConfig, deleteTalent, getAllPages, getFieldsByPageId, 
 import { fullConfig } from "@/test-data/dataModelConfig";
 import { validLogin } from "@/test-data/loginData";
 import { urls } from "@/utils/urls";
-import { test, expect } from './_setup/talentTest';
+import { test, expect } from '../_setup/talentTest';
 import { enterOtpForTalent, getOtpFromMailtrap } from "@/utils/mailtrapOtp";
 import { TalentRegisterPage } from "@/pages/talent/register/registerPage";
 import { generateEmail } from "@/test-data/random-data";

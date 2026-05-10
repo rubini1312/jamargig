@@ -16,6 +16,8 @@ dotenv.config();
  */
 export default defineConfig({
 
+   globalSetup: './tests/_setup/auth.setup.ts',
+
   timeout: 120000,
   testDir: './tests',
   /* Run tests in files in parallel */
@@ -34,6 +36,8 @@ export default defineConfig({
 
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
+     storageState: 'playwright/.auth/auth.json',
+
     launchOptions: {
       args: ["--disable-web-security"]
     },

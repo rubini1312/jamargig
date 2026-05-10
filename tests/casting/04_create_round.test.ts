@@ -34,11 +34,8 @@ test.describe('Casting owner create round scenarios', () => {
         uniqueName = `Automation Talent-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     });
 
-    test.beforeEach(async ({ page, request }) => {
-        await page.goto(urls.casting);
+    test.beforeEach(async ({ page }) => {
         const login = new LoginPage(page);
-        const status = await login.validLoginwithUI(validLogin.email, validLogin.password, request);
-        console.log("2FA Status:", status);
         await page.goto(urls.casting + "/projects"); await expect(page).toHaveURL(/projects/);
     });
 

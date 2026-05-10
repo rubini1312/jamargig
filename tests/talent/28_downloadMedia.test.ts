@@ -6,15 +6,15 @@ import { fullConfig } from "@/test-data/dataModelConfig";
 import { validLogin } from "@/test-data/loginData";
 import { urls } from "@/utils/urls";
 import LoginPage from "../../pages/talent/login/loginPage";
-import { test, expect } from './_setup/talentTest';
+import { test, expect } from '../_setup/talentTest';
 import { enterOtpForTalent, getOtpFromMailtrap } from "@/utils/mailtrapOtp";
 import { TalentRegisterPage } from "@/pages/talent/register/registerPage";
 import { TalentHomePage } from "@/pages/talent/home/homePage";
 import { generateEmail } from "@/test-data/random-data";
 import { createAvailabilityQuestion, createCheckboxQuestion, createDropdownQuestion, createMediaQuestion, createRadioQuestion, createTextQuestion, getSubmittedForm, makeAvailabilityQuestionAsMandotory, makeCheckboxQuestionAsInactive, makeCheckboxQuestionAsMandotory, makeDropdownQuestionAsMandotory, makeMediaQuestionAsMandotory, makeRadioQuestionAsMandotory, makeTextQuestionAsInactive, makeTextQuestionAsMandory, updateQuestionAsInactive } from "@/helpers/api/casting/questionApi";
-import { TalentApplyPage } from "@/pages/talent/apply/applyRoundPage";
 import { getAccessTokenSmartFromCasting } from "@/helpers/api/casting/authApi";
 import { talentAuditionPageLocators } from "@/pages/talent/audition/auditionPageLocators";
+import { TalentApplyPage } from "@/pages/talent/apply/applyRoundPage";
 
 test.describe('Apply talent scenarios', () => {
 

@@ -1,5 +1,5 @@
 import { test as base, expect } from '@playwright/test';
-import { mockCaptcha } from '../../fixtures/captcha.fixture';
+import { mockCaptcha } from '../fixtures/captcha.fixture';
 import { generateEmail } from '@/test-data/random-data';
 
 type TalentFixtures = {
