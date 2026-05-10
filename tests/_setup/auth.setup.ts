@@ -1,87 +1,70 @@
-// auth.setup.ts
-import { chromium, request } from '@playwright/test';
-import { validLogin } from '@/test-data/loginData';
-import { getAccessTokenSmartFromCasting } from '@/helpers/api/casting/authApi';
+// tests/_setup/auth.setup.ts
+import { chromium, expect, request } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
+
+import LoginPage from '../../pages/casting/owner/login/loginPage';
+import { validLogin } from '@/test-data/loginData';
 import { urls } from '@/utils/urls';
 
 const authFile = path.resolve('playwright/.auth/auth.json');
 
 async function globalSetup() {
-  // API context for token retrieval
+  // Create API request context (used by validLoginwithUI for Mailtrap OTP retrieval)
   const apiContext = await request.newContext();
 
+  // Launch browser
+  const browser = await chromium.launch({
+    headless: true, // change to false if you want to watch the login
+  });
+
+  const context = await browser.newContext({
+    baseURL: urls.casting,
+    ignoreHTTPSErrors: true,
+  });
+
+  const page = await context.newPage();
+
   try {
-    // ------------------------------------------------------------
-    // 1. Get access token via API
-    // ------------------------------------------------------------
-    const token = await getAccessTokenSmartFromCasting(
-      apiContext,
-      validLogin.email
-    );
-
-    // ------------------------------------------------------------
-    // 2. Launch browser and create context
-    // ------------------------------------------------------------
-    const browser = await chromium.launch({ headless: true });
-
-    const context = await browser.newContext({
-      // Increase page load timeout for slow environments
-      baseURL: urls.casting,
-      ignoreHTTPSErrors: true,
-    });
-
-    const page = await context.newPage();
-
-    // ------------------------------------------------------------
-    // 3. Navigate with a larger timeout and wait only for DOM load
-    //    (avoids hanging on slow resources)
-    // ------------------------------------------------------------
+    // Open the application login page
     await page.goto(urls.casting, {
       waitUntil: 'domcontentloaded',
-      timeout: 120000, // 2 minutes
-    });
-
-    // Optional: wait a few seconds for app scripts to initialize
-    await page.waitForTimeout(3000);
-
-    // ------------------------------------------------------------
-    // 4. Inject token into localStorage
-    // ------------------------------------------------------------
-    await page.evaluate((accessToken: string) => {
-      localStorage.setItem('accessToken', accessToken);
-    }, token);
-
-    // ------------------------------------------------------------
-    // 5. Reload and wait for authenticated page
-    // ------------------------------------------------------------
-    await page.reload({
-      waitUntil: 'domcontentloaded',
       timeout: 120000,
     });
 
-    // Wait until redirected to projects page
-    await page.waitForURL('**/projects', {
+    // Perform real UI login (handles both normal login and OTP flow)
+    const loginPage = new LoginPage(page);
+
+    const twoFaStatus = await loginPage.validLoginwithUI(
+      validLogin.email,
+      validLogin.password,
+      apiContext
+    );
+
+    console.log(`2FA status detected: ${twoFaStatus}`);
+
+    // Ensure we are authenticated
+    await expect(page).toHaveURL(/settings/, {
       timeout: 120000,
     });
 
-    // ------------------------------------------------------------
-    // 6. Save storage state
-    // ------------------------------------------------------------
-    fs.mkdirSync(path.dirname(authFile), { recursive: true });
+    // Create auth directory if needed
+    fs.mkdirSync(path.dirname(authFile), {
+      recursive: true,
+    });
 
+    // Save the full authenticated browser state:
+    // - cookies
+    // - localStorage
+    // - any other persisted auth state
     await context.storageState({
       path: authFile,
     });
 
     console.log(`Authentication state saved to: ${authFile}`);
-
-    // ------------------------------------------------------------
-    // 7. Cleanup
-    // ------------------------------------------------------------
-    await browser.close();
   } finally {
+    // Cleanup
+    await browser.close();
     await apiContext.dispose();
   }
 }

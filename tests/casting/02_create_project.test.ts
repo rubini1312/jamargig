@@ -29,10 +29,12 @@ test.describe("Casting owner create project flow", () => {
   ];
 
 
-  test.beforeEach(async ({ page, request }) => {
-    const login = new LoginPage(page);
-    await page.goto(urls.casting + "/projects"); 
-    await expect(page).toHaveURL(/projects/);;
+  test.beforeEach(async ({ page }) => {
+    await page.goto(`${urls.casting}/projects`, {
+      waitUntil: 'domcontentloaded',
+    });
+
+    await expect(page).toHaveURL(/projects/);
   });
 
 
