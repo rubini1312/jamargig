@@ -13,10 +13,8 @@ import RolePage from "@/pages/casting/owner/role/rolePage";
 test.describe('Casting owner delete project scenarios', () => {
     let token: string;
     let projectId: number;
-    let roundId: number;
     let roleId: number;
     let roleName: string;
-    let roundName: string;
     let projectName: string;
     let uniqueName: string;
 
@@ -26,12 +24,12 @@ test.describe('Casting owner delete project scenarios', () => {
         uniqueName = `Automation Talent-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     });
 
-    test.beforeEach(async ({ page, request }) => {
-        await page.goto(urls.casting);
-        const login = new LoginPage(page);
-        const status = await login.validLoginwithUI(validLogin.email, validLogin.password, request);
-        console.log("2FA Status:", status);
-        await page.goto(urls.casting + "/projects"); await expect(page).toHaveURL(/projects/);
+    test.beforeEach(async ({ page }) => {
+        await page.goto(`${urls.casting}/projects`, {
+            waitUntil: 'domcontentloaded',
+        });
+
+        await expect(page).toHaveURL(/projects/);
     });
 
 

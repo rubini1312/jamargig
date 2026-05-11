@@ -7,14 +7,15 @@ import ManageAccountPage from "@/pages/casting/owner/manageAccount/manageAccount
 
 test.describe("Casting owner Change Password Scenarios", () => {
 
-    test.beforeEach(async ({ page, request }) => {
-        await page.goto(urls.casting);
-        const login = new LoginPage(page);
-        const status = await login.validLoginwithUI(validLogin.email, validLogin.password, request);
-        console.log("2FA Status:", status);
-        await page.goto(urls.casting + "/profile");
+
+    test.beforeEach(async ({ page }) => {
+        await page.goto(`${urls.casting}/profile`, {
+            waitUntil: 'domcontentloaded',
+        });
+
         await page.goto(urls.casting + "/profile", { waitUntil: 'networkidle' });
     });
+
 
     // =========================================================
     test("Change Password - should not change password without confirm password", async ({ page, request, browser }) => {
@@ -35,7 +36,7 @@ test.describe("Casting owner Change Password Scenarios", () => {
 
     });
 
-        test("Change Password - should not change password with password", async ({ page, request, browser }) => {
+    test("Change Password - should not change password with password", async ({ page, request, browser }) => {
 
         const homePage = new HomePage(page);
         const manageAccountPage = new ManageAccountPage(page);

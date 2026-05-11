@@ -11,12 +11,7 @@ import CastListPage from "@/pages/casting/owner/workingCastList/workingCastListP
 test.describe('Casting owner create wcl scenarios', () => {
     let token: string;
     let projectId: number;
-    let roundId: number;
-    let roleId: number;
-    let roleName: string;
-    let roundName: string;
     let projectName: string;
-    let uniqueName: string;
 
     test.beforeAll(async ({ request }) => {
         token = await getAccessTokenSmartFromCasting(request, validLogin.email);
@@ -27,12 +22,12 @@ test.describe('Casting owner create wcl scenarios', () => {
         console.log(projectId);
     });
 
-    test.beforeEach(async ({ page, request }) => {
-        await page.goto(urls.casting);
-        const login = new LoginPage(page);
-        const status = await login.validLoginwithUI(validLogin.email, validLogin.password, request);
-        console.log("2FA Status:", status);
-        await page.goto(urls.casting + "/projects"); await expect(page).toHaveURL(/projects/);
+    test.beforeEach(async ({ page }) => {
+        await page.goto(`${urls.casting}/projects`, {
+            waitUntil: 'domcontentloaded',
+        });
+
+        await expect(page).toHaveURL(/projects/);
     });
 
     test.afterAll(async ({ request }) => {

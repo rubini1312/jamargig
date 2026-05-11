@@ -45,12 +45,12 @@ test.describe('Casting owner create question scenarios', () => {
         roundName = round.round_name;
     });
 
-    test.beforeEach(async ({ page, request }) => {
-        await page.goto(urls.casting);
-        const login = new LoginPage(page);
-        const status = await login.validLoginwithUI(validLogin.email, validLogin.password, request);
-        console.log("2FA Status:", status);
-        await page.goto(urls.casting + "/projects"); await expect(page).toHaveURL(/projects/);
+    test.beforeEach(async ({ page }) => {
+        await page.goto(`${urls.casting}/projects`, {
+            waitUntil: 'domcontentloaded',
+        });
+
+        await expect(page).toHaveURL(/projects/);
     });
 
     test.afterAll(async ({ request }) => {

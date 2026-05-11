@@ -35,8 +35,11 @@ test.describe('Casting owner create round scenarios', () => {
     });
 
     test.beforeEach(async ({ page }) => {
-        const login = new LoginPage(page);
-        await page.goto(urls.casting + "/projects"); await expect(page).toHaveURL(/projects/);
+        await page.goto(`${urls.casting}/projects`, {
+            waitUntil: 'domcontentloaded',
+        });
+
+        await expect(page).toHaveURL(/projects/);
     });
 
     test.afterAll(async ({ request }) => {

@@ -41,9 +41,12 @@ test.describe('Casting owner create role scenarios', () => {
         console.log(projectId);
     });
 
-    test.beforeEach(async ({ page, request }) => {
-        const login = new LoginPage(page);
-        await page.goto(urls.casting + "/projects"); await expect(page).toHaveURL(/projects/);
+    test.beforeEach(async ({ page }) => {
+        await page.goto(`${urls.casting}/projects`, {
+            waitUntil: 'domcontentloaded',
+        });
+
+        await expect(page).toHaveURL(/projects/);
     });
 
     test.afterAll(async ({ request }) => {

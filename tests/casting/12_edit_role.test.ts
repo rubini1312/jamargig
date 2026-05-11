@@ -37,12 +37,12 @@ test.describe('Casting owner edit role scenarios', () => {
         uniqueName = `Automation Talent-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     });
 
-    test.beforeEach(async ({ page, request }) => {
-        await page.goto(urls.casting);
-        const login = new LoginPage(page);
-        const status = await login.validLoginwithUI(validLogin.email, validLogin.password, request);
-        console.log("2FA Status:", status);
-        await page.goto(urls.casting + "/projects"); await expect(page).toHaveURL(/projects/);
+    test.beforeEach(async ({ page }) => {
+        await page.goto(`${urls.casting}/projects`, {
+            waitUntil: 'domcontentloaded',
+        });
+
+        await expect(page).toHaveURL(/projects/);
     });
 
 
@@ -72,7 +72,7 @@ test.describe('Casting owner edit role scenarios', () => {
 
         await rolePage.clickEditRole(roleName);
 
-         await page.locator(roleLocators.editRole_name).click()
+        await page.locator(roleLocators.editRole_name).click()
 
         await deleteProject(request, token, projectId);
     });

@@ -42,7 +42,7 @@ export default defineConfig({
       args: ["--disable-web-security"]
     },
     viewport: { width: 1920, height: 1080 },
-    headless: false,
+    headless: true,
     screenshot: 'on',
     video: 'on',
     acceptDownloads: true,
