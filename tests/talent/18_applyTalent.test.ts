@@ -117,9 +117,31 @@ test.describe('Apply talent scenarios', () => {
                     }
                 }
 
-                if (apiFields.some(f => f.name === "avatar" || f.name === "profile_photo")) {
+                if (
+                    apiFields.some(
+                        f =>
+                            ['Avatar', 'avatar', 'profile_photo'].includes(f.name) &&
+                            f.required
+                    )
+                ) {
+
                     await talentRegisterPage.uploadProfilePicture();
                     await talentRegisterPage.saveCroppedProfilePicture();
+
+                    console.log('Profile picture uploaded successfully.');
+                }
+
+                if (
+                    apiFields.some(
+                        f =>
+                            ['Supported Media', 'supported_media', 'm_CmsQ'].includes(f.name) &&
+                            f.required
+                    )
+                ) {
+
+                    await talentRegisterPage.uploadRandomSupportedMedia();
+
+                    console.log('Supported Media uploaded successfully.');
                 }
 
                 if (p.page_no === 1) {
@@ -151,8 +173,9 @@ test.describe('Apply talent scenarios', () => {
                 .toBeVisible();
 
             await talentHome.enterProjectName(projectName);
+            await expect(page.getByText(projectName)).toBeVisible();
+            
             await talentHome.clickApplyForSearchedProject(roleName);
-
             const talentApply = new TalentApplyPage(page);
 
             await talentApply.clickApplyOnlineround();
@@ -273,9 +296,31 @@ test.describe('Apply talent scenarios', () => {
                     }
                 }
 
-                if (apiFields.some(f => f.name === "avatar" || f.name === "profile_photo")) {
+                if (
+                    apiFields.some(
+                        f =>
+                            ['Avatar', 'avatar', 'profile_photo'].includes(f.name) &&
+                            f.required
+                    )
+                ) {
+
                     await talentRegisterPage.uploadProfilePicture();
                     await talentRegisterPage.saveCroppedProfilePicture();
+
+                    console.log('Profile picture uploaded successfully.');
+                }
+
+                if (
+                    apiFields.some(
+                        f =>
+                            ['Supported Media', 'supported_media', 'm_CmsQ'].includes(f.name) &&
+                            f.required
+                    )
+                ) {
+
+                    await talentRegisterPage.uploadRandomSupportedMedia();
+
+                    console.log('Supported Media uploaded successfully.');
                 }
 
                 if (p.page_no === 1) {
@@ -446,9 +491,31 @@ test.describe('Apply talent scenarios', () => {
                     }
                 }
 
-                if (apiFields.some(f => f.name === "avatar")) {
+                if (
+                    apiFields.some(
+                        f =>
+                            ['Avatar', 'avatar', 'profile_photo'].includes(f.name) &&
+                            f.required
+                    )
+                ) {
+
                     await talentRegisterPage.uploadProfilePicture();
                     await talentRegisterPage.saveCroppedProfilePicture();
+
+                    console.log('Profile picture uploaded successfully.');
+                }
+
+                if (
+                    apiFields.some(
+                        f =>
+                            ['Supported Media', 'supported_media', 'm_CmsQ'].includes(f.name) &&
+                            f.required
+                    )
+                ) {
+
+                    await talentRegisterPage.uploadRandomSupportedMedia();
+
+                    console.log('Supported Media uploaded successfully.');
                 }
 
                 if (pages[i].page_no === 1) {
@@ -606,9 +673,31 @@ test.describe('Apply talent scenarios', () => {
                     }
                 }
 
-                if (apiFields.some(f => f.name === "avatar")) {
+                if (
+                    apiFields.some(
+                        f =>
+                            ['Avatar', 'avatar', 'profile_photo'].includes(f.name) &&
+                            f.required
+                    )
+                ) {
+
                     await talentRegisterPage.uploadProfilePicture();
                     await talentRegisterPage.saveCroppedProfilePicture();
+
+                    console.log('Profile picture uploaded successfully.');
+                }
+
+                if (
+                    apiFields.some(
+                        f =>
+                            ['Supported Media', 'supported_media', 'm_CmsQ'].includes(f.name) &&
+                            f.required
+                    )
+                ) {
+
+                    await talentRegisterPage.uploadRandomSupportedMedia();
+
+                    console.log('Supported Media uploaded successfully.');
                 }
 
                 if (pages[i].page_no === 1) {
@@ -763,9 +852,31 @@ test.describe('Apply talent scenarios', () => {
                     }
                 }
 
-                if (apiFields.some(f => f.name === "avatar")) {
+                if (
+                    apiFields.some(
+                        f =>
+                            ['Avatar', 'avatar', 'profile_photo'].includes(f.name) &&
+                            f.required
+                    )
+                ) {
+
                     await talentRegisterPage.uploadProfilePicture();
                     await talentRegisterPage.saveCroppedProfilePicture();
+
+                    console.log('Profile picture uploaded successfully.');
+                }
+
+                if (
+                    apiFields.some(
+                        f =>
+                            ['Supported Media', 'supported_media', 'm_CmsQ'].includes(f.name) &&
+                            f.required
+                    )
+                ) {
+
+                    await talentRegisterPage.uploadRandomSupportedMedia();
+
+                    console.log('Supported Media uploaded successfully.');
                 }
 
                 if (pages[i].page_no === 1) {
@@ -924,9 +1035,31 @@ test.describe('Apply talent scenarios', () => {
                     }
                 }
 
-                if (apiFields.some(f => f.name === "avatar")) {
+                if (
+                    apiFields.some(
+                        f =>
+                            ['Avatar', 'avatar', 'profile_photo'].includes(f.name) &&
+                            f.required
+                    )
+                ) {
+
                     await talentRegisterPage.uploadProfilePicture();
                     await talentRegisterPage.saveCroppedProfilePicture();
+
+                    console.log('Profile picture uploaded successfully.');
+                }
+
+                if (
+                    apiFields.some(
+                        f =>
+                            ['Supported Media', 'supported_media', 'm_CmsQ'].includes(f.name) &&
+                            f.required
+                    )
+                ) {
+
+                    await talentRegisterPage.uploadRandomSupportedMedia();
+
+                    console.log('Supported Media uploaded successfully.');
                 }
 
                 if (pages[i].page_no === 1) {
@@ -1081,9 +1214,31 @@ test.describe('Apply talent scenarios', () => {
                     }
                 }
 
-                if (apiFields.some(f => f.name === "avatar" || f.name === "profile_photo")) {
+                if (
+                    apiFields.some(
+                        f =>
+                            ['Avatar', 'avatar', 'profile_photo'].includes(f.name) &&
+                            f.required
+                    )
+                ) {
+
                     await talentRegisterPage.uploadProfilePicture();
                     await talentRegisterPage.saveCroppedProfilePicture();
+
+                    console.log('Profile picture uploaded successfully.');
+                }
+
+                if (
+                    apiFields.some(
+                        f =>
+                            ['Supported Media', 'supported_media', 'm_CmsQ'].includes(f.name) &&
+                            f.required
+                    )
+                ) {
+
+                    await talentRegisterPage.uploadRandomSupportedMedia();
+
+                    console.log('Supported Media uploaded successfully.');
                 }
 
                 if (pages[i].page_no === 1) {
@@ -1248,9 +1403,31 @@ test.describe('Apply talent scenarios', () => {
                     }
                 }
 
-                if (apiFields.some(f => f.name === "avatar")) {
+                if (
+                    apiFields.some(
+                        f =>
+                            ['Avatar', 'avatar', 'profile_photo'].includes(f.name) &&
+                            f.required
+                    )
+                ) {
+
                     await talentRegisterPage.uploadProfilePicture();
                     await talentRegisterPage.saveCroppedProfilePicture();
+
+                    console.log('Profile picture uploaded successfully.');
+                }
+
+                if (
+                    apiFields.some(
+                        f =>
+                            ['Supported Media', 'supported_media', 'm_CmsQ'].includes(f.name) &&
+                            f.required
+                    )
+                ) {
+
+                    await talentRegisterPage.uploadRandomSupportedMedia();
+
+                    console.log('Supported Media uploaded successfully.');
                 }
 
                 if (pages[i].page_no === 1) {
@@ -1398,9 +1575,31 @@ test.describe('Apply talent scenarios', () => {
                     }
                 }
 
-                if (apiFields.some(f => f.name === "avatar")) {
+                if (
+                    apiFields.some(
+                        f =>
+                            ['Avatar', 'avatar', 'profile_photo'].includes(f.name) &&
+                            f.required
+                    )
+                ) {
+
                     await talentRegisterPage.uploadProfilePicture();
                     await talentRegisterPage.saveCroppedProfilePicture();
+
+                    console.log('Profile picture uploaded successfully.');
+                }
+
+                if (
+                    apiFields.some(
+                        f =>
+                            ['Supported Media', 'supported_media', 'm_CmsQ'].includes(f.name) &&
+                            f.required
+                    )
+                ) {
+
+                    await talentRegisterPage.uploadRandomSupportedMedia();
+
+                    console.log('Supported Media uploaded successfully.');
                 }
 
                 if (pages[i].page_no === 1) {

@@ -1,6 +1,7 @@
 import { Page } from '@playwright/test';
 import { talentRegisterLocators } from './registerPageLocators';
 import path = require('path');
+import { roleLocators } from '@/pages/casting/owner/role/rolePageLocators';
 
 export class TalentRegisterPage {
   constructor(private page: Page) { }
@@ -52,16 +53,78 @@ export class TalentRegisterPage {
   }
 
   async uploadProfilePicture() {
-    const filePath = path.join(process.cwd(), "test-files/images/test-role.jpg");
-    await this.page.waitForLoadState('domcontentloaded');
+    const filePath = path.join(
+      process.cwd(),
+      'test-files/images/test-role.jpg'
+    );
+
+    // Wait until the file input is attached to the DOM
     const fileInput = this.page.locator(talentRegisterLocators.uploadInput);
-    await fileInput.waitFor({ state: "attached" });
+
+    await fileInput.waitFor({
+      state: 'attached',
+      timeout: 15000,
+    });
+
+    // Upload the file
     await fileInput.setInputFiles(filePath);
+
+    // Optional: wait briefly for crop modal to appear
+    await this.page.waitForTimeout(2000);
   }
 
   async saveCroppedProfilePicture() {
+    // Wait until the Continue button is visible and enabled
+    const continueButton = this.page.locator(
+      talentRegisterLocators.cropImageSaveButton
+    );
+
+
+    await continueButton.waitFor({
+      state: 'visible',
+      timeout: 15000,
+    });
+
+    await continueButton.click();
+  }
+
+  async uploadRandomSupportedMedia() {
+    const supportedFiles = [
+      'test-files/images/test-role.jpg',      // JPG
+      'test-files/images/test-pngFile.png',   // PNG
+      'test-files/images/test-webpFile.webp', // WEBP
+    ];
+
+    const randomFile =
+      supportedFiles[Math.floor(Math.random() * supportedFiles.length)];
+
+    console.log(`Selected media file: ${randomFile}`);
+
+    const filePath = path.join(process.cwd(), randomFile);
+
+    const container = this.page.locator('[data-testid="auth-m_CmsQ"]');
+
+    await container.waitFor({
+      state: 'visible',
+      timeout: 15000,
+    });
+
+    const fileInput = container.locator('input[type="file"]');
+
+    await fileInput.waitFor({
+      state: 'attached',
+      timeout: 15000,
+    });
+
+    await fileInput.setInputFiles(filePath);
+
+    const uploadedFileName = await fileInput.evaluate(
+      (input: HTMLInputElement) => input.files?.[0]?.name || null
+    );
+
+    console.log(`Uploaded file: ${uploadedFileName}`);
+
     await this.page.waitForTimeout(3000);
-    await this.page.locator(talentRegisterLocators.cropImageSaveButton).click();
   }
 
   async selectSelfRatedSkill(index: number, skill: string) {
@@ -94,5 +157,24 @@ export class TalentRegisterPage {
     await this.page.keyboard.press('ArrowDown');
     await this.page.keyboard.press('Enter');
   }
+
+  async uploadMedia(filePath: string) {
+
+    const tab = this.page.locator(roleLocators.addMaterial_btn);
+    await tab.waitFor({ state: "visible", timeout: 30000 });
+    await tab.click();
+
+    const browseFileOption = this.page.locator(roleLocators.materialBrowse_option);
+    await browseFileOption.waitFor({ state: "visible", timeout: 30000 });
+    await browseFileOption.click();
+
+    await this.page.getByText("Drop file or browse").waitFor({ timeout: 30000 });
+
+    await this.page.setInputFiles(
+      '[data-testid="material-add-upload"] input[type="file"]',
+      filePath
+    );
+  }
+
 
 }

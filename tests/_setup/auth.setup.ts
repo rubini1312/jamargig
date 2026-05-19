@@ -10,12 +10,10 @@ import { urls } from '@/utils/urls';
 const authFile = path.resolve('playwright/.auth/auth.json');
 
 async function globalSetup() {
-  // Create API request context (used by validLoginwithUI for Mailtrap OTP retrieval)
   const apiContext = await request.newContext();
 
-  // Launch browser
   const browser = await chromium.launch({
-    headless: true, // change to false if you want to watch the login
+    headless: true, // set false if you want to watch the login
   });
 
   const context = await browser.newContext({
@@ -26,13 +24,13 @@ async function globalSetup() {
   const page = await context.newPage();
 
   try {
-    // Open the application login page
+    // Open login page
     await page.goto(urls.casting, {
       waitUntil: 'domcontentloaded',
       timeout: 120000,
     });
 
-    // Perform real UI login (handles both normal login and OTP flow)
+    // Perform UI login (supports normal login and 2FA)
     const loginPage = new LoginPage(page);
 
     const twoFaStatus = await loginPage.validLoginwithUI(
@@ -43,27 +41,33 @@ async function globalSetup() {
 
     console.log(`2FA status detected: ${twoFaStatus}`);
 
-    // Ensure we are authenticated
+    // Ensure login is complete
     await expect(page).toHaveURL(/settings/, {
       timeout: 120000,
     });
+
+    // Small extra delay to ensure all storage is populated
+    await page.waitForTimeout(2000);
+
+    // Debug: print all localStorage keys
+    const localStorageData = await page.evaluate(() => ({ ...localStorage }));
+    console.log(
+      'Local Storage:',
+      JSON.stringify(localStorageData, null, 2)
+    );
 
     // Create auth directory if needed
     fs.mkdirSync(path.dirname(authFile), {
       recursive: true,
     });
 
-    // Save the full authenticated browser state:
-    // - cookies
-    // - localStorage
-    // - any other persisted auth state
+    // Save full authenticated state (cookies + localStorage)
     await context.storageState({
       path: authFile,
     });
 
     console.log(`Authentication state saved to: ${authFile}`);
   } finally {
-    // Cleanup
     await browser.close();
     await apiContext.dispose();
   }

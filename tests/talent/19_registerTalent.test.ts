@@ -244,9 +244,32 @@ test.describe('Talent registration scenarios', () => {
         }
       }
 
-      if (apiFields.some(f => f.name === "avatar" || f.name === "profile_photo")) {
+
+      if (
+        apiFields.some(
+          f =>
+            ['Avatar', 'avatar', 'profile_photo'].includes(f.name) &&
+            f.required
+        )
+      ) {
+
         await talentRegisterPage.uploadProfilePicture();
         await talentRegisterPage.saveCroppedProfilePicture();
+
+        console.log('Profile picture uploaded successfully.');
+      }
+
+      if (
+        apiFields.some(
+          f =>
+            ['Supported Media', 'supported_media', 'm_CmsQ'].includes(f.name) &&
+            f.required
+        )
+      ) {
+
+        await talentRegisterPage.uploadRandomSupportedMedia();
+
+        console.log('Supported Media uploaded successfully.');
       }
 
       if (p.page_no === 1) {
