@@ -22,7 +22,15 @@ test.describe('Casting owner create wcl scenarios', () => {
         console.log(projectId);
     });
 
-    test.beforeEach(async ({ page }) => {
+    test.beforeEach(async ({ page, request }) => {
+        const loginPage = new LoginPage(page);
+        const twoFaStatus = await loginPage.validLoginwithUI(
+            validLogin.email,
+            validLogin.password,
+            request
+        );
+        console.log(`2FA status detected: ${twoFaStatus}`);
+
         await page.goto(`${urls.casting}/projects`, {
             waitUntil: 'domcontentloaded',
         });

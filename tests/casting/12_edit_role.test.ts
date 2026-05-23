@@ -37,7 +37,15 @@ test.describe('Casting owner edit role scenarios', () => {
         uniqueName = `Automation Talent-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     });
 
-    test.beforeEach(async ({ page }) => {
+    test.beforeEach(async ({ page, request }) => {
+        const loginPage = new LoginPage(page);
+        const twoFaStatus = await loginPage.validLoginwithUI(
+            validLogin.email,
+            validLogin.password,
+            request
+        );
+        console.log(`2FA status detected: ${twoFaStatus}`);
+
         await page.goto(`${urls.casting}/projects`, {
             waitUntil: 'domcontentloaded',
         });

@@ -163,4 +163,27 @@ export class TalentApplyPage {
         console.log("Downloaded:", filePath);
     }
 
+    async getAuditionDetailProjectName() {
+
+        return await this.page
+            .locator(talentApplyPageLocators.auditionDetail_projectName)
+            .first()
+            .textContent();
+    }
+
+    async getAuditionRoundName() {
+
+        return await this.page
+            .locator(talentApplyPageLocators.auditionRoundName)
+            .first()
+            .textContent();
+    }
+
+    async getAuditionDetailRoleName() {
+
+    return await this.page
+        .locator(talentApplyPageLocators.auditionDetail_roleName)
+        .textContent();
+}
+
 }

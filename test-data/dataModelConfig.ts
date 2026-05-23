@@ -47,7 +47,7 @@ export const fullConfig = {
   },
   4: {
     production_types: { status: true },
-    m_CmsQ: { status: true, required: true }
+    m_CmsQ: { status: false }
   }
 }
 

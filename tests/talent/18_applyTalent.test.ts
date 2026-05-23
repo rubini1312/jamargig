@@ -117,31 +117,9 @@ test.describe('Apply talent scenarios', () => {
                     }
                 }
 
-                if (
-                    apiFields.some(
-                        f =>
-                            ['Avatar', 'avatar', 'profile_photo'].includes(f.name) &&
-                            f.required
-                    )
-                ) {
-
+                if (apiFields.some(f => f.name === "avatar" || f.name === "profile_photo")) {
                     await talentRegisterPage.uploadProfilePicture();
                     await talentRegisterPage.saveCroppedProfilePicture();
-
-                    console.log('Profile picture uploaded successfully.');
-                }
-
-                if (
-                    apiFields.some(
-                        f =>
-                            ['Supported Media', 'supported_media', 'm_CmsQ'].includes(f.name) &&
-                            f.required
-                    )
-                ) {
-
-                    await talentRegisterPage.uploadRandomSupportedMedia();
-
-                    console.log('Supported Media uploaded successfully.');
                 }
 
                 if (p.page_no === 1) {
@@ -169,15 +147,32 @@ test.describe('Apply talent scenarios', () => {
             // Apply flow
             const talentHome = new TalentHomePage(page);
 
-            await expect(page.locator(talentAuditionPageLocators.auditionCards).first())
-                .toBeVisible();
+            await expect(page.locator(talentAuditionPageLocators.auditionCards).first()).toBeVisible();
 
             await talentHome.enterProjectName(projectName);
-            await expect(page.getByText(projectName)).toBeVisible();
-            
+
+            await talentHome.verifyProjectName(projectName);
+
+            const description = await talentHome.getProjectDescriptionByCard();
+            const expectedDescription = response.data.description.replace(/<[^>]*>/g, '').trim();
+            expect(description?.trim()).toContain(expectedDescription);
+
+            const location = await talentHome.getProjectLocationByCard();
+            expect(location).toContain(response.data.location);
+            expect(location).toContain('1 Role');
+
             await talentHome.clickApplyForSearchedProject(roleName);
+
             const talentApply = new TalentApplyPage(page);
 
+            const detailProjectName = await talentApply.getAuditionDetailProjectName();
+            expect(detailProjectName).toContain(projectName);
+            const uiRoundName = await talentApply.getAuditionRoundName();
+            expect(uiRoundName).toContain(round.round_name);
+
+            const uiRoleName = await talentApply.getAuditionDetailRoleName();
+            expect(uiRoleName).toContain(roleName);
+            
             await talentApply.clickApplyOnlineround();
 
             await talentApply.clickSubmit();
@@ -296,31 +291,9 @@ test.describe('Apply talent scenarios', () => {
                     }
                 }
 
-                if (
-                    apiFields.some(
-                        f =>
-                            ['Avatar', 'avatar', 'profile_photo'].includes(f.name) &&
-                            f.required
-                    )
-                ) {
-
+                if (apiFields.some(f => f.name === "avatar" || f.name === "profile_photo")) {
                     await talentRegisterPage.uploadProfilePicture();
                     await talentRegisterPage.saveCroppedProfilePicture();
-
-                    console.log('Profile picture uploaded successfully.');
-                }
-
-                if (
-                    apiFields.some(
-                        f =>
-                            ['Supported Media', 'supported_media', 'm_CmsQ'].includes(f.name) &&
-                            f.required
-                    )
-                ) {
-
-                    await talentRegisterPage.uploadRandomSupportedMedia();
-
-                    console.log('Supported Media uploaded successfully.');
                 }
 
                 if (p.page_no === 1) {
@@ -347,9 +320,22 @@ test.describe('Apply talent scenarios', () => {
             await expect(page.locator(talentAuditionPageLocators.auditionCards).first()).toBeVisible();
 
             await talentHome.enterProjectName(projectName);
+
+            await talentHome.verifyProjectName(projectName);
+
+            const description = await talentHome.getProjectDescriptionByCard();
+            const expectedDescription = response.data.description.replace(/<[^>]*>/g, '').trim();
+            expect(description?.trim()).toContain(expectedDescription);
+
+            const location = await talentHome.getProjectLocationByCard();
+            expect(location).toContain(response.data.location);
+
             await talentHome.clickApplyForSearchedProject(roleName);
 
             const talentApply = new TalentApplyPage(page);
+            const detailProjectName = await talentApply.getAuditionDetailProjectName();
+            expect(detailProjectName).toContain(projectName);
+
 
             await talentApply.clickApplyOnlineround();
             await talentApply.clickSubmit();
@@ -491,31 +477,9 @@ test.describe('Apply talent scenarios', () => {
                     }
                 }
 
-                if (
-                    apiFields.some(
-                        f =>
-                            ['Avatar', 'avatar', 'profile_photo'].includes(f.name) &&
-                            f.required
-                    )
-                ) {
-
+                if (apiFields.some(f => f.name === "avatar")) {
                     await talentRegisterPage.uploadProfilePicture();
                     await talentRegisterPage.saveCroppedProfilePicture();
-
-                    console.log('Profile picture uploaded successfully.');
-                }
-
-                if (
-                    apiFields.some(
-                        f =>
-                            ['Supported Media', 'supported_media', 'm_CmsQ'].includes(f.name) &&
-                            f.required
-                    )
-                ) {
-
-                    await talentRegisterPage.uploadRandomSupportedMedia();
-
-                    console.log('Supported Media uploaded successfully.');
                 }
 
                 if (pages[i].page_no === 1) {
@@ -541,9 +505,21 @@ test.describe('Apply talent scenarios', () => {
             await expect(page.locator(talentAuditionPageLocators.auditionCards).first()).toBeVisible();
 
             await talentHome.enterProjectName(projectName);
+            await talentHome.verifyProjectName(projectName);
+
+            const description = await talentHome.getProjectDescriptionByCard();
+            const expectedDescription = response.data.description.replace(/<[^>]*>/g, '').trim();
+            expect(description?.trim()).toContain(expectedDescription);
+
+            const location = await talentHome.getProjectLocationByCard();
+            expect(location).toContain(response.data.location);
+
             await talentHome.clickApplyForSearchedProject(roleName);
 
             const talentApply = new TalentApplyPage(page);
+            const detailProjectName = await talentApply.getAuditionDetailProjectName();
+            expect(detailProjectName).toContain(projectName);
+
             await talentApply.clickApplyOnlineround();
             await talentApply.clickRoleSelector();
 
@@ -673,31 +649,9 @@ test.describe('Apply talent scenarios', () => {
                     }
                 }
 
-                if (
-                    apiFields.some(
-                        f =>
-                            ['Avatar', 'avatar', 'profile_photo'].includes(f.name) &&
-                            f.required
-                    )
-                ) {
-
+                if (apiFields.some(f => f.name === "avatar")) {
                     await talentRegisterPage.uploadProfilePicture();
                     await talentRegisterPage.saveCroppedProfilePicture();
-
-                    console.log('Profile picture uploaded successfully.');
-                }
-
-                if (
-                    apiFields.some(
-                        f =>
-                            ['Supported Media', 'supported_media', 'm_CmsQ'].includes(f.name) &&
-                            f.required
-                    )
-                ) {
-
-                    await talentRegisterPage.uploadRandomSupportedMedia();
-
-                    console.log('Supported Media uploaded successfully.');
                 }
 
                 if (pages[i].page_no === 1) {
@@ -723,9 +677,21 @@ test.describe('Apply talent scenarios', () => {
             await expect(page.locator(talentAuditionPageLocators.auditionCards).first()).toBeVisible();
 
             await talentHome.enterProjectName(projectName);
+            await talentHome.verifyProjectName(projectName);
+
+            const description = await talentHome.getProjectDescriptionByCard();
+            const expectedDescription = response.data.description.replace(/<[^>]*>/g, '').trim();
+            expect(description?.trim()).toContain(expectedDescription);
+
+            const location = await talentHome.getProjectLocationByCard();
+            expect(location).toContain(response.data.location);
+
             await talentHome.clickApplyForSearchedProject(roleName);
 
             const talentApply = new TalentApplyPage(page);
+            const detailProjectName = await talentApply.getAuditionDetailProjectName();
+            expect(detailProjectName).toContain(projectName);
+
             await talentApply.clickApplyOnlineround();
             await talentApply.clickRoleSelector();
             await talentApply.clickSubmit();
@@ -852,31 +818,9 @@ test.describe('Apply talent scenarios', () => {
                     }
                 }
 
-                if (
-                    apiFields.some(
-                        f =>
-                            ['Avatar', 'avatar', 'profile_photo'].includes(f.name) &&
-                            f.required
-                    )
-                ) {
-
+                if (apiFields.some(f => f.name === "avatar" || f.name === "profile_photo")) {
                     await talentRegisterPage.uploadProfilePicture();
                     await talentRegisterPage.saveCroppedProfilePicture();
-
-                    console.log('Profile picture uploaded successfully.');
-                }
-
-                if (
-                    apiFields.some(
-                        f =>
-                            ['Supported Media', 'supported_media', 'm_CmsQ'].includes(f.name) &&
-                            f.required
-                    )
-                ) {
-
-                    await talentRegisterPage.uploadRandomSupportedMedia();
-
-                    console.log('Supported Media uploaded successfully.');
                 }
 
                 if (pages[i].page_no === 1) {
@@ -903,9 +847,21 @@ test.describe('Apply talent scenarios', () => {
                 .toBeVisible();
 
             await talentHome.enterProjectName(projectName);
+            await talentHome.verifyProjectName(projectName);
+
+            const description = await talentHome.getProjectDescriptionByCard();
+            const expectedDescription = response.data.description.replace(/<[^>]*>/g, '').trim();
+            expect(description?.trim()).toContain(expectedDescription);
+
+            const location = await talentHome.getProjectLocationByCard();
+            expect(location).toContain(response.data.location);
+
             await talentHome.clickApplyForSearchedProject(roleName);
 
             const talentApply = new TalentApplyPage(page);
+            const detailProjectName = await talentApply.getAuditionDetailProjectName();
+            expect(detailProjectName).toContain(projectName);
+
             await talentApply.clickApplyOnlineround();
             await talentApply.clickRoleSelector();
 
@@ -1035,31 +991,9 @@ test.describe('Apply talent scenarios', () => {
                     }
                 }
 
-                if (
-                    apiFields.some(
-                        f =>
-                            ['Avatar', 'avatar', 'profile_photo'].includes(f.name) &&
-                            f.required
-                    )
-                ) {
-
+                if (apiFields.some(f => f.name === "avatar")) {
                     await talentRegisterPage.uploadProfilePicture();
                     await talentRegisterPage.saveCroppedProfilePicture();
-
-                    console.log('Profile picture uploaded successfully.');
-                }
-
-                if (
-                    apiFields.some(
-                        f =>
-                            ['Supported Media', 'supported_media', 'm_CmsQ'].includes(f.name) &&
-                            f.required
-                    )
-                ) {
-
-                    await talentRegisterPage.uploadRandomSupportedMedia();
-
-                    console.log('Supported Media uploaded successfully.');
                 }
 
                 if (pages[i].page_no === 1) {
@@ -1086,8 +1020,21 @@ test.describe('Apply talent scenarios', () => {
                 .toBeVisible();
 
             await talentHome.enterProjectName(projectName);
+            await talentHome.verifyProjectName(projectName);
+
+            const description = await talentHome.getProjectDescriptionByCard();
+            const expectedDescription = response.data.description.replace(/<[^>]*>/g, '').trim();
+            expect(description?.trim()).toContain(expectedDescription);
+
+            const location = await talentHome.getProjectLocationByCard();
+            expect(location).toContain(response.data.location);
+
             await talentHome.clickApplyForSearchedProject(roleName);
+
             const talentApply = new TalentApplyPage(page);
+            const detailProjectName = await talentApply.getAuditionDetailProjectName();
+            expect(detailProjectName).toContain(projectName);
+
             await talentApply.clickApplyOnlineround();
             await talentApply.clickRoleSelector();
             await talentApply.clickSubmit();
@@ -1214,31 +1161,9 @@ test.describe('Apply talent scenarios', () => {
                     }
                 }
 
-                if (
-                    apiFields.some(
-                        f =>
-                            ['Avatar', 'avatar', 'profile_photo'].includes(f.name) &&
-                            f.required
-                    )
-                ) {
-
+                if (apiFields.some(f => f.name === "avatar" || f.name === "profile_photo")) {
                     await talentRegisterPage.uploadProfilePicture();
                     await talentRegisterPage.saveCroppedProfilePicture();
-
-                    console.log('Profile picture uploaded successfully.');
-                }
-
-                if (
-                    apiFields.some(
-                        f =>
-                            ['Supported Media', 'supported_media', 'm_CmsQ'].includes(f.name) &&
-                            f.required
-                    )
-                ) {
-
-                    await talentRegisterPage.uploadRandomSupportedMedia();
-
-                    console.log('Supported Media uploaded successfully.');
                 }
 
                 if (pages[i].page_no === 1) {
@@ -1266,9 +1191,21 @@ test.describe('Apply talent scenarios', () => {
                 .toBeVisible();
 
             await talentHome.enterProjectName(projectName);
+            await talentHome.verifyProjectName(projectName);
+
+            const description = await talentHome.getProjectDescriptionByCard();
+            const expectedDescription = response.data.description.replace(/<[^>]*>/g, '').trim();
+            expect(description?.trim()).toContain(expectedDescription);
+
+            const location = await talentHome.getProjectLocationByCard();
+            expect(location).toContain(response.data.location);
+
             await talentHome.clickApplyForSearchedProject(roleName);
 
             const talentApply = new TalentApplyPage(page);
+            const detailProjectName = await talentApply.getAuditionDetailProjectName();
+            expect(detailProjectName).toContain(projectName);
+
             await talentApply.clickApplyOnlineround();
             await talentApply.clickSubmit();
 
@@ -1403,31 +1340,9 @@ test.describe('Apply talent scenarios', () => {
                     }
                 }
 
-                if (
-                    apiFields.some(
-                        f =>
-                            ['Avatar', 'avatar', 'profile_photo'].includes(f.name) &&
-                            f.required
-                    )
-                ) {
-
+                if (apiFields.some(f => f.name === "avatar")) {
                     await talentRegisterPage.uploadProfilePicture();
                     await talentRegisterPage.saveCroppedProfilePicture();
-
-                    console.log('Profile picture uploaded successfully.');
-                }
-
-                if (
-                    apiFields.some(
-                        f =>
-                            ['Supported Media', 'supported_media', 'm_CmsQ'].includes(f.name) &&
-                            f.required
-                    )
-                ) {
-
-                    await talentRegisterPage.uploadRandomSupportedMedia();
-
-                    console.log('Supported Media uploaded successfully.');
                 }
 
                 if (pages[i].page_no === 1) {
@@ -1456,9 +1371,21 @@ test.describe('Apply talent scenarios', () => {
                 .toBeVisible();
 
             await talentHome.enterProjectName(projectName);
+            await talentHome.verifyProjectName(projectName);
+
+            const description = await talentHome.getProjectDescriptionByCard();
+            const expectedDescription = response.data.description.replace(/<[^>]*>/g, '').trim();
+            expect(description?.trim()).toContain(expectedDescription);
+
+            const location = await talentHome.getProjectLocationByCard();
+            expect(location).toContain(response.data.location);
+
             await talentHome.clickApplyForSearchedProject(roleName);
 
             const talentApply = new TalentApplyPage(page);
+            const detailProjectName = await talentApply.getAuditionDetailProjectName();
+            expect(detailProjectName).toContain(projectName);
+
             await talentApply.clickApplyOnlineround();
             await talentApply.clickRoleSelector();
 
@@ -1575,31 +1502,9 @@ test.describe('Apply talent scenarios', () => {
                     }
                 }
 
-                if (
-                    apiFields.some(
-                        f =>
-                            ['Avatar', 'avatar', 'profile_photo'].includes(f.name) &&
-                            f.required
-                    )
-                ) {
-
+                if (apiFields.some(f => f.name === "avatar")) {
                     await talentRegisterPage.uploadProfilePicture();
                     await talentRegisterPage.saveCroppedProfilePicture();
-
-                    console.log('Profile picture uploaded successfully.');
-                }
-
-                if (
-                    apiFields.some(
-                        f =>
-                            ['Supported Media', 'supported_media', 'm_CmsQ'].includes(f.name) &&
-                            f.required
-                    )
-                ) {
-
-                    await talentRegisterPage.uploadRandomSupportedMedia();
-
-                    console.log('Supported Media uploaded successfully.');
                 }
 
                 if (pages[i].page_no === 1) {
@@ -1618,9 +1523,21 @@ test.describe('Apply talent scenarios', () => {
                 .toBeVisible();
 
             await talentHome.enterProjectName(projectName);
+            await talentHome.verifyProjectName(projectName);
+
+            const description = await talentHome.getProjectDescriptionByCard();
+            const expectedDescription = response.data.description.replace(/<[^>]*>/g, '').trim();
+            expect(description?.trim()).toContain(expectedDescription);
+
+            const location = await talentHome.getProjectLocationByCard();
+            expect(location).toContain(response.data.location);
+
             await talentHome.clickApplyForSearchedProject(roleName);
 
             const talentApply = new TalentApplyPage(page);
+            const detailProjectName = await talentApply.getAuditionDetailProjectName();
+            expect(detailProjectName).toContain(projectName);
+
             await talentApply.clickApplyOnlineround();
             await talentApply.clickRoleSelector();
 

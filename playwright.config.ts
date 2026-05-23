@@ -16,7 +16,7 @@ dotenv.config();
  */
 export default defineConfig({
 
-  globalSetup: './tests/_setup/auth.setup.ts',
+  //  globalSetup: './tests/_setup/auth.setup.ts',
 
   timeout: 120000,
   testDir: './tests',
@@ -36,7 +36,7 @@ export default defineConfig({
 
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
-    storageState: 'playwright/.auth/auth.json',
+    //  storageState: 'playwright/.auth/auth.json',
 
     launchOptions: {
       args: ["--disable-web-security"]
@@ -62,12 +62,9 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: {
-        ...devices['Desktop Chrome'],
-        storageState: 'playwright/.auth/auth.json',
-      },
+      use: { ...devices['Desktop Chrome'] },
+
     },
-  ],
 
     /*     {
           name: 'firefox',
@@ -98,7 +95,7 @@ export default defineConfig({
     //   name: 'Google Chrome',
     //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
     // },
-  
+  ],
 
   /* Run your local dev server before starting the tests */
   // webServer: {
