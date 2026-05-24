@@ -13,5 +13,8 @@ export const talentApplyPageLocators = {
 
   auditionDetail_projectName: '.section-header-title',
   auditionRoundName: '.n-card .font-semibold',
-  auditionDetail_roleName: 'span.text-center.text-xs.break-words.w-full'
+  auditionDetail_roleName: 'span.text-center.text-xs.break-words.w-full',
+  uploadMediaButtons: '.action button',
+  uploadMediaDragger : 'input[type="file"]'
+  
 };

@@ -344,3 +344,26 @@ export async function getTalentSearchTotalCount(
 
   return body.total;
 }
+
+
+export async function getTalentUploadedMedia(
+  request: APIRequestContext,
+  token: string,
+  projectId: number,
+  talentUuid: string
+) {
+
+  const response = await request.get(
+    urls.casting_base  + `projects/${projectId}/talent/${talentUuid}/media`,
+    {
+        headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      }
+    }
+  );
+
+  expect(response.ok()).toBeTruthy();
+
+  return await response.json();
+}

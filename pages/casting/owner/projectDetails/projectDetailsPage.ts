@@ -1,6 +1,7 @@
-import { expect, Page } from "@playwright/test";
+import { APIRequestContext, expect, Page } from "@playwright/test";
 import { projectDetailsLocators } from "./projectDetailsPageLocators";
 import { projectLocators } from "../project/projectPageLocators";
+import { getTalentUploadedMedia } from "@/helpers/api/casting/talentApi";
 
 export default class ProjectDetailsPage {
     constructor(public page: Page) { }
@@ -36,5 +37,36 @@ export default class ProjectDetailsPage {
         await expect(
             this.page.locator(projectDetailsLocators.editProject_name)
         ).toHaveText(editedRoleName);
+    }
+
+
+    async verifyUploadedMediaFromApi(
+        request: APIRequestContext,
+        token: string,
+        projectId: number,
+        talentUuid: string,
+        fileName: string
+    ) {
+
+        await expect.poll(async () => {
+
+            const response = await getTalentUploadedMedia(
+                request,
+                token,
+                projectId,
+                talentUuid
+            );
+
+            const mediaList = response.data || [];
+
+            return mediaList.some((m: any) =>
+                m.original_name?.includes(fileName) ||
+                m.name?.includes(fileName)
+            );
+
+        }, {
+            timeout: 20000,
+            intervals: [1000]
+        }).toBeTruthy();
     }
 }

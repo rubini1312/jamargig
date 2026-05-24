@@ -181,9 +181,59 @@ export class TalentApplyPage {
 
     async getAuditionDetailRoleName() {
 
-    return await this.page
-        .locator(talentApplyPageLocators.auditionDetail_roleName)
-        .textContent();
-}
+        return await this.page
+            .locator(talentApplyPageLocators.auditionDetail_roleName)
+            .textContent();
+    }
+
+
+    async clickProfilePhotoUpload() {
+
+        await this.page
+            .locator(talentApplyPageLocators.uploadMediaButtons)
+            .nth(0)
+            .click();
+    }
+
+    async clickVideoPerformanceUpload() {
+
+        await this.page
+            .locator(talentApplyPageLocators.uploadMediaButtons)
+            .nth(1)
+            .click();
+    }
+
+    async clickAudioUpload() {
+
+        await this.page
+            .locator(talentApplyPageLocators.uploadMediaButtons)
+            .nth(2)
+            .click();
+    }
+
+    async clickDocumentUpload() {
+
+        await this.page
+            .locator(talentApplyPageLocators.uploadMediaButtons)
+            .nth(3)
+            .click();
+    }
+
+    async uploadMedia(filePath: string) {
+
+        await this.page
+            .locator(talentApplyPageLocators.uploadMediaDragger)
+            .setInputFiles(filePath);
+    }
+
+    async clickAddToLibrary() {
+        await this.page.locator(':text("Add to Library")').click();
+        await expect(this.page.getByText('Select Media from Library')).toBeVisible();
+    }
+
+    async clickAddToApplication() {
+        await this.page.locator(':text("Add Media to Application")').click();
+        await expect(this.page.getByText('Select Media from Library')).toBeHidden();
+    }
 
 }

@@ -15,6 +15,8 @@ import { createAvailabilityQuestion, createCheckboxQuestion, createDropdownQuest
 import { TalentApplyPage } from "@/pages/talent/apply/applyRoundPage";
 import { getAccessTokenSmartFromCasting } from "@/helpers/api/casting/authApi";
 import { talentAuditionPageLocators } from "@/pages/talent/audition/auditionPageLocators";
+import path from "path";
+import ProjectDetailsPage from "@/pages/casting/owner/projectDetails/projectDetailsPage";
 
 test.describe('Apply talent scenarios', () => {
 
@@ -172,7 +174,7 @@ test.describe('Apply talent scenarios', () => {
 
             const uiRoleName = await talentApply.getAuditionDetailRoleName();
             expect(uiRoleName).toContain(roleName);
-            
+
             await talentApply.clickApplyOnlineround();
 
             await talentApply.clickSubmit();
@@ -1092,22 +1094,9 @@ test.describe('Apply talent scenarios', () => {
             const roundId = round.id;
 
             const textQuestion = await createTextQuestion(request, token, projectId, roundId, roleId, "Tell us about yourself");
-
-            const checkboxQuestion = await createCheckboxQuestion(
-                request, token, projectId, roundId, roleId,
-                "Select your skills", ["Acting", "Singing", "Dancing"]
-            );
-
-            const radioQuestion = await createRadioQuestion(
-                request, token, projectId, roundId, roleId,
-                "Do you have acting experience?", ["Yes", "No"]
-            );
-
-            const dropdownQuestion = await createDropdownQuestion(
-                request, token, projectId, roundId, roleId,
-                "Select your country", ["USA", "UK", "Canada"]
-            );
-
+            const checkboxQuestion = await createCheckboxQuestion(request, token, projectId, roundId, roleId, "Select your skills", ["Acting", "Singing", "Dancing"]);
+            const radioQuestion = await createRadioQuestion(request, token, projectId, roundId, roleId, "Do you have acting experience?", ["Yes", "No"]);
+            const dropdownQuestion = await createDropdownQuestion(request, token, projectId, roundId, roleId,"Select your country", ["USA", "UK", "Canada"]);
             const imageMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your profile photo", [1]);
             const videoMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your video performance", [2]);
             const audioMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your audio clip", [3]);
@@ -1216,6 +1205,27 @@ test.describe('Apply talent scenarios', () => {
             await talentApply.selectRadioOption("Yes");
             await talentApply.selectCountry("USA");
             await talentApply.selectAvailability("Morning", "Yes");
+
+            await talentApply.clickProfilePhotoUpload();
+            await talentApply.uploadMedia(path.join(process.cwd(), 'test-files/images/test-pngFile.png'));
+            await talentApply.clickAddToLibrary();
+            await talentApply.clickAddToApplication();
+
+            await talentApply.clickVideoPerformanceUpload();
+            await talentApply.uploadMedia(path.join(process.cwd(), 'test-files/videos/file_example_MP4_1920_18MG.mp4'));
+            await talentApply.clickAddToLibrary();
+            await talentApply.clickAddToApplication();
+
+            await talentApply.clickAudioUpload();
+            await talentApply.uploadMedia(path.join(process.cwd(), 'test-files/audioes/file_example_MP3_700KB.mp3'));
+            await talentApply.clickAddToLibrary();
+            await talentApply.clickAddToApplication();
+
+            await talentApply.clickDocumentUpload();
+            await talentApply.uploadMedia(path.join(process.cwd(), 'test-files/pdfs/file-sample_150kB.pdf'));
+            await talentApply.clickAddToLibrary();
+            await talentApply.clickAddToApplication();
+
             await talentApply.clickSubmit();
 
             await expect(page.getByText("Submitted")).toBeVisible();
@@ -1242,6 +1252,12 @@ test.describe('Apply talent scenarios', () => {
             const selected = availability.selection.find((s: any) => s.is_selected);
 
             expect(selected.label).toBe("Yes");
+
+            const projectDataTalentPage = new ProjectDetailsPage(page);
+            await projectDataTalentPage.verifyUploadedMediaFromApi(request, token, projectId, uuid, 'test-pngFile.png');
+            await projectDataTalentPage.verifyUploadedMediaFromApi(request, token, projectId, uuid, 'file_example_MP4_1920_18MG.mp4');
+            await projectDataTalentPage.verifyUploadedMediaFromApi(request, token, projectId, uuid, 'file_example_MP3_700KB.mp3');
+            await projectDataTalentPage.verifyUploadedMediaFromApi(request, token, projectId, uuid, 'file-sample_150kB.pdf');
 
             await deleteProject(request, token, projectId);
             await deleteTalent(request, token, uuid);
