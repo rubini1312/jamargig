@@ -6,14 +6,15 @@ export default class ManageAccountPage {
     constructor(public page: Page) { }
 
     async clickOnPasswordField() {
-        await this.page.locator('text=Password')
-            .locator('xpath=ancestor::div[contains(@class,"n-form-item")]')
-            .locator('button')
-            .click();
 
-        // wait for edit mode
+        const section = this.page.locator(
+            '.n-form-item-blank:has-text("Password")'
+        );
+
+        await section.locator('button').click();
+
+        // wait until fields appear
         await expect(this.page.getByText('CONFIRM PASSWORD')).toBeVisible();
-
     }
 
     async changePasswordWithInvalidPasswordsAndValidate(newPassword: string, confirmPassword: string, expectedMsg: string) {

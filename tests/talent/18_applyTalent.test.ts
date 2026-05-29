@@ -6,6 +6,7 @@ import { fullConfig } from "@/test-data/dataModelConfig";
 import { validLogin } from "@/test-data/loginData";
 import { urls } from "@/utils/urls";
 import LoginPage from "../../pages/talent/login/loginPage";
+import CastingLoginPage from "@pages/casting/owner/login/loginPage";
 import { test, expect } from '../_setup/talentTest';
 import { enterOtpForTalent, getOtpFromMailtrap } from "@/utils/mailtrapOtp";
 import { TalentRegisterPage } from "@/pages/talent/register/registerPage";
@@ -17,6 +18,7 @@ import { getAccessTokenSmartFromCasting } from "@/helpers/api/casting/authApi";
 import { talentAuditionPageLocators } from "@/pages/talent/audition/auditionPageLocators";
 import path from "path";
 import ProjectDetailsPage from "@/pages/casting/owner/projectDetails/projectDetailsPage";
+import Talentpage from "@/pages/casting/owner/talentProfile/talentPage";
 
 test.describe('Apply talent scenarios', () => {
 
@@ -1096,7 +1098,7 @@ test.describe('Apply talent scenarios', () => {
             const textQuestion = await createTextQuestion(request, token, projectId, roundId, roleId, "Tell us about yourself");
             const checkboxQuestion = await createCheckboxQuestion(request, token, projectId, roundId, roleId, "Select your skills", ["Acting", "Singing", "Dancing"]);
             const radioQuestion = await createRadioQuestion(request, token, projectId, roundId, roleId, "Do you have acting experience?", ["Yes", "No"]);
-            const dropdownQuestion = await createDropdownQuestion(request, token, projectId, roundId, roleId,"Select your country", ["USA", "UK", "Canada"]);
+            const dropdownQuestion = await createDropdownQuestion(request, token, projectId, roundId, roleId, "Select your country", ["USA", "UK", "Canada"]);
             const imageMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your profile photo", [1]);
             const videoMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your video performance", [2]);
             const audioMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your audio clip", [3]);
@@ -1258,6 +1260,55 @@ test.describe('Apply talent scenarios', () => {
             await projectDataTalentPage.verifyUploadedMediaFromApi(request, token, projectId, uuid, 'file_example_MP4_1920_18MG.mp4');
             await projectDataTalentPage.verifyUploadedMediaFromApi(request, token, projectId, uuid, 'file_example_MP3_700KB.mp3');
             await projectDataTalentPage.verifyUploadedMediaFromApi(request, token, projectId, uuid, 'file-sample_150kB.pdf');
+
+            const castingPage = await page.context().newPage();
+
+            await castingPage.goto(urls.casting);
+
+            const castingLogin = new CastingLoginPage(castingPage);
+
+            await castingLogin.validLoginwithUI(
+                validLogin.email,
+                validLogin.password,
+                request
+            );
+
+            await castingPage.goto(
+                `${urls.casting}/projects/${projectId}/talents`
+            );
+
+            const castingTalentPage = new Talentpage(castingPage);
+
+            await castingTalentPage.clickTalentCardByName(uniqueName);
+            await castingTalentPage.clickOnSubmissionFormTab('Tell us about yourself');
+
+            await castingTalentPage.verifyQuestionAndAnswer(
+                "Tell us about yourself",
+                "Test submission"
+            );
+
+            await castingTalentPage.verifyQuestionAndAnswer(
+                "Select your country",
+                "USA"
+            );
+
+            await castingTalentPage.verifyQuestionAndAnswer(
+                "Do you have acting experience?",
+                "Yes"
+            );
+
+            await castingTalentPage.verifyQuestionAndMultipleAnswers(
+                "Select your skills",
+                ["Acting", "Singing"]
+            );
+
+            await castingTalentPage.clickOnSubmissionMediaTab('file_example_MP4_1920_18MG.mp4');
+            await castingTalentPage.verifyUploadedFileNames([
+                'file_example_MP4_1920_18MG.mp4',
+                'test-pngFile.png',
+                'file_example_MP3_700KB.mp3',
+                'file-sample_150kB.pdf'
+            ]);
 
             await deleteProject(request, token, projectId);
             await deleteTalent(request, token, uuid);
