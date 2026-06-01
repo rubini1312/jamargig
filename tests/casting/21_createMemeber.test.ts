@@ -25,7 +25,7 @@ test.describe("Casting owner create Member Type flow", () => {
 
 
     // =========================================================
-    test("Create member- should shows validation (required fields)", async ({ page }) => {
+    test("Create member- should show validation (required fields)", async ({ page }) => {
 
         await page.goto(urls.casting + "/settings");
         await expect(page.getByTitle('Member Types')).toBeVisible();

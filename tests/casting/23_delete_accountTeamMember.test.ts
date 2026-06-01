@@ -28,7 +28,7 @@ test.describe("Casting owner Account Team Member Type flow", () => {
     });
 
     // =========================================================
-    test("Delete member - should delete member successfully before registration", async ({ page, request, browser }) => {
+    test("Delete member - should delete member successfully before registration", async ({page}) => {
 
         await page.goto(urls.casting + "/settings");
         await expect(page.getByTitle('Member Types')).toBeVisible();
