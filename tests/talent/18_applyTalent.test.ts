@@ -1096,18 +1096,18 @@ test.describe('Apply talent scenarios', () => {
             const roundId = round.id;
 
             const textQuestion = await createTextQuestion(request, token, projectId, roundId, roleId, "Tell us about yourself");
-            //const checkboxQuestion = await createCheckboxQuestion(request, token, projectId, roundId, roleId, "Select your skills", ["Acting", "Singing", "Dancing"]);
-            //const radioQuestion = await createRadioQuestion(request, token, projectId, roundId, roleId, "Do you have acting experience?", ["Yes", "No"]);
-            //const dropdownQuestion = await createDropdownQuestion(request, token, projectId, roundId, roleId, "Select your country", ["USA", "UK", "Canada"]);
-            //const imageMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your profile photo", [1]);
-            //const videoMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your video performance", [2]);
-            //const audioMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your audio clip", [3]);
-            //const pdfMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your proposal pdf version", [4]);
+            const checkboxQuestion = await createCheckboxQuestion(request, token, projectId, roundId, roleId, "Select your skills", ["Acting", "Singing", "Dancing"]);
+            const radioQuestion = await createRadioQuestion(request, token, projectId, roundId, roleId, "Do you have acting experience?", ["Yes", "No"]);
+            const dropdownQuestion = await createDropdownQuestion(request, token, projectId, roundId, roleId, "Select your country", ["USA", "UK", "Canada"]);
+            const imageMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your profile photo", [1]);
+            const videoMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your video performance", [2]);
+            const audioMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your audio clip", [3]);
+            const pdfMediaQuestion = await createMediaQuestion(request, token, projectId, roundId, roleId, "Upload your proposal pdf version", [4]);
 
-/*             const availabilityQuestion = await createAvailabilityQuestion(
+            const availabilityQuestion = await createAvailabilityQuestion(
                 request, token, projectId, roundId, roleId,
                 "Select your availability", ["Morning"]
-            ); */
+            ); 
 
             await updateRoundSubmissionStatus(request, token, projectId, roundId, 1);
             await applyRegistrationConfig(request, token, fullConfig);
