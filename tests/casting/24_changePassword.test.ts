@@ -35,7 +35,7 @@ test.describe("Casting owner Change Password Scenarios", () => {
 
     });
 
-    test("Change Password - should not change password with mismatch password", async ({ page, request, browser }) => {
+    test("Change Password - should not change password with mismatch password", async ({ page}) => {
 
         const homePage = new HomePage(page);
         const manageAccountPage = new ManageAccountPage(page);
@@ -44,9 +44,9 @@ test.describe("Casting owner Change Password Scenarios", () => {
 
     });
 
-    test("Change Password - should not change password with password", async ({ page, request, browser }) => {
+    test("Change Password - should change password with valid and matching passwords", async ({page}) => {
 
-        const homePage = new HomePage(page);
+        //const homePage = new HomePage(page);
         const manageAccountPage = new ManageAccountPage(page);
         manageAccountPage.clickOnPasswordField();
         manageAccountPage.changePassword('@ut0maT312345', '@ut0maT312345');

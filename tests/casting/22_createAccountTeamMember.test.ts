@@ -30,7 +30,7 @@ test.describe("Casting owner Account Team Member Type flow", () => {
 
 
     // =========================================================
-    test("Create Account Member- should shows validation (required fields)", async ({ page }) => {
+    test("Create Account Member- should show validation (required fields)", async ({ page }) => {
 
         await page.goto(urls.casting + "/settings");
         await expect(page.getByTitle('Member Types')).toBeVisible();
@@ -45,7 +45,7 @@ test.describe("Casting owner Account Team Member Type flow", () => {
 
 
     // =========================================================
-    test("Create member- should show the memeber details & should receive invitation successfully", async ({ page, request }) => {
+    test("Create member- should show the member details & should receive invitation successfully", async ({ page, request }) => {
 
         await page.goto(urls.casting + "/settings");
         await expect(page.getByTitle('Member Types')).toBeVisible();
