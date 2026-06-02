@@ -12,32 +12,36 @@ export async function getUserUuidByEmail(
     targetEmail: string
 ): Promise<string> {
 
-    const res = await request.get(
-        urls.casting_base + "team/",
-        {
-            headers: {
-                Authorization: `Bearer ${token}`
+    for (let i = 0; i < 10; i++) {
+
+        const res = await request.get(
+            urls.casting_base + "team/",
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
             }
+        );
+
+        const body = await res.json();
+
+        console.log(JSON.stringify(body, null, 2));
+
+        const users = body.data || [];
+
+        const user = users.find(
+            (u: any) =>
+                u.email?.toLowerCase() === targetEmail.toLowerCase()
+        );
+
+        if (user) {
+            return user.user_uuid;
         }
-    );
 
-    if (!res.ok()) {
-        throw new Error(`Failed to fetch team: ${res.status()} ${await res.text()}`);
+        await new Promise(r => setTimeout(r, 2000));
     }
 
-    const body = await res.json();
-
-    const users: TeamUser[] = body.data || [];
-
-    const user = users.find(u =>
-        u.email.toLowerCase() === targetEmail.toLowerCase()
-    );
-
-    if (!user) {
-        throw new Error(`User not found for email: ${targetEmail}`);
-    }
-
-    return user.uuid;
+    throw new Error(`User not found: ${targetEmail}`);
 }
 
 export async function removeTeamMember(
@@ -47,6 +51,8 @@ export async function removeTeamMember(
     email: string
 ) {
     const url = urls.casting_base + `team/${memberUuid}/action`;
+    console.log(url);
+    console.log(email);
 
     const res = await request.patch(url, {
         headers: {

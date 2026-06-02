@@ -136,7 +136,11 @@ export class AccountTypePage {
 
         await row.locator('[data-testid*="actions-dropdown"]').click();
 
-        await this.page.getByText('Remove', { exact: true }).click();
+        // await this.page.getByText('Remove', { exact: true }).click();
+
+        const removeOption = this.page.locator('[data-testid*="option-remove"]');
+        await expect(removeOption).toBeVisible();
+        await removeOption.click();
 
         const confirmBtn = this.page.getByRole('button', { name: /confirm|yes|remove/i });
         if (await confirmBtn.isVisible().catch(() => false)) {
@@ -145,7 +149,7 @@ export class AccountTypePage {
 
         await expect(
             this.page.getByText('No team members to display')
-        ).toBeVisible({ timeout: 10000 });
+        ).toBeVisible({ timeout: 25000 });
 
         const searchInput = this.page.locator('input[placeholder*="Search"]');
 

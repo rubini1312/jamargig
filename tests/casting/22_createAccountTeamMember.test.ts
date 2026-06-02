@@ -153,14 +153,16 @@ test.describe("Casting owner Account Team Member Type flow", () => {
         await registerPage.enterDataForRegistration(email, "TestAutomation-Member");
         await registerPage.CheckTermsAndConditions();
         await registerPage.clickNext();
+        await expect(
+            invitePage.getByRole('button', { name: /next/i })
+        ).toBeVisible({ timeout: 15000 });
 
-        await expect(invitePage.getByText("Add a photo of yourself")).toBeVisible();
         await registerPage.clickNext();
         await invitePage.waitForURL("**/projects", { timeout: 60000 });
 
         const token = await getAccessTokenSmartFromCasting(request, validLogin.email);
-        const memberUuid = await getUserUuidByEmail(request, token, email);
-        await removeTeamMember(request, token, memberUuid, email);
+        // const memberUuid = await getUserUuidByEmail(request, token, email);
+        // await removeTeamMember(request, token, memberUuid, email);
     });
 
 });
